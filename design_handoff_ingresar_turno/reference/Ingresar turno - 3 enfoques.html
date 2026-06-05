@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Planilla Caja · Ingresar turno — 3 enfoques</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; background: #f0eee9; }
+  body { font-family: 'Schibsted Grotesk', -apple-system, system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+  @keyframes blink { 0%, 50% { opacity: 1; } 50.01%, 100% { opacity: 0; } }
+  @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+  @keyframes fade { from { opacity: 0; } to { opacity: 1; } }
+  input::placeholder { color: #B7B9B2; }
+  input { -webkit-appearance: none; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<template id="__bundler_thumbnail">
+  <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <rect width="100" height="100" fill="#1E7A4F"/>
+    <rect x="34" y="22" width="32" height="56" rx="6" fill="#fff"/>
+    <rect x="40" y="30" width="20" height="10" rx="2" fill="#E6F1EA"/>
+    <circle cx="44" cy="52" r="3" fill="#1E7A4F"/><circle cx="50" cy="52" r="3" fill="#33518C"/><circle cx="56" cy="52" r="3" fill="#1E7A4F"/>
+    <circle cx="44" cy="62" r="3" fill="#33518C"/><circle cx="50" cy="62" r="3" fill="#1E7A4F"/><circle cx="56" cy="62" r="3" fill="#33518C"/>
+  </svg>
+</template>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script type="text/babel" src="design-canvas.jsx"></script>
+<script type="text/babel" src="ios-frame.jsx"></script>
+<script type="text/babel" src="kit.jsx"></script>
+<script type="text/babel" src="approachA.jsx"></script>
+<script type="text/babel" src="approachB.jsx"></script>
+<script type="text/babel" src="approachC.jsx"></script>
+
+<script type="text/babel">
+const { useState } = React;
+
+function Frame({ children }) {
+  return (
+    <IOSDevice width={390} height={844}>
+      {children}
+    </IOSDevice>
+  );
+}
+
+function App() {
+  return (
+    <DesignCanvas>
+      <DCSection id="flujo" title="Ingresar turno — Planilla Caja Fryt" subtitle="Tres enfoques del registro diario · móvil · prototipos interactivos">
+        <DCArtboard id="a" label="A · Lista + hoja" width={390} height={844}>
+          <Frame><ApproachA /></Frame>
+        </DCArtboard>
+        <DCArtboard id="b" label="B · Calculadora POS" width={390} height={844}>
+          <Frame><ApproachB /></Frame>
+        </DCArtboard>
+        <DCArtboard id="c" label="C · Asistente + cuadre" width={390} height={844}>
+          <Frame><ApproachC /></Frame>
+        </DCArtboard>
+      </DCSection>
+    </DesignCanvas>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

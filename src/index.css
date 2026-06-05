@@ -1,0 +1,100 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    -webkit-tap-highlight-color: transparent;
+    overscroll-behavior: none;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  html.dark {
+    color-scheme: dark;
+  }
+
+  body {
+    @apply text-gray-900 dark:text-zinc-100 antialiased;
+    background-color: #FBF6EC;
+    overscroll-behavior: none;
+    overflow-x: hidden;
+    padding-top: env(safe-area-inset-top);
+  }
+  html.dark body {
+    background-color: #18181b;
+  }
+
+  /* Permitir selección de texto solo en inputs y áreas de texto */
+  input, textarea, [contenteditable] {
+    -webkit-user-select: text;
+    user-select: text;
+    /* Evitar zoom al hacer foco en iOS (requiere font-size >= 16px) */
+    font-size: 16px;
+  }
+}
+
+@layer components {
+  .btn {
+    @apply inline-flex items-center justify-center rounded-xl px-4 py-2 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none;
+    min-height: 44px;
+    touch-action: manipulation;
+  }
+  @media (min-width: 768px) {
+    .btn {
+      min-height: 38px;
+    }
+  }
+  .btn-primary {
+    @apply btn bg-brand text-white hover:bg-brand-hover focus:ring-brand;
+  }
+  .btn-secondary {
+    @apply btn bg-white dark:bg-zinc-700 text-gray-700 dark:text-zinc-200 border border-gray-300 dark:border-zinc-600 hover:bg-gray-50 dark:hover:bg-zinc-600 focus:ring-brand;
+  }
+  .btn-danger {
+    @apply btn bg-red-600 text-white hover:bg-red-700 focus:ring-red-500;
+  }
+  .input {
+    @apply block w-full rounded-xl border border-gray-200 dark:border-zinc-600 bg-white dark:bg-zinc-700 text-gray-900 dark:text-zinc-100 px-3 py-2.5 shadow-sm placeholder-gray-400 dark:placeholder-zinc-500 focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand;
+    font-size: 16px;
+    touch-action: manipulation;
+  }
+  .card {
+    @apply bg-white dark:bg-zinc-800 rounded-xl shadow-sm border border-gray-100 dark:border-zinc-700 p-4;
+  }
+  .label {
+    @apply block text-sm font-medium text-gray-700 dark:text-zinc-300 mb-1;
+  }
+
+  /* Barra inferior segura: respeta el home indicator en Android/iOS */
+  .safe-bottom {
+    padding-bottom: max(12px, env(safe-area-inset-bottom));
+  }
+
+  /* Espacio para que el contenido no quede tapado por la barra de navegación inferior */
+  .pb-nav {
+    padding-bottom: calc(56px + max(8px, env(safe-area-inset-bottom)) + 16px);
+  }
+
+  /* Barras fijas (ej. "Guardar") que deben quedar sobre la bottom nav en mobile */
+  .above-nav {
+    bottom: calc(56px + max(8px, env(safe-area-inset-bottom)));
+  }
+  @media (min-width: 768px) {
+    .above-nav {
+      bottom: 0;
+    }
+  }
+
+  /* App shell de altura fija para mobile: evita que el nav se desplace con el viewport del browser */
+  .app-shell {
+    height: 100dvh;
+    overflow: hidden;
+  }
+  @media (min-width: 768px) {
+    .app-shell {
+      height: auto;
+      min-height: 100vh;
+      overflow: visible;
+    }
+  }
+}
