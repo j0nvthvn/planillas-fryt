@@ -91,7 +91,7 @@ export default function EditarTurno() {
         setTurnoId(turno.id)
         setTurnoVersion(turno.updated_at)
         setCambioRemotoPendiente(false)
-        const v = turno.ventas
+        const v = Array.isArray(turno.ventas) ? turno.ventas[0] : turno.ventas
         if (v) setVentas({ efectivo: +v.efectivo || 0, getnet: +v.getnet || 0, mercadopago: +v.mercadopago || 0, edenred: +v.edenred || 0, amipass: +v.amipass || 0, transferencia: +v.transferencia || 0 })
         if (turno.proveedores?.length) {
           setProvs(turno.proveedores.map((p) => ({
