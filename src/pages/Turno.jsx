@@ -24,7 +24,6 @@ export default function Turno() {
   const [sheet, setSheet] = useState(null)
   const [error, setError] = useState('')
   const [guardando, setGuardando] = useState(false)
-  const [exito, setExito] = useState(null)
   const [draftRestaurado, setDraftRestaurado] = useState(false)
   const [showConfirm, setShowConfirm] = useState(false)
   const [showLimpiarConfirm, setShowLimpiarConfirm] = useState(false)
@@ -108,7 +107,7 @@ export default function Turno() {
       setProvs(turno.proveedores?.length
         ? turno.proveedores.map((p) => ({ nombre: p.nombre, monto: +p.monto, forma_pago: p.forma_pago, imagen_url: imgMap[p.nombre] || '' }))
         : [])
-      const v = turno.ventas
+      const v = Array.isArray(turno.ventas) ? turno.ventas[0] : turno.ventas
       setVentas(v
         ? { efectivo: +v.efectivo || 0, getnet: +v.getnet || 0, mercadopago: +v.mercadopago || 0, edenred: +v.edenred || 0, amipass: +v.amipass || 0, transferencia: +v.transferencia || 0 }
         : VENTAS_VACIAS)
@@ -293,7 +292,7 @@ export default function Turno() {
       if (draftKey) localStorage.removeItem(draftKey)
       setCambiosLocales(false)
       setCambioRemotoPendiente(false)
-      setExito({ tipo, totalVentas, efProv, trProv, provs: proveedoresValidos })
+      navigate('/resumen')
     } catch (err) {
       console.error(err)
       setError(err?.code === '23505'
@@ -302,59 +301,11 @@ export default function Turno() {
     } finally { setGuardando(false) }
   }
 
-  function reset() {
-    setExito(null)
-    setProvs([])
-    setVentas(VENTAS_VACIAS)
-    setCambiosLocales(false)
-    setCambioRemotoPendiente(false)
-    if (!esDiaUnico(hoy())) {
-      const siguiente = ['mañana', 'tarde'].find((t) => !tiposExistentes.includes(t))
-      if (siguiente) setTipo(siguiente)
-    }
-    setLoadKey((k) => k + 1)
-  }
   function limpiar() {
     setProvs([]); setVentas(VENTAS_VACIAS); setError(''); setDraftRestaurado(false); setCambiosLocales(false); setCambioRemotoPendiente(false)
     if (draftKey) localStorage.removeItem(draftKey)
   }
 
-  if (exito) {
-    return (
-      <Layout>
-        <div className="max-w-lg md:max-w-2xl mx-auto space-y-5 py-4">
-          <div className="text-center space-y-3">
-            <div className="mx-auto w-16 h-16 rounded-full grid place-items-center" style={{ background: ACCENT_TINT, color: ACCENT }}>
-              <Icon name="check" className="w-8 h-8" stroke={2.6} />
-            </div>
-            <h2 className="text-xl font-bold text-gray-900 dark:text-zinc-100">Turno guardado</h2>
-            <p className="text-sm text-gray-500 dark:text-zinc-400 capitalize">{exito.tipo} · {fechaLegible(hoy())}</p>
-          </div>
-          <div className="card divide-y divide-gray-100 dark:divide-zinc-700">
-            <ResumenRow label="Ventas del turno" valor={clp(exito.totalVentas)} />
-            <ResumenRow label="Efectivo a proveedores" valor={clp(exito.efProv)} color={GREEN} />
-            <ResumenRow label="Transferencia a proveedores" valor={clp(exito.trProv)} color={NAVY} />
-          </div>
-          {exito.provs.length > 0 && (
-            <div className="card">
-              <p className="text-xs font-semibold text-gray-400 dark:text-zinc-500 uppercase tracking-wide mb-2">{exito.provs.length} proveedores</p>
-              <div className="divide-y divide-gray-100 dark:divide-zinc-700">
-                {exito.provs.map((p, i) => (
-                  <div key={i} className="flex items-center gap-3 py-2">
-                    <ProveedorAvatar nombre={p.nombre} imagen_url={p.imagen_url} size="sm" />
-                    <span className="flex-1 text-sm text-gray-800 dark:text-zinc-200">{p.nombre}</span>
-                    <span className="font-semibold tabular-nums text-sm" style={{ color: p.forma_pago === 'efectivo' ? GREEN : NAVY }}>{clp(p.monto)}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-          <button onClick={() => navigate('/resumen')} className="btn-primary w-full py-3">Ver resumen del día</button>
-          <button onClick={reset} className="btn-secondary w-full py-3">Ingresar otro turno</button>
-        </div>
-      </Layout>
-    )
-  }
 
   if (tipo === null) {
     return <Layout><div className="flex justify-center py-16"><div className="w-6 h-6 rounded-full border-2 border-[#5C3317] dark:border-[#E8C9A8] border-t-transparent animate-spin" /></div></Layout>
@@ -402,12 +353,6 @@ export default function Turno() {
               <button onClick={() => setShowLimpiarConfirm(true)} className="text-xs font-medium text-red-500 dark:text-red-400 hover:text-red-700 underline underline-offset-2">Limpiar borrador</button>
             </div>
           )}
-          {turnoExistente && (
-            <div className="mt-2 flex items-center gap-2 text-sm text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-700 rounded-lg px-3 py-2">
-              <Icon name="check" className="w-4 h-4 shrink-0" stroke={2.4} />
-              Turno de {tipo} ya guardado — puedes editarlo aquí
-            </div>
-          )}
           {draftRestaurado && (
             <div className="mt-2 flex items-center justify-between gap-2 text-sm text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-700 rounded-lg px-3 py-2">
               <span>Borrador restaurado automáticamente</span>
@@ -426,59 +371,77 @@ export default function Turno() {
           )}
         </div>
 
-        <section>
-          <SectionHead title="Proveedores" right={provs.length || null} />
-          {provs.length === 0 ? (
-            <button onClick={openNew} className="w-full flex flex-col items-center gap-2 py-7 rounded-xl border border-dashed border-gray-300 dark:border-zinc-600 text-gray-500 dark:text-zinc-400 text-sm font-medium">
-              <Icon name="plus" /> Agrega el primer proveedor
+        {turnoExistente ? (
+          <div className="flex flex-col items-center gap-5 py-8 text-center">
+            <div className="w-16 h-16 rounded-full grid place-items-center" style={{ background: ACCENT_TINT, color: ACCENT }}>
+              <Icon name="check" className="w-8 h-8" stroke={2.6} />
+            </div>
+            <div>
+              <h2 className="text-lg font-bold text-gray-900 dark:text-zinc-100 capitalize">Turno de {tipo} registrado</h2>
+              <p className="text-sm text-gray-500 dark:text-zinc-400 mt-1">Para editarlo, ve al resumen del día.</p>
+            </div>
+            <button onClick={() => navigate('/resumen')} className="btn-primary w-full py-3">
+              Ver resumen del día
             </button>
-          ) : (
-            <>
-              <div className="card !p-0 overflow-hidden divide-y divide-gray-100 dark:divide-zinc-700">
-                {provs.map((p, i) => (
-                  <button key={i} onClick={() => openEdit(i)} className="w-full flex items-center gap-3 px-4 py-3 text-left">
-                    <ProveedorAvatar nombre={p.nombre} imagen_url={p.imagen_url} size="sm" />
-                    <span className="flex-1 min-w-0">
-                      <span className="block text-[15px] font-medium text-gray-900 dark:text-zinc-100 truncate">{p.nombre}</span>
-                      <span className="block text-xs capitalize" style={{ color: p.forma_pago === 'efectivo' ? GREEN : NAVY }}>{p.forma_pago}</span>
-                    </span>
-                    <span className="font-semibold tabular-nums text-gray-900 dark:text-zinc-100">{clp(p.monto)}</span>
-                    <Icon name="chevR" className="w-4 h-4 text-gray-300 dark:text-zinc-600" />
-                  </button>
-                ))}
-              </div>
-              <button onClick={openNew} className="w-full mt-2 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold"
-                style={{ background: ACCENT_TINT, color: ACCENT }}>
-                <Icon name="plus" className="w-4 h-4" stroke={2} /> Agregar proveedor
-              </button>
-            </>
-          )}
-        </section>
-
-        <section>
-          <SectionHead title="Ventas del turno" />
-          <div className="card !p-0 overflow-hidden divide-y divide-gray-100 dark:divide-zinc-700">
-            {METODOS_VENTA.map((m) => {
-              const tiene = ventas[m.key] > 0
-              return (
-                <button key={m.key} onClick={() => openVenta(m.key)}
-                  className={`w-full flex items-center gap-3 px-4 py-3 text-left transition ${tiene ? 'bg-[#F7FBF9] dark:bg-emerald-950/30' : ''}`}>
-                  <MetodoLogo metodo={m} active={tiene} />
-                  <span className="flex-1 min-w-0">
-                    <span className="block text-[15px] font-medium text-gray-900 dark:text-zinc-100">{m.label}</span>
-                    <span className="block text-xs text-gray-500 dark:text-zinc-400">{m.sub}</span>
-                  </span>
-                  <span className={`font-semibold tabular-nums ${tiene ? 'text-gray-900 dark:text-zinc-100' : 'text-gray-300 dark:text-zinc-600'}`}>{clp(ventas[m.key])}</span>
-                  <Icon name="chevR" className="w-4 h-4 text-gray-300 dark:text-zinc-600" />
-                </button>
-              )
-            })}
           </div>
-        </section>
+        ) : (
+          <>
+            <section>
+              <SectionHead title="Proveedores" right={provs.length || null} />
+              {provs.length === 0 ? (
+                <button onClick={openNew} className="w-full flex flex-col items-center gap-2 py-7 rounded-xl border border-dashed border-gray-300 dark:border-zinc-600 text-gray-500 dark:text-zinc-400 text-sm font-medium">
+                  <Icon name="plus" /> Agrega el primer proveedor
+                </button>
+              ) : (
+                <>
+                  <div className="card !p-0 overflow-hidden divide-y divide-gray-100 dark:divide-zinc-700">
+                    {provs.map((p, i) => (
+                      <button key={i} onClick={() => openEdit(i)} className="w-full flex items-center gap-3 px-4 py-3 text-left">
+                        <ProveedorAvatar nombre={p.nombre} imagen_url={p.imagen_url} size="sm" />
+                        <span className="flex-1 min-w-0">
+                          <span className="block text-[15px] font-medium text-gray-900 dark:text-zinc-100 truncate">{p.nombre}</span>
+                          <span className="block text-xs capitalize" style={{ color: p.forma_pago === 'efectivo' ? GREEN : NAVY }}>{p.forma_pago}</span>
+                        </span>
+                        <span className="font-semibold tabular-nums text-gray-900 dark:text-zinc-100">{clp(p.monto)}</span>
+                        <Icon name="chevR" className="w-4 h-4 text-gray-300 dark:text-zinc-600" />
+                      </button>
+                    ))}
+                  </div>
+                  <button onClick={openNew} className="w-full mt-2 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold"
+                    style={{ background: ACCENT_TINT, color: ACCENT }}>
+                    <Icon name="plus" className="w-4 h-4" stroke={2} /> Agregar proveedor
+                  </button>
+                </>
+              )}
+            </section>
 
-        {error && <p className="text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-lg px-4 py-3">{error}</p>}
+            <section>
+              <SectionHead title="Ventas del turno" />
+              <div className="card !p-0 overflow-hidden divide-y divide-gray-100 dark:divide-zinc-700">
+                {METODOS_VENTA.map((m) => {
+                  const tiene = ventas[m.key] > 0
+                  return (
+                    <button key={m.key} onClick={() => openVenta(m.key)}
+                      className={`w-full flex items-center gap-3 px-4 py-3 text-left transition ${tiene ? 'bg-[#F7FBF9] dark:bg-emerald-950/30' : ''}`}>
+                      <MetodoLogo metodo={m} active={tiene} />
+                      <span className="flex-1 min-w-0">
+                        <span className="block text-[15px] font-medium text-gray-900 dark:text-zinc-100">{m.label}</span>
+                        <span className="block text-xs text-gray-500 dark:text-zinc-400">{m.sub}</span>
+                      </span>
+                      <span className={`font-semibold tabular-nums ${tiene ? 'text-gray-900 dark:text-zinc-100' : 'text-gray-300 dark:text-zinc-600'}`}>{clp(ventas[m.key])}</span>
+                      <Icon name="chevR" className="w-4 h-4 text-gray-300 dark:text-zinc-600" />
+                    </button>
+                  )
+                })}
+              </div>
+            </section>
+
+            {error && <p className="text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-lg px-4 py-3">{error}</p>}
+          </>
+        )}
       </div>
 
+      {!turnoExistente && (
       <div className="above-nav fixed inset-x-0 bg-white dark:bg-zinc-900 border-t border-gray-200 dark:border-zinc-700 pt-3 safe-bottom z-30">
         <div className="max-w-2xl mx-auto px-4 flex items-center gap-3">
         <div className="flex-1 min-w-0">
@@ -502,17 +465,17 @@ export default function Turno() {
           className="h-12 px-7 rounded-xl text-white font-semibold disabled:opacity-50 shrink-0 flex items-center gap-2"
           style={{ background: ACCENT }}>
           {guardando && <span className="w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin" />}
-          {guardando ? 'Guardando…' : turnoExistente ? 'Guardar cambios' : 'Guardar'}
+          {guardando ? 'Guardando…' : 'Guardar'}
         </button>
         </div>
       </div>
+      )}
       <div className="pb-nav md:h-20" />
 
       {showConfirm && (
         <ConfirmModal
           tipo={tipo}
           fecha={hoy()}
-          modoEditar={turnoExistente}
           totalVentas={totalVentas}
           efProv={efProv}
           trProv={trProv}
@@ -677,14 +640,14 @@ function ResumenRow({ label, valor, color = '#111827' }) {
   )
 }
 
-function ConfirmModal({ tipo, fecha, totalVentas, efProv, trProv, provs, onConfirm, onCancel, modoEditar }) {
+function ConfirmModal({ tipo, fecha, totalVentas, efProv, trProv, provs, onConfirm, onCancel }) {
   return (
     <>
       <div className="fixed inset-0 bg-black/40 z-40" onClick={onCancel} />
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
         <div className="bg-white dark:bg-zinc-900 rounded-2xl shadow-2xl w-full max-w-sm flex flex-col gap-4 p-6">
           <div>
-            <h3 className="text-lg font-bold text-gray-900 dark:text-zinc-100 capitalize">{modoEditar ? 'Guardar cambios en' : 'Confirmar'} turno de {tipo}</h3>
+            <h3 className="text-lg font-bold text-gray-900 dark:text-zinc-100 capitalize">Confirmar turno de {tipo}</h3>
             <p className="text-sm text-gray-500 dark:text-zinc-400">{fechaLegible(fecha)}</p>
           </div>
           <div className="card !p-0 overflow-hidden divide-y divide-gray-100 dark:divide-zinc-700">
