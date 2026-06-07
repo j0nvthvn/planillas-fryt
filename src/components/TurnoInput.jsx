@@ -244,24 +244,30 @@ export function FreqChips({ query = '', used = [], sugerencias = [], onPick }) {
 
 /* ── DesktopAmountInput ──────────────────────────────────── */
 export function DesktopAmountInput({ value, onChange, color = '#191B1F', label, autoFocus = true, onEnter }) {
-  const n = parseNum(value)
+  // Solo dígitos, sin ceros a la izquierda (igual que applyKey en móvil)
+  const digits = String(value || '').replace(/\D/g, '').replace(/^0+/, '')
+  const n = parseNum(digits)
+  const display = digits ? clp(n) : ''
+  function handleChange(e) {
+    const next = e.target.value.replace(/\D/g, '').replace(/^0+/, '').slice(0, 9)
+    // Forzar el DOM al valor canónico: evita que un "0" suelto quede pegado
+    // cuando el valor canónico no cambia y React omite la reconciliación.
+    e.target.value = next ? clp(parseNum(next)) : ''
+    onChange(next)
+  }
   return (
-    <div className="space-y-2">
-      <div className="rounded-2xl bg-gray-50 dark:bg-zinc-800 border border-gray-100 dark:border-zinc-700 px-4 py-3">
-        {label && <p className="text-xs font-medium text-gray-500 dark:text-zinc-400 mb-0.5">{label}</p>}
-        <p className={`text-4xl font-semibold tracking-tight tabular-nums ${!n ? 'text-gray-300 dark:text-zinc-600' : ''}`} style={n ? { color } : undefined}>
-          {clp(n)}
-        </p>
-      </div>
+    <div className="rounded-2xl bg-gray-50 dark:bg-zinc-800 border border-gray-100 dark:border-zinc-700 px-4 py-3 focus-within:border-gray-300 dark:focus-within:border-zinc-500 transition-colors">
+      {label && <p className="text-xs font-medium text-gray-500 dark:text-zinc-400 mb-0.5">{label}</p>}
       <input
         type="text"
         inputMode="numeric"
         autoFocus={autoFocus}
-        value={value || ''}
-        onChange={(e) => onChange(e.target.value.replace(/\D/g, '').slice(0, 9))}
+        value={display}
+        onChange={handleChange}
         onKeyDown={(e) => e.key === 'Enter' && onEnter?.()}
-        placeholder="Ingresa el monto..."
-        className="input"
+        placeholder="$0"
+        className={`w-full bg-transparent border-0 p-0 outline-none focus:ring-0 text-4xl font-semibold tracking-tight tabular-nums placeholder:text-gray-300 dark:placeholder:text-zinc-600 ${!n ? 'text-gray-300 dark:text-zinc-600' : ''}`}
+        style={n ? { color } : undefined}
       />
     </div>
   )
