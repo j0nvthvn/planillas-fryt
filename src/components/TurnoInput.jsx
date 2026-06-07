@@ -274,13 +274,18 @@ export function DesktopAmountInput({ value, onChange, color = '#191B1F', label, 
 }
 
 /* ── AmountDisplay ───────────────────────────────────────── */
-export function AmountDisplay({ value, sub, color = '#191B1F' }) {
+export function AmountDisplay({ value, sub, color }) {
   const n = parseNum(value)
   const empty = !n
+  // Sin color explícito (ej. ventas) usamos una clase que se adapta al tema;
+  // un color fijo no se veía en modo oscuro.
+  const colorClass = empty
+    ? 'text-gray-300 dark:text-zinc-600'
+    : color ? '' : 'text-gray-900 dark:text-zinc-100'
   return (
     <div className="rounded-2xl bg-gray-50 dark:bg-zinc-800 border border-gray-100 dark:border-zinc-700 px-4 py-3">
       {sub && <p className="text-xs font-medium text-gray-500 dark:text-zinc-400 mb-0.5">{sub}</p>}
-      <p className={`text-4xl font-semibold tracking-tight tabular-nums ${empty ? 'text-gray-300 dark:text-zinc-600' : ''}`} style={!empty ? { color } : undefined}>
+      <p className={`text-4xl font-semibold tracking-tight tabular-nums ${colorClass}`} style={!empty && color ? { color } : undefined}>
         {clp(n)}
       </p>
     </div>
