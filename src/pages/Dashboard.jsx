@@ -8,15 +8,9 @@ import Layout from '../components/Layout'
 import Spinner from '../components/Spinner'
 import { clp, toNum } from '../utils/format'
 import { totalesVentas, totalesProveedores } from '../utils/totales'
+import { METODOS_VENTA, ACCENT, GREEN } from '../components/TurnoInput'
 
-const METODOS = [
-  { key: 'efectivo',      label: 'Efectivo',      color: '#1E7A4F' },
-  { key: 'getnet',        label: 'Getnet',         color: '#33518C' },
-  { key: 'mercadopago',   label: 'Mercado Pago',   color: '#00b1ea' },
-  { key: 'edenred',       label: 'Edenred',        color: '#f59e0b' },
-  { key: 'amipass',       label: 'Amipass',        color: '#a16207' },
-  { key: 'transferencia', label: 'Transferencia',  color: '#5C3317' },
-]
+const METODOS = METODOS_VENTA
 
 function tickFmt(v) {
   if (v === 0) return '$0'
@@ -140,12 +134,18 @@ export default function Dashboard() {
     }
   }
 
+  const ventasTotal = datos ? Object.values(datos.totalesGlobales).reduce((a, b) => a + b, 0) : 0
+  const proveedoresTotal = datos ? datos.totalEfectivoProveedores + datos.totalTransferenciaProveedores : 0
+  const neto = ventasTotal - proveedoresTotal
+  const efectivoEnCaja = datos ? datos.totalesGlobales.efectivo - datos.totalEfectivoProveedores : 0
+
   const kpis = datos ? [
-    { label: 'Ventas totales',            value: Object.values(datos.totalesGlobales).reduce((a, b) => a + b, 0), color: '#5C3317' },
-    { label: 'Efectivo ventas',           value: datos.totalesGlobales.efectivo,           color: '#1E7A4F' },
-    { label: 'Proveedores efectivo',      value: datos.totalEfectivoProveedores,           color: '#b91c1c' },
-    { label: 'Proveedores transferencia', value: datos.totalTransferenciaProveedores,      color: '#33518C' },
+    { label: 'Ventas',          value: ventasTotal,     color: ACCENT },
+    { label: 'Proveedores',     value: proveedoresTotal, color: '#b91c1c' },
+    { label: 'Efectivo en caja', value: efectivoEnCaja,  color: GREEN },
   ] : []
+
+  const periodoLabel = periodo === 'dia' ? 'hoy' : periodo === 'semana' ? 'estos 7 días' : 'estos 30 días'
 
   const tooltipStyle = {
     background: isDark ? '#27272a' : '#fff',
@@ -191,14 +191,27 @@ export default function Dashboard() {
 
         {!cargando && datos && (
           <>
+            {/* Hero — Neto del período (lo accionable, primero) */}
+            <div className="card">
+              <div className="flex items-baseline justify-between gap-2">
+                <p className="text-[11px] font-semibold uppercase tracking-widest text-gray-400 dark:text-zinc-500">Neto {periodoLabel}</p>
+                <p className="text-[11px] text-gray-400 dark:text-zinc-500">ventas − proveedores</p>
+              </div>
+              <p className="text-[34px] font-black tabular-nums leading-none mt-1.5"
+                style={{ color: neto >= 0 ? GREEN : '#b91c1c' }}>{clp(neto)}</p>
+              <p className="text-xs text-gray-400 dark:text-zinc-500 mt-2">
+                {clp(ventasTotal)} ventas − {clp(proveedoresTotal)} proveedores
+              </p>
+            </div>
+
             {/* KPIs */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div className="grid grid-cols-3 gap-3">
               {kpis.map((kpi) => (
                 <div key={kpi.label} className="card text-center py-4"
                   style={{ background: isDark ? `${kpi.color}30` : `${kpi.color}0d` }}>
                   <p className="text-[10px] font-semibold uppercase tracking-widest mb-2 leading-tight"
                     style={{ color: isDark ? `${kpi.color}cc` : `${kpi.color}99` }}>{kpi.label}</p>
-                  <p className="text-[22px] font-black tabular-nums leading-none"
+                  <p className="text-[19px] font-black tabular-nums leading-none"
                     style={{ color: isDark ? `${kpi.color}ee` : kpi.color }}>{clp(kpi.value)}</p>
                 </div>
               ))}
@@ -274,13 +287,6 @@ export default function Dashboard() {
                     })}
                   </div>
                 </div>
-                <div className="card bg-[#F5EAD4] dark:bg-[#3d2817]">
-                  <p className="text-xs font-semibold uppercase tracking-wide mb-1 text-[#5C3317]/60 dark:text-[#E8C9A8]">Efectivo neto en caja hoy</p>
-                  <p className="text-xs text-gray-500 dark:text-zinc-400 mb-2">Efectivo cobrado en ventas − efectivo pagado a proveedores</p>
-                  <p className="text-3xl font-black tabular-nums text-[#5C3317] dark:text-[#E8C9A8]">
-                    {clp(datos.totalesGlobales.efectivo - datos.totalEfectivoProveedores)}
-                  </p>
-                </div>
               </>
             )}
 
@@ -308,94 +314,50 @@ export default function Dashboard() {
               </div>
             )}
 
-            {/* Pie charts */}
-            {(datos.pieVentas.length > 0 || datos.pieProveedores.length > 0) && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {datos.pieVentas.length > 0 && (() => {
-                  const total = datos.pieVentas.reduce((s, d) => s + d.value, 0)
-                  return (
-                    <div className="card flex flex-col gap-3">
-                      <div>
-                        <h2 className="font-semibold text-gray-800 dark:text-zinc-200 text-sm">Mix de ventas</h2>
-                        <p className="text-xs text-gray-400 dark:text-zinc-500 mt-0.5">Proporción por método en el período</p>
-                      </div>
-                      <ResponsiveContainer width="100%" height={170}>
-                        <PieChart>
-                          <Pie data={datos.pieVentas} cx="50%" cy="50%"
-                            outerRadius="72%" innerRadius="48%" dataKey="value"
-                            stroke={isDark ? '#27272a' : '#fff'}
-                            paddingAngle={2}>
-                            {datos.pieVentas.map((d, i) => <Cell key={i} fill={d.color} />)}
-                            <Label content={({ viewBox: { cx, cy } }) => (
-                              <text textAnchor="middle">
-                                <tspan x={cx} y={cy - 7} fontSize={10} fill={tickColor}>Total</tspan>
-                                <tspan x={cx} y={cy + 9} fontSize={13} fontWeight="700" fill={isDark ? '#f4f4f5' : '#111827'}>{clp(total)}</tspan>
-                              </text>
-                            )} />
-                          </Pie>
-                          <Tooltip formatter={(v, name) => [clp(v), name]} contentStyle={tooltipStyle} labelStyle={tooltipTextStyle} itemStyle={tooltipItemStyle} />
-                        </PieChart>
-                      </ResponsiveContainer>
-                      <div className="space-y-1.5">
-                        {datos.pieVentas.map((d) => {
-                          const pct = total > 0 ? (d.value / total) * 100 : 0
-                          return (
-                            <div key={d.name} className="flex items-center gap-2">
-                              <span className="w-2 h-2 rounded-full shrink-0" style={{ background: d.color }} />
-                              <span className="flex-1 text-xs text-gray-600 dark:text-zinc-300 truncate">{d.name}</span>
-                              <span className="text-xs text-gray-400 dark:text-zinc-500 tabular-nums w-8 text-right">{pct.toFixed(0)}%</span>
-                              <span className="text-xs font-semibold tabular-nums w-20 text-right" style={{ color: d.color }}>{clp(d.value)}</span>
-                            </div>
-                          )
-                        })}
-                      </div>
+            {/* Mix de ventas */}
+            {datos.pieVentas.length > 0 && (() => {
+              const total = datos.pieVentas.reduce((s, d) => s + d.value, 0)
+              return (
+                <div className="card flex flex-col gap-3">
+                  <div>
+                    <h2 className="font-semibold text-gray-800 dark:text-zinc-200 text-sm">Mix de ventas</h2>
+                    <p className="text-xs text-gray-400 dark:text-zinc-500 mt-0.5">Proporción por método en el período</p>
+                  </div>
+                  <div className="grid sm:grid-cols-2 gap-3 items-center">
+                    <ResponsiveContainer width="100%" height={170}>
+                      <PieChart>
+                        <Pie data={datos.pieVentas} cx="50%" cy="50%"
+                          outerRadius="72%" innerRadius="48%" dataKey="value"
+                          stroke={isDark ? '#27272a' : '#fff'}
+                          paddingAngle={2}>
+                          {datos.pieVentas.map((d, i) => <Cell key={i} fill={d.color} />)}
+                          <Label content={({ viewBox: { cx, cy } }) => (
+                            <text textAnchor="middle">
+                              <tspan x={cx} y={cy - 7} fontSize={10} fill={tickColor}>Total</tspan>
+                              <tspan x={cx} y={cy + 9} fontSize={13} fontWeight="700" fill={isDark ? '#f4f4f5' : '#111827'}>{clp(total)}</tspan>
+                            </text>
+                          )} />
+                        </Pie>
+                        <Tooltip formatter={(v, name) => [clp(v), name]} contentStyle={tooltipStyle} labelStyle={tooltipTextStyle} itemStyle={tooltipItemStyle} />
+                      </PieChart>
+                    </ResponsiveContainer>
+                    <div className="space-y-1.5">
+                      {datos.pieVentas.map((d) => {
+                        const pct = total > 0 ? (d.value / total) * 100 : 0
+                        return (
+                          <div key={d.name} className="flex items-center gap-2">
+                            <span className="w-2 h-2 rounded-full shrink-0" style={{ background: d.color }} />
+                            <span className="flex-1 text-xs text-gray-600 dark:text-zinc-300 truncate">{d.name}</span>
+                            <span className="text-xs text-gray-400 dark:text-zinc-500 tabular-nums w-8 text-right">{pct.toFixed(0)}%</span>
+                            <span className="text-xs font-semibold tabular-nums w-20 text-right" style={{ color: d.color }}>{clp(d.value)}</span>
+                          </div>
+                        )
+                      })}
                     </div>
-                  )
-                })()}
-
-                {datos.pieProveedores.length > 0 && (() => {
-                  const total = datos.pieProveedores.reduce((s, d) => s + d.value, 0)
-                  return (
-                    <div className="card flex flex-col gap-3">
-                      <div>
-                        <h2 className="font-semibold text-gray-800 dark:text-zinc-200 text-sm">Proveedores por pago</h2>
-                        <p className="text-xs text-gray-400 dark:text-zinc-500 mt-0.5">Efectivo vs. transferencia en el período</p>
-                      </div>
-                      <ResponsiveContainer width="100%" height={170}>
-                        <PieChart>
-                          <Pie data={datos.pieProveedores} cx="50%" cy="50%"
-                            outerRadius="72%" innerRadius="48%" dataKey="value"
-                            stroke={isDark ? '#27272a' : '#fff'}
-                            paddingAngle={3}>
-                            {datos.pieProveedores.map((d, i) => <Cell key={i} fill={d.color} />)}
-                            <Label content={({ viewBox: { cx, cy } }) => (
-                              <text textAnchor="middle">
-                                <tspan x={cx} y={cy - 7} fontSize={10} fill={tickColor}>Total</tspan>
-                                <tspan x={cx} y={cy + 9} fontSize={13} fontWeight="700" fill={isDark ? '#f4f4f5' : '#111827'}>{clp(total)}</tspan>
-                              </text>
-                            )} />
-                          </Pie>
-                          <Tooltip formatter={(v, name) => [clp(v), name]} contentStyle={tooltipStyle} labelStyle={tooltipTextStyle} itemStyle={tooltipItemStyle} />
-                        </PieChart>
-                      </ResponsiveContainer>
-                      <div className="space-y-1.5">
-                        {datos.pieProveedores.map((d) => {
-                          const pct = total > 0 ? (d.value / total) * 100 : 0
-                          return (
-                            <div key={d.name} className="flex items-center gap-2">
-                              <span className="w-2 h-2 rounded-full shrink-0" style={{ background: d.color }} />
-                              <span className="flex-1 text-xs text-gray-600 dark:text-zinc-300 truncate">{d.name}</span>
-                              <span className="text-xs text-gray-400 dark:text-zinc-500 tabular-nums w-8 text-right">{pct.toFixed(0)}%</span>
-                              <span className="text-xs font-semibold tabular-nums w-20 text-right" style={{ color: d.color }}>{clp(d.value)}</span>
-                            </div>
-                          )
-                        })}
-                      </div>
-                    </div>
-                  )
-                })()}
-              </div>
-            )}
+                  </div>
+                </div>
+              )
+            })()}
 
             {/* Top proveedores */}
             {datos.topProveedores.length > 0 && (
