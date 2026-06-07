@@ -189,7 +189,7 @@ export default function EditarTurno() {
 
   return (
     <Layout>
-      <div className="max-w-lg md:max-w-2xl mx-auto space-y-5">
+      <div className="max-w-lg md:max-w-4xl mx-auto space-y-5">
         {/* Encabezado */}
         <div>
           <p className="text-xs font-medium text-gray-500 dark:text-zinc-400 mb-1 capitalize">{fechaLegible(fecha)}</p>
@@ -215,14 +215,16 @@ export default function EditarTurno() {
           </div>
         </div>
 
-        <ProveedoresSection
-          provs={provs}
-          onAdd={form.openNew}
-          onEdit={form.openEdit}
-          accent={ACCENT}
-          accentTint={ACCENT_TINT}
-        />
-        <VentasSection ventas={ventas} onEdit={form.openVenta} />
+        <div className="grid lg:grid-cols-2 gap-5 items-start">
+          <ProveedoresSection
+            provs={provs}
+            onAdd={form.openNew}
+            onEdit={form.openEdit}
+            accent={ACCENT}
+            accentTint={ACCENT_TINT}
+          />
+          <VentasSection ventas={ventas} onEdit={form.openVenta} />
+        </div>
 
         {error && <p className="text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-lg px-4 py-3">{error}</p>}
         {cambioRemotoPendiente && (

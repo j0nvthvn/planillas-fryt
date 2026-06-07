@@ -147,7 +147,7 @@ export default function Layout({ children }) {
         className="relative bg-white dark:bg-zinc-900 border-b border-brand-tint dark:border-zinc-800 sticky top-0 z-20"
         style={{ paddingTop: 'env(safe-area-inset-top)' }}
       >
-        <div className="max-w-6xl mx-auto px-4 py-2 flex items-center justify-between gap-3">
+        <div className="max-w-screen-2xl mx-auto px-4 py-2 flex items-center justify-between gap-3">
           <div className="flex items-center gap-2 min-w-0">
             <span className="w-7 h-7 rounded-lg grid place-items-center bg-brand-tint text-brand shrink-0" aria-hidden="true">
               <Icon name="store" className="w-4 h-4" stroke={2} />
@@ -193,7 +193,7 @@ export default function Layout({ children }) {
       </header>
 
       {/* ── Cuerpo: sidebar + contenido ────────────────── */}
-      <div className="flex flex-1 min-h-0 max-w-6xl mx-auto w-full overflow-hidden md:overflow-visible">
+      <div className="flex flex-1 min-h-0 max-w-screen-2xl mx-auto w-full overflow-hidden md:overflow-visible">
 
         {/* Sidebar desktop (md+) */}
         <aside className="hidden md:flex flex-col w-[220px] shrink-0 border-r border-brand-tint dark:border-zinc-800 bg-white dark:bg-zinc-900 sticky top-[calc(env(safe-area-inset-top)+44px)] h-[calc(100vh-44px)] overflow-y-auto">

@@ -54,7 +54,7 @@ export default function Historial() {
 
         {/* Registrar turno anterior */}
         {esDueno && (
-          <div className="card space-y-3">
+          <div className="card space-y-3 max-w-md">
             <div>
               <label className="label">Registrar turno anterior</label>
               <input type="date" value={fechaPicker} max={hoy()}
@@ -91,7 +91,7 @@ export default function Historial() {
           <div className="card text-center text-gray-400 dark:text-zinc-500 py-12">No hay jornadas registradas.</div>
         )}
 
-        <div className="space-y-2">
+        <div className="grid lg:grid-cols-2 gap-2">
           {jornadas.map((j) => {
             const turnos = j.turnos || []
             const totalVentas = turnos.reduce((sum, t) => sum + totalesVentas(t.ventas).total, 0)

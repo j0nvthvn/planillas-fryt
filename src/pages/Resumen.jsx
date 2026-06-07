@@ -116,7 +116,7 @@ export default function Resumen({ fecha: fechaProp, esDuenoOverride, onBack }) {
 
   return (
     <Layout>
-      <div className="max-w-4xl mx-auto space-y-5">
+      <div className="max-w-screen-2xl mx-auto space-y-5">
         {onBack && (
           <button onClick={onBack} className="btn-secondary flex items-center gap-2">
             <Icon name="arrowLeft" className="w-4 h-4" />
@@ -247,8 +247,12 @@ export default function Resumen({ fecha: fechaProp, esDuenoOverride, onBack }) {
           </button>
         )}
 
-        {/* Ventas comparativo */}
+        {/* Datos del día — 2 columnas en escritorio */}
         {turnos.length > 0 && (
+        <div className={`grid gap-5 items-start ${todosProveedores.length > 0 ? 'lg:grid-cols-2' : ''}`}>
+        <div className="space-y-5">
+
+        {/* Ventas comparativo */}
           <div className="card">
             <h2 className="text-xs font-semibold text-gray-500 dark:text-zinc-400 uppercase tracking-wide mb-3">Ventas por método de pago</h2>
             <div className="overflow-x-auto">
@@ -291,10 +295,8 @@ export default function Resumen({ fecha: fechaProp, esDuenoOverride, onBack }) {
               </table>
             </div>
           </div>
-        )}
 
         {/* Balance del día */}
-        {turnos.length > 0 && (
           <div className="card">
             <div className="flex items-center justify-between mb-3">
               <p className="text-xs font-semibold text-gray-500 dark:text-zinc-400 uppercase tracking-wide">Balance del día</p>
@@ -322,10 +324,11 @@ export default function Resumen({ fecha: fechaProp, esDuenoOverride, onBack }) {
               </p>
             </div>
           </div>
-        )}
+        </div>
 
-        {/* Tabla de proveedores consolidada */}
         {todosProveedores.length > 0 && (
+        <div className="space-y-5">
+          {/* Tabla de proveedores consolidada */}
           <div className="card">
             <h2 className="text-xs font-semibold text-gray-500 dark:text-zinc-400 uppercase tracking-wide mb-3">Proveedores del día</h2>
             <div className="overflow-x-auto">
@@ -366,6 +369,9 @@ export default function Resumen({ fecha: fechaProp, esDuenoOverride, onBack }) {
               </table>
             </div>
           </div>
+        </div>
+        )}
+        </div>
         )}
       </div>
 
