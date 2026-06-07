@@ -141,9 +141,9 @@ export default function Usuarios() {
         {/* Lista de usuarios */}
         <div className="card">
           <h2 className="font-semibold text-gray-800 dark:text-zinc-200 mb-3">Usuarios registrados</h2>
-          <div className="divide-y divide-gray-50 dark:divide-zinc-700">
+          <div className="grid sm:grid-cols-2 gap-x-6">
             {usuarios.map((u) => (
-              <div key={u.id} className="flex items-center justify-between py-3">
+              <div key={u.id} className="flex items-center justify-between py-3 border-b border-gray-50 dark:border-zinc-700">
                 <div>
                   <p className="font-medium text-gray-800 dark:text-zinc-200">{u.nombre}</p>
                   <p className="text-sm text-gray-500 dark:text-zinc-400">{u.email}</p>

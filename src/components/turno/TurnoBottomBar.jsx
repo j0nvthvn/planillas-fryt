@@ -6,7 +6,7 @@ import { ACCENT, GREEN, NAVY } from '../TurnoInput'
 export function TurnoBottomBar({ totalVentas, totalProveedores, efProv, guardando, disabled, label, onGuardar }) {
   return (
     <div className="above-nav fixed inset-x-0 bg-white dark:bg-zinc-900 border-t border-gray-200 dark:border-zinc-700 pt-3 safe-bottom z-30">
-      <div className="max-w-2xl mx-auto px-4 flex items-center gap-3">
+      <div className="max-w-4xl mx-auto px-4 flex items-center gap-3">
         <div className="flex-1 min-w-0">
           <div className="flex items-baseline gap-3">
             <div>

@@ -165,7 +165,7 @@ export default function Dashboard() {
 
   return (
     <Layout>
-      <div className="max-w-5xl mx-auto space-y-4">
+      <div className="max-w-screen-2xl mx-auto space-y-4">
         {/* Header */}
         <div className="flex items-center justify-between flex-wrap gap-3">
           <h1 className="text-xl font-bold text-gray-800 dark:text-zinc-200">Dashboard</h1>
@@ -216,6 +216,9 @@ export default function Dashboard() {
                 </div>
               ))}
             </div>
+
+            {/* Tarjetas analíticas — 2 columnas en escritorio */}
+            <div className="grid lg:grid-cols-2 gap-4 items-start">
 
             {/* Ventas por día — solo períodos multi-día */}
             {periodo !== 'dia' && datos.hayVentas && (() => {
@@ -383,6 +386,8 @@ export default function Dashboard() {
                 </div>
               </div>
             )}
+
+            </div>
 
             {/* Estado vacío */}
             {!datos.hayVentas && (

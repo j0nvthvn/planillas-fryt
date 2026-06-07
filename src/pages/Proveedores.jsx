@@ -153,7 +153,7 @@ export default function Proveedores() {
 
   return (
     <Layout>
-      <div className="max-w-4xl mx-auto space-y-4">
+      <div className="max-w-6xl mx-auto space-y-4">
         <div className="flex items-center justify-between gap-3">
           <div>
             <h1 className="text-xl font-bold text-gray-900 dark:text-zinc-100">Proveedores frecuentes</h1>
@@ -172,13 +172,13 @@ export default function Proveedores() {
           </div>
         )}
 
-        <div className="card !p-0 overflow-hidden divide-y divide-gray-100 dark:divide-zinc-700">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-2">
           {proveedores.map((p) => (
             <button key={p.id} onClick={() => abrirEditar(p)}
-              className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-gray-50 dark:hover:bg-zinc-800 transition">
+              className="card !py-3 !px-4 flex items-center gap-3 text-left hover:border-[#5C3317]/30 dark:hover:border-brand/40 hover:shadow-md transition">
               <ProveedorAvatar nombre={p.nombre} imagen_url={p.imagen_url} size="sm" />
-              <span className="flex-1 font-medium text-gray-900 dark:text-zinc-100">{p.nombre}</span>
-              <Icon name="edit" className="w-4 h-4 text-gray-300 dark:text-zinc-600" />
+              <span className="flex-1 font-medium text-gray-900 dark:text-zinc-100 truncate">{p.nombre}</span>
+              <Icon name="edit" className="w-4 h-4 text-gray-300 dark:text-zinc-600 shrink-0" />
             </button>
           ))}
         </div>
