@@ -204,18 +204,6 @@ export default function Resumen({ fecha: fechaProp, esDuenoOverride, onBack }) {
             )
           })()}
 
-          {/* Botón fusionar — solo visible cuando aplica */}
-          {puedeEditar && !esDiaUnico(fecha) && !esTurnoUnico && datos.jornada && turnoMañana && !turnoTarde && (
-            <div className="flex items-center" style={{ paddingTop: '0.875rem' }}>
-              <button
-                onClick={() => setShowMergeConfirm(true)}
-                title="Fusionar como turno único"
-                className="w-9 h-9 rounded-full border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 shadow-sm flex items-center justify-center text-gray-400 dark:text-zinc-500 hover:text-[#5C3317] dark:hover:text-[#E8C9A8] hover:border-[#5C3317]/40 transition-colors">
-                <Icon name="merge" className="w-4 h-4" stroke={1.8} />
-              </button>
-            </div>
-          )}
-
           {/* Chip Tarde — se oculta cuando es turno único */}
           {!esTurnoUnico && (() => {
             const presente = turnos.find((tu) => tu.tipo === 'tarde')
@@ -248,6 +236,16 @@ export default function Resumen({ fecha: fechaProp, esDuenoOverride, onBack }) {
             )
           })()}
         </div>
+
+        {/* Fusionar en turno único — acción con etiqueta, solo cuando aplica */}
+        {puedeEditar && !esDiaUnico(fecha) && !esTurnoUnico && datos.jornada && turnoMañana && !turnoTarde && (
+          <button
+            onClick={() => setShowMergeConfirm(true)}
+            className="w-full flex items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-semibold border border-gray-200 dark:border-zinc-700 text-gray-600 dark:text-zinc-300 bg-white dark:bg-zinc-900 hover:border-[#5C3317]/40 hover:text-[#5C3317] dark:hover:text-[#E8C9A8] transition-colors">
+            <Icon name="merge" className="w-4 h-4" stroke={1.8} />
+            Fusionar en turno único
+          </button>
+        )}
 
         {/* Ventas comparativo */}
         {turnos.length > 0 && (

@@ -8,12 +8,12 @@ export const GREEN = '#1E7A4F'
 export const NAVY = '#33518C'
 
 export const METODOS_VENTA = [
-  { key: 'efectivo',      label: 'Efectivo',      sub: 'Caja',              logo: '/metodos/efectivo.png' },
-  { key: 'getnet',        label: 'Getnet',         sub: 'Débito / Crédito',  logo: '/metodos/getnet.png' },
-  { key: 'mercadopago',   label: 'Mercado Pago',   sub: 'Débito / Crédito',  logo: '/metodos/mercadopago.png' },
-  { key: 'edenred',       label: 'Edenred',        sub: 'Sodexo / Ticket',   logo: '/metodos/edenred.png' },
-  { key: 'amipass',       label: 'Amipass',        sub: 'Tarjeta beneficio', logo: '/metodos/amipass.png' },
-  { key: 'transferencia', label: 'Transferencia',  sub: 'Banco',             logo: '/metodos/transferencia.png' },
+  { key: 'efectivo',      label: 'Efectivo',      sub: 'Caja',              logo: '/metodos/efectivo.png',      color: '#1E7A4F' },
+  { key: 'getnet',        label: 'Getnet',         sub: 'Débito / Crédito',  logo: '/metodos/getnet.png',        color: '#33518C' },
+  { key: 'mercadopago',   label: 'Mercado Pago',   sub: 'Débito / Crédito',  logo: '/metodos/mercadopago.png',   color: '#00b1ea' },
+  { key: 'edenred',       label: 'Edenred',        sub: 'Sodexo / Ticket',   logo: '/metodos/edenred.png',       color: '#f59e0b' },
+  { key: 'amipass',       label: 'Amipass',        sub: 'Tarjeta beneficio', logo: '/metodos/amipass.png',       color: '#a16207' },
+  { key: 'transferencia', label: 'Transferencia',  sub: 'Banco',             logo: '/metodos/transferencia.png', color: '#5C3317' },
 ]
 
 /* ── Logo de método de pago ──────────────────────────────── */

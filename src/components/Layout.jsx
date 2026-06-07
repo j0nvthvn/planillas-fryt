@@ -83,7 +83,6 @@ export default function Layout({ children }) {
   const [popoverAbierto, setPopoverAbierto] = useState(false)
   const [masMontado, setMasMontado] = useState(false)
   const [masVisible, setMasVisible] = useState(false)
-  const [sheetListo, setSheetListo] = useState(false)
   const [confirmLogout, setConfirmLogout] = useState(false)
 
   const tabs = esDueno ? navDueno : navTrabajador
@@ -98,17 +97,12 @@ export default function Layout({ children }) {
 
   function abrirMas() {
     setMasMontado(true)
-    setSheetListo(false)
-    requestAnimationFrame(() => requestAnimationFrame(() => {
-      setMasVisible(true)
-      setTimeout(() => setSheetListo(true), 320)
-    }))
+    requestAnimationFrame(() => setMasVisible(true))
   }
 
   function cerrarMas() {
     setMasVisible(false)
-    setSheetListo(false)
-    setTimeout(() => setMasMontado(false), 220)
+    setTimeout(() => setMasMontado(false), 220) // espera la transición de salida
   }
 
   useEffect(() => {
@@ -275,7 +269,7 @@ export default function Layout({ children }) {
               <div className="w-10 h-1 rounded-full bg-gray-300 dark:bg-zinc-600" />
             </div>
             <p className="px-4 py-2 text-xs font-semibold uppercase tracking-wide text-gray-400 dark:text-zinc-500">Más opciones</p>
-            <nav className={`px-3 space-y-0.5 transition-none ${sheetListo ? '' : 'pointer-events-none'}`}
+            <nav className="px-3 space-y-0.5"
               aria-label="Secciones adicionales"
               style={{ paddingBottom: 'max(16px, env(safe-area-inset-bottom))' }}>
               {masItems.map((item) => (

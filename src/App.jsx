@@ -2,6 +2,7 @@ import { lazy, Suspense, useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { AuthProvider } from './hooks/useAuth'
 import { ConfigProvider } from './hooks/useConfig'
+import { ToastProvider } from './components/Toast'
 import ProtectedRoute from './components/ProtectedRoute'
 import Spinner from './components/Spinner'
 
@@ -40,6 +41,7 @@ export default function App() {
     <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <AuthProvider>
         <ConfigProvider>
+        <ToastProvider>
         <ScrollToTop />
         <Routes>
           <Route path="/login" element={<Login />} />
@@ -91,6 +93,7 @@ export default function App() {
           <Route path="/" element={<Navigate to="/turno" replace />} />
           <Route path="*" element={<Navigate to="/turno" replace />} />
         </Routes>
+        </ToastProvider>
         </ConfigProvider>
       </AuthProvider>
     </BrowserRouter>
