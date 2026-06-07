@@ -74,12 +74,18 @@ export default function EditarTurno() {
     let activo = true
     async function cargar() {
       setCargando(true)
-      const { data: jornada } = await supabase
+      setError('')
+      const { data: jornada, error: errJornada } = await supabase
         .from('jornadas').select('id').eq('fecha', fecha).maybeSingle()
 
-      if (!jornada) { if (activo) setCargando(false); return }
+      if (!activo) return
+      if (errJornada) {
+        setError('No se pudo cargar la jornada. Revisa tu conexión e inténtalo de nuevo.')
+        setCargando(false); return
+      }
+      if (!jornada) { setCargando(false); return }
 
-      const { data: turno } = await supabase
+      const { data: turno, error: errTurno } = await supabase
         .from('turnos')
         .select('id, updated_at, proveedores:proveedores_turno(nombre, monto, forma_pago), ventas:ventas_turno(efectivo, getnet, mercadopago, edenred, amipass, transferencia)')
         .eq('jornada_id', jornada.id)
@@ -87,6 +93,10 @@ export default function EditarTurno() {
         .maybeSingle()
 
       if (!activo) return
+      if (errTurno) {
+        setError('No se pudieron cargar los datos del turno. Revisa tu conexión e inténtalo de nuevo.')
+        setCargando(false); return
+      }
       if (turno) {
         setTurnoId(turno.id)
         setTurnoVersion(turno.updated_at)
