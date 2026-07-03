@@ -14,8 +14,9 @@
   }
 
   body {
-    @apply text-gray-900 dark:text-zinc-100 antialiased;
+    @apply text-ink antialiased;
     background-color: #FBF6EC;
+    font-family: 'Hanken Grotesk', system-ui, sans-serif;
     overscroll-behavior: none;
     overflow-x: hidden;
     padding-top: env(safe-area-inset-top);
@@ -34,6 +35,7 @@
 }
 
 @layer components {
+  /* Botones */
   .btn {
     @apply inline-flex items-center justify-center rounded-xl px-4 py-2 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none;
     min-height: 44px;
@@ -46,23 +48,46 @@
   }
   .btn-primary {
     @apply btn bg-brand text-white hover:bg-brand-hover focus:ring-brand;
+    border-radius: 15px;
   }
   .btn-secondary {
-    @apply btn bg-white dark:bg-zinc-700 text-gray-700 dark:text-zinc-200 border border-gray-300 dark:border-zinc-600 hover:bg-gray-50 dark:hover:bg-zinc-600 focus:ring-brand;
+    @apply btn bg-white dark:bg-zinc-700 text-ink2 dark:text-zinc-200 border border-hairline dark:border-zinc-600 hover:bg-canvas dark:hover:bg-zinc-600 focus:ring-brand;
   }
   .btn-danger {
-    @apply btn bg-red-600 text-white hover:bg-red-700 focus:ring-red-500;
+    @apply btn bg-neg text-white hover:opacity-90 focus:ring-neg;
   }
+
+  /* Input */
   .input {
-    @apply block w-full rounded-xl border border-gray-200 dark:border-zinc-600 bg-white dark:bg-zinc-700 text-gray-900 dark:text-zinc-100 px-3 py-2.5 shadow-sm placeholder-gray-400 dark:placeholder-zinc-500 focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand;
+    @apply block w-full rounded-[14px] border border-[#E4D6BF] dark:border-zinc-600 bg-canvas dark:bg-zinc-700 text-ink dark:text-zinc-100 px-3.5 py-3 placeholder-muted2 focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand;
     font-size: 16px;
     touch-action: manipulation;
   }
+
+  /* Cards */
   .card {
-    @apply bg-white dark:bg-zinc-800 rounded-xl shadow-sm border border-gray-100 dark:border-zinc-700 p-4;
+    @apply bg-white dark:bg-zinc-800 rounded-[20px] border border-hairline dark:border-zinc-700 p-5;
+    box-shadow: 0 6px 20px -14px rgba(92,51,23,.20);
   }
+  .card-hero {
+    @apply card;
+    box-shadow: 0 8px 24px -14px rgba(92,51,23,.28);
+  }
+
+  /* Eyebrow / label de sección */
+  .eyebrow {
+    @apply text-[11px] font-bold uppercase text-muted2;
+    letter-spacing: 0.12em;
+  }
+
+  /* Cantidad de dinero (cifras grandes serif) */
+  .amount {
+    @apply font-display tabular-nums;
+  }
+
+  /* Form helpers legacy (mantener compatibilidad) */
   .label {
-    @apply block text-sm font-medium text-gray-700 dark:text-zinc-300 mb-1;
+    @apply block text-sm font-medium text-ink2 dark:text-zinc-300 mb-1;
   }
 
   /* Barra inferior segura: respeta el home indicator en Android/iOS */
