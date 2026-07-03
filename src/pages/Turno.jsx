@@ -6,7 +6,8 @@ import { useJornadaRealtime } from '../hooks/useJornadaRealtime'
 import { useToast } from '../components/Toast'
 import { supabase } from '../lib/supabase'
 import Layout from '../components/Layout'
-import { hoy, fechaLegible } from '../utils/format'
+import PageHeader from '../components/PageHeader'
+import { hoy, fechaLegible, clp } from '../utils/format'
 import {
   ACCENT, ACCENT_TINT, METODOS_VENTA, VENTAS_VACIAS, TurnoIcon as Icon,
 } from '../components/TurnoInput'
@@ -16,6 +17,48 @@ import { ProveedoresSection, VentasSection } from '../components/turno/TurnoSect
 import { TurnoSheets } from '../components/turno/TurnoSheets'
 import { TurnoBottomBar } from '../components/turno/TurnoBottomBar'
 import { crearTurno, escribirTurno, versionTurno, borrarTurno } from '../components/turno/turnoApi'
+
+function SegmentedTipo({ tipo, tiposExistentes, esDiaUnico, onChange }) {
+  if (esDiaUnico) {
+    return (
+      <div className="flex p-1 bg-brand-tint rounded-[15px]">
+        <div className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-[11px] text-[14px] font-semibold bg-white text-ink shadow-sm">
+          <Icon name="sun" className="w-4 h-4" stroke={1.8} />
+          Mañana
+          {tiposExistentes.includes('mañana') && (
+            <Icon name="check" className="w-3.5 h-3.5 text-pos" stroke={2.5} />
+          )}
+          <span className="text-[11px] text-muted font-normal">(turno único)</span>
+        </div>
+      </div>
+    )
+  }
+  return (
+    <div className="flex gap-1 p-1 bg-brand-tint rounded-[15px]">
+      {[['mañana', 'sun'], ['tarde', 'moon']].map(([t, ic]) => {
+        const esActivo = tipo === t
+        const yaRegistrado = tiposExistentes.includes(t)
+        return (
+          <button
+            key={t}
+            onClick={() => onChange(t)}
+            className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-[11px] text-[14px] font-semibold capitalize transition ${
+              esActivo
+                ? 'bg-white text-ink shadow-sm'
+                : 'text-muted hover:text-ink2'
+            }`}
+          >
+            <Icon name={ic} className="w-4 h-4" stroke={esActivo ? 1.8 : 1.6} />
+            {t}
+            {yaRegistrado && (
+              <Icon name="check" className="w-3.5 h-3.5 text-pos" stroke={2.5} />
+            )}
+          </button>
+        )
+      })}
+    </div>
+  )
+}
 
 export default function Turno() {
   const { usuario } = useAuth()
@@ -183,8 +226,18 @@ export default function Turno() {
     })
   }, [])
 
-  const { efProv, totalVentas, totalProveedores } = form
+  const { totalVentas, totalProveedores } = form
   const hayDatos = provs.length > 0 || totalVentas > 0
+  const total = totalVentas
+
+  function cambiarTipo(t) {
+    setProvs([])
+    setVentas(VENTAS_VACIAS)
+    setCambiosLocales(false)
+    setCambioRemotoPendiente(false)
+    setError('')
+    setTipo(t)
+  }
 
   async function guardarTurno() {
     if (cambioRemotoPendiente) {
@@ -208,7 +261,7 @@ export default function Turno() {
       if (draftKey) localStorage.removeItem(draftKey)
       setCambiosLocales(false)
       setCambioRemotoPendiente(false)
-      navigate('/resumen')
+      navigate('/hoy')
     } catch (err) {
       console.error(err)
       setError(err?.code === '23505'
@@ -235,85 +288,70 @@ export default function Turno() {
   }
 
   if (tipo === null) {
-    return <Layout><div className="flex justify-center py-16"><div className="w-6 h-6 rounded-full border-2 border-[#5C3317] dark:border-[#E8C9A8] border-t-transparent animate-spin" /></div></Layout>
+    return <Layout><div className="flex justify-center py-16"><div className="w-6 h-6 rounded-full border-2 border-brand border-t-transparent animate-spin" /></div></Layout>
   }
 
   return (
     <Layout>
-      <div className="max-w-lg md:max-w-4xl mx-auto space-y-5">
-        <div>
-          <p className="text-xs font-medium text-gray-500 dark:text-zinc-400 mb-1 capitalize">{fechaLegible(hoy())}</p>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-zinc-100 mb-3">Ingresar turno</h1>
-          {esDiaUnico(hoy()) ? (
-            <div className="flex p-1 bg-gray-100 dark:bg-zinc-700 rounded-xl">
-              <div className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium bg-white dark:bg-zinc-800 shadow-sm text-gray-900 dark:text-zinc-100">
-                <Icon name="sun" className="w-4 h-4" /> mañana
-                {tiposExistentes.includes('mañana') && <Icon name="check" className="w-3.5 h-3.5 text-green-500" stroke={2.5} />}
-                <span className="text-xs text-gray-400 dark:text-zinc-500 font-normal">(turno único)</span>
-              </div>
-            </div>
-          ) : (
-            <div className="flex gap-2 p-1 bg-gray-100 dark:bg-zinc-700 rounded-xl">
-              {[['mañana', 'sun'], ['tarde', 'moon']].map(([t, ic]) => {
-                const esActivo = tipo === t
-                const yaRegistrado = tiposExistentes.includes(t)
-                return (
-                  <button key={t} onClick={() => {
-                    setProvs([])
-                    setVentas(VENTAS_VACIAS)
-                    setCambiosLocales(false)
-                    setCambioRemotoPendiente(false)
-                    setError('')
-                    setTipo(t)
-                  }}
-                    className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium capitalize transition
-                      ${esActivo ? 'bg-white dark:bg-zinc-800 shadow-sm text-gray-900 dark:text-zinc-100' : 'text-gray-500 dark:text-zinc-400'}`}>
-                    <Icon name={ic} className="w-4 h-4" />{t}
-                    {yaRegistrado && <Icon name="check" className="w-3.5 h-3.5 text-green-500" stroke={2.5} />}
-                  </button>
-                )
-              })}
-            </div>
-          )}
-          {!turnoExistente && hayDatos && (
-            <div className="mt-1.5 flex justify-end">
-              <button onClick={() => setShowLimpiarConfirm(true)} className="text-xs font-medium text-red-500 dark:text-red-400 hover:text-red-700 underline underline-offset-2">Limpiar borrador</button>
-            </div>
-          )}
-          {draftRestaurado && (
-            <div className="mt-2 flex items-center justify-between gap-2 text-sm text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-700 rounded-lg px-3 py-2">
-              <span>Borrador restaurado automáticamente</span>
-              <button onClick={() => setDraftRestaurado(false)} className="shrink-0 text-amber-500 hover:text-amber-700">
-                <Icon name="close" className="w-3.5 h-3.5" />
-              </button>
-            </div>
-          )}
-          {cambioRemotoPendiente && (
-            <div className="mt-2 flex items-center justify-between gap-3 text-sm text-blue-800 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg px-3 py-2">
-              <span>Hay cambios de otro usuario en este turno.</span>
-              <button onClick={refrescarDesdeRemoto} className="shrink-0 font-semibold underline underline-offset-2">
-                Recargar
-              </button>
-            </div>
-          )}
-        </div>
+      <div className="max-w-lg md:max-w-4xl mx-auto space-y-4">
+        <PageHeader
+          title="Ingresar turno"
+          date={fechaLegible(hoy())}
+        />
+
+        <SegmentedTipo
+          tipo={tipo}
+          tiposExistentes={tiposExistentes}
+          esDiaUnico={esDiaUnico(hoy())}
+          onChange={cambiarTipo}
+        />
+
+        {!turnoExistente && hayDatos && (
+          <div className="flex justify-end">
+            <button
+              onClick={() => setShowLimpiarConfirm(true)}
+              className="text-xs font-medium text-neg hover:underline underline-offset-2"
+            >
+              Limpiar borrador
+            </button>
+          </div>
+        )}
+
+        {draftRestaurado && (
+          <div className="flex items-center justify-between gap-2 text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+            <span>Borrador restaurado automáticamente</span>
+            <button onClick={() => setDraftRestaurado(false)} className="shrink-0 text-amber-500 hover:text-amber-700">
+              <Icon name="close" className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        )}
+
+        {cambioRemotoPendiente && (
+          <div className="flex items-center justify-between gap-3 text-sm text-blue-800 bg-blue-50 border border-blue-200 rounded-lg px-3 py-2">
+            <span>Hay cambios de otro usuario en este turno.</span>
+            <button onClick={refrescarDesdeRemoto} className="shrink-0 font-semibold underline underline-offset-2">
+              Recargar
+            </button>
+          </div>
+        )}
 
         {turnoExistente ? (
           <div className="flex flex-col items-center gap-5 py-8 text-center">
-            <div className="w-16 h-16 rounded-full grid place-items-center" style={{ background: ACCENT_TINT, color: ACCENT }}>
+            <div className="w-16 h-16 rounded-full grid place-items-center bg-brand-tint text-brand">
               <Icon name="check" className="w-8 h-8" stroke={2.6} />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-gray-900 dark:text-zinc-100 capitalize">Turno de {tipo} registrado</h2>
-              <p className="text-sm text-gray-500 dark:text-zinc-400 mt-1">Para editarlo, ve al resumen del día.</p>
+              <h2 className="font-display text-[26px] text-ink capitalize">Turno de {tipo} registrado</h2>
+              <p className="text-sm text-muted mt-1">Para editarlo, ve al resumen del día.</p>
             </div>
-            <button onClick={() => navigate('/resumen')} className="btn-primary w-full py-3">
+            <button onClick={() => navigate('/hoy')} className="btn-primary w-full py-3 text-base">
               Ver resumen del día
             </button>
           </div>
         ) : (
           <>
-            <div className="grid lg:grid-cols-2 gap-5 items-start">
+            <div className="grid lg:grid-cols-2 gap-4 items-start">
+              <VentasSection ventas={ventas} onEdit={form.openVenta} />
               <ProveedoresSection
                 provs={provs}
                 onAdd={form.openNew}
@@ -321,21 +359,22 @@ export default function Turno() {
                 accent={ACCENT}
                 accentTint={ACCENT_TINT}
               />
-              <VentasSection ventas={ventas} onEdit={form.openVenta} />
             </div>
-            {error && <p className="text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-lg px-4 py-3">{error}</p>}
+            {error && (
+              <p className="text-sm text-neg bg-neg-tint border border-neg/20 rounded-lg px-4 py-3">
+                {error}
+              </p>
+            )}
           </>
         )}
       </div>
 
       {!turnoExistente && (
         <TurnoBottomBar
-          totalVentas={totalVentas}
-          totalProveedores={totalProveedores}
-          efProv={efProv}
+          total={total}
           guardando={guardando}
           disabled={cambioRemotoPendiente}
-          label="Guardar"
+          label="Guardar turno"
           onGuardar={guardarTurno}
         />
       )}
@@ -345,10 +384,10 @@ export default function Turno() {
         <>
           <div className="fixed inset-0 bg-black/40 z-40" onClick={() => setShowLimpiarConfirm(false)} />
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <div className="bg-white dark:bg-zinc-900 rounded-2xl shadow-2xl w-full max-w-xs p-6 flex flex-col gap-4">
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-xs p-6 flex flex-col gap-4">
               <div>
-                <p className="font-bold text-gray-900 dark:text-zinc-100 text-base">¿Limpiar el borrador?</p>
-                <p className="text-sm text-gray-500 dark:text-zinc-400 mt-1">
+                <p className="font-bold text-ink text-base">¿Limpiar el borrador?</p>
+                <p className="text-sm text-ink2 mt-1">
                   Se borrarán todos los proveedores y ventas ingresados. Esta acción no se puede deshacer.
                 </p>
               </div>
@@ -356,7 +395,8 @@ export default function Turno() {
                 <button onClick={() => setShowLimpiarConfirm(false)} className="flex-1 btn-secondary">Cancelar</button>
                 <button
                   onClick={() => { setShowLimpiarConfirm(false); limpiar() }}
-                  className="flex-1 h-10 rounded-xl text-white text-sm font-semibold bg-red-600 hover:bg-red-700 transition">
+                  className="flex-1 h-10 rounded-xl text-white text-sm font-semibold bg-neg hover:opacity-90 transition"
+                >
                   Limpiar
                 </button>
               </div>

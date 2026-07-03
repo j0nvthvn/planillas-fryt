@@ -1,61 +1,111 @@
 import { clp } from '../../utils/format'
 import {
-  GREEN, NAVY, METODOS_VENTA,
-  TurnoIcon as Icon, ProveedorAvatar, SectionHead, MetodoLogo,
+  METODOS_VENTA, TurnoIcon as Icon, ProveedorAvatar, MetodoLogo,
 } from '../TurnoInput'
 
-/* Lista de proveedores del turno (vacía → botón punteado; con datos → card + agregar) */
+const FORM_COLORS = { efectivo: '#1E7A4F', transferencia: '#33518C' }
+
+function ProveedorRow({ p, onEdit }) {
+  return (
+    <button onClick={onEdit} className="w-full flex items-center gap-3 py-2.5 text-left first:pt-0 last:pb-0">
+      <ProveedorAvatar nombre={p.nombre} imagen_url={p.imagen_url} size="sm" />
+      <span className="flex-1 min-w-0 text-[14px] font-semibold text-ink truncate">{p.nombre}</span>
+      <span
+        className="text-[10px] font-bold rounded-full px-2.5 py-0.5 capitalize"
+        style={{ background: `${FORM_COLORS[p.forma_pago] || '#5C3317'}15`, color: FORM_COLORS[p.forma_pago] || '#5C3317' }}
+      >
+        {p.forma_pago}
+      </span>
+      <span className="text-[14px] font-semibold text-ink tabular-nums min-w-[90px] text-right">{clp(p.monto)}</span>
+      <Icon name="pencil" className="w-3.5 h-3.5 text-muted2" stroke={1.8} />
+    </button>
+  )
+}
+
 export function ProveedoresSection({ provs, onAdd, onEdit, accent, accentTint }) {
   return (
     <section>
-      <SectionHead title="Proveedores" right={provs.length || null} />
+      <div className="flex items-baseline justify-between px-1 mb-2.5">
+        <p className="eyebrow">Proveedores</p>
+        {provs.length > 0 && (
+          <AmountTotal value={provs.reduce((s, p) => s + p.monto, 0)} />
+        )}
+      </div>
       {provs.length === 0 ? (
-        <button onClick={onAdd} className="w-full flex flex-col items-center gap-2 py-7 rounded-xl border border-dashed border-gray-300 dark:border-zinc-600 text-gray-500 dark:text-zinc-400 text-sm font-medium">
-          <Icon name="plus" /> Agrega el primer proveedor
+        <button
+          onClick={onAdd}
+          className="w-full rounded-2xl border border-dashed border-hairline py-6 text-[13px] font-semibold text-muted2 hover:border-brand hover:text-brand transition-colors flex items-center justify-center gap-2"
+        >
+          <Icon name="plus" className="w-4 h-4" stroke={1.8} />
+          Añadir proveedor
         </button>
       ) : (
-        <>
-          <div className="card !p-0 overflow-hidden divide-y divide-gray-100 dark:divide-zinc-700">
-            {provs.map((p, i) => (
-              <button key={i} onClick={() => onEdit(i)} className="w-full flex items-center gap-3 px-4 py-3 text-left">
-                <ProveedorAvatar nombre={p.nombre} imagen_url={p.imagen_url} size="sm" />
-                <span className="flex-1 min-w-0">
-                  <span className="block text-[15px] font-medium text-gray-900 dark:text-zinc-100 truncate">{p.nombre}</span>
-                  <span className="block text-xs capitalize" style={{ color: p.forma_pago === 'efectivo' ? GREEN : NAVY }}>{p.forma_pago}</span>
-                </span>
-                <span className="font-semibold tabular-nums text-gray-900 dark:text-zinc-100">{clp(p.monto)}</span>
-                <Icon name="chevR" className="w-4 h-4 text-gray-300 dark:text-zinc-600" />
-              </button>
-            ))}
-          </div>
-          <button onClick={onAdd} className="w-full mt-2 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold"
-            style={{ background: accentTint, color: accent }}>
-            <Icon name="plus" className="w-4 h-4" stroke={2} /> Agregar proveedor
+        <div className="card !p-4 divide-y divide-soft">
+          {provs.map((p, i) => (
+            <ProveedorRow key={`${p.nombre}-${i}`} p={p} onEdit={() => onEdit(i)} />
+          ))}
+          <button
+            onClick={onAdd}
+            className="w-full mt-3 py-2.5 rounded-xl text-[13px] font-semibold flex items-center justify-center gap-1.5"
+            style={{ background: accentTint, color: accent }}
+          >
+            <Icon name="plus" className="w-4 h-4" stroke={2} />
+            Añadir proveedor
           </button>
-        </>
+        </div>
       )}
     </section>
   )
 }
 
-/* Lista de los 6 métodos de pago, abre el editor de monto al tocar */
+function AmountTotal({ value }) {
+  return (
+    <span className="font-display tabular-nums text-[20px] text-brand">
+      {clp(value)}
+    </span>
+  )
+}
+
+function MethodDot({ color }) {
+  return (
+    <span
+      className="w-[30px] h-[30px] rounded-[10px] shrink-0"
+      style={{ background: `${color}1A`, boxShadow: `inset 0 0 0 1px ${color}33` }}
+    >
+      <span
+        className="block w-3 h-3 rounded-[3px] m-auto mt-[7px]"
+        style={{ background: color }}
+      />
+    </span>
+  )
+}
+
 export function VentasSection({ ventas, onEdit }) {
+  const total = METODOS_VENTA.reduce((s, m) => s + (ventas[m.key] || 0), 0)
   return (
     <section>
-      <SectionHead title="Ventas del turno" />
-      <div className="card !p-0 overflow-hidden divide-y divide-gray-100 dark:divide-zinc-700">
+      <div className="flex items-baseline justify-between px-1 mb-2.5">
+        <p className="eyebrow">Ventas · toca para editar</p>
+        <AmountTotal value={total} />
+      </div>
+      <div className="card !p-2.5 divide-y divide-soft">
         {METODOS_VENTA.map((m) => {
-          const tiene = ventas[m.key] > 0
+          const n = ventas[m.key] || 0
+          const vacio = n === 0
           return (
-            <button key={m.key} onClick={() => onEdit(m.key)}
-              className={`w-full flex items-center gap-3 px-4 py-3 text-left transition ${tiene ? 'bg-[#F7FBF9] dark:bg-emerald-950/30' : ''}`}>
-              <MetodoLogo metodo={m} active={tiene} />
+            <button
+              key={m.key}
+              onClick={() => onEdit(m.key)}
+              className="w-full flex items-center gap-3 py-2.5 px-2 text-left first:pt-1 last:pb-1"
+            >
+              <MethodDot color={m.color} />
               <span className="flex-1 min-w-0">
-                <span className="block text-[15px] font-medium text-gray-900 dark:text-zinc-100">{m.label}</span>
-                <span className="block text-xs text-gray-500 dark:text-zinc-400">{m.sub}</span>
+                <span className="block text-[14px] font-semibold text-ink">{m.label}</span>
               </span>
-              <span className={`font-semibold tabular-nums ${tiene ? 'text-gray-900 dark:text-zinc-100' : 'text-gray-300 dark:text-zinc-600'}`}>{clp(ventas[m.key])}</span>
-              <Icon name="chevR" className="w-4 h-4 text-gray-300 dark:text-zinc-600" />
+              <span className={`font-display tabular-nums text-[18px] ${vacio ? 'text-muted2' : 'text-ink'}`}>
+                {vacio ? '—' : clp(n)}
+              </span>
+              <Icon name="pencil" className="w-3.5 h-3.5 text-muted2" stroke={1.8} />
             </button>
           )
         })}

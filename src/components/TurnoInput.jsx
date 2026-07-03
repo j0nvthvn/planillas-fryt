@@ -168,12 +168,13 @@ export function BottomSheet({ title, children, onClose, extra }) {
 
   return (
     <div
-      className="fixed inset-x-0 bottom-0 z-50 bg-white dark:bg-zinc-900 rounded-t-3xl px-4 pt-3 shadow-2xl max-h-[92%] overflow-y-auto flex flex-col gap-3 safe-bottom md:inset-x-auto md:left-1/2 md:bottom-auto md:top-[8vh] md:w-[480px] md:rounded-3xl md:max-h-[80vh]"
+      className="fixed inset-x-0 bottom-0 z-50 bg-canvas rounded-t-[30px] px-5 pt-3 max-h-[92%] overflow-y-auto flex flex-col gap-3 safe-bottom md:inset-x-auto md:left-1/2 md:bottom-auto md:top-[8vh] md:w-[480px] md:rounded-3xl md:max-h-[80vh]"
       style={{
         animation: dragY === 0 ? 'sheetUp .26s cubic-bezier(.2,.8,.2,1)' : 'none',
         transform: isDesktop ? 'translateX(-50%)' : `translateY(${dragY}px)`,
         transition: dragY === 0 ? 'transform .2s ease' : 'none',
         willChange: 'transform',
+        boxShadow: '0 -22px 55px -22px rgba(0,0,0,.45)',
       }}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
@@ -181,18 +182,20 @@ export function BottomSheet({ title, children, onClose, extra }) {
     >
       <style>{`@keyframes sheetUp{from{transform:translateY(100%)}to{transform:translateY(0)}}`}</style>
       {/* Handle — área de arrastre */}
-      <div data-handle className="md:hidden w-full flex justify-center pt-1 pb-2 -mx-4 px-4 cursor-grab active:cursor-grabbing touch-none">
-        <div className="w-9 h-1 rounded-full bg-gray-300 dark:bg-zinc-600" />
+      <div data-handle className="md:hidden w-full flex justify-center pt-1 pb-2 -mx-5 px-5 cursor-grab active:cursor-grabbing touch-none">
+        <div className="w-10 h-1 rounded-full bg-[#E4D6BF]" />
       </div>
-      <div className="flex items-center justify-between">
-        <h3 className="text-[17px] font-bold text-gray-900 dark:text-zinc-100">{title}</h3>
-        <div className="flex gap-2">
-          {extra}
-          <button onClick={onClose} className="w-8 h-8 rounded-full grid place-items-center bg-gray-100 dark:bg-zinc-700 text-gray-600 dark:text-zinc-300" aria-label="Cerrar">
-            <TurnoIcon name="close" className="w-[17px] h-[17px]" />
-          </button>
+      {title && (
+        <div className="flex items-center justify-between">
+          <h3 className="text-[16px] font-bold text-ink">{title}</h3>
+          <div className="flex gap-2">
+            {extra}
+            <button onClick={onClose} className="w-8 h-8 rounded-full grid place-items-center bg-hairline text-ink2" aria-label="Cerrar">
+              <TurnoIcon name="close" className="w-[15px] h-[15px]" stroke={2.2} />
+            </button>
+          </div>
         </div>
-      </div>
+      )}
       {children}
     </div>
   )
@@ -277,15 +280,13 @@ export function DesktopAmountInput({ value, onChange, color = '#191B1F', label, 
 export function AmountDisplay({ value, sub, color }) {
   const n = parseNum(value)
   const empty = !n
-  // Sin color explícito (ej. ventas) usamos una clase que se adapta al tema;
-  // un color fijo no se veía en modo oscuro.
   const colorClass = empty
-    ? 'text-gray-300 dark:text-zinc-600'
-    : color ? '' : 'text-gray-900 dark:text-zinc-100'
+    ? 'text-[#cdbfa8]'
+    : color ? '' : 'text-ink'
   return (
-    <div className="rounded-2xl bg-gray-50 dark:bg-zinc-800 border border-gray-100 dark:border-zinc-700 px-4 py-3">
-      {sub && <p className="text-xs font-medium text-gray-500 dark:text-zinc-400 mb-0.5">{sub}</p>}
-      <p className={`text-4xl font-semibold tracking-tight tabular-nums ${colorClass}`} style={!empty && color ? { color } : undefined}>
+    <div className="rounded-2xl bg-white border border-hairline px-4 py-3">
+      {sub && <p className="text-[10px] font-bold uppercase tracking-widest text-muted2 mb-1">{sub}</p>}
+      <p className={`amount text-[46px] leading-none ${colorClass}`} style={!empty && color ? { color } : undefined}>
         {clp(n)}
       </p>
     </div>
@@ -320,19 +321,36 @@ export function PayToggle({ value, onChange }) {
 export function Keypad({ onKey, onAccept, disabled, accent, label }) {
   const keys = ['7', '8', '9', '4', '5', '6', '1', '2', '3', '000', '0', 'del']
   return (
-    <div className="flex flex-col gap-2">
-      <div className="grid grid-cols-3 gap-2">
-        {keys.map((k) => (
-          <button key={k} onClick={() => onKey(k)}
-            className="h-12 md:h-14 rounded-2xl border border-gray-100 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-2xl font-medium text-gray-900 dark:text-zinc-100 active:bg-gray-200 dark:active:bg-zinc-700 active:scale-95 flex items-center justify-center transition-transform duration-75"
-            style={{ touchAction: 'manipulation' }}>
-            {k === 'del' ? '⌫' : k}
-          </button>
-        ))}
+    <div className="flex flex-col gap-2.5">
+      <div className="grid grid-cols-3 gap-2.5">
+        {keys.map((k) => {
+          const isDel = k === 'del'
+          return (
+            <button
+              key={k}
+              onClick={() => onKey(k)}
+              className={`h-[54px] md:h-[58px] rounded-[15px] text-[23px] font-semibold text-ink active:scale-95 flex items-center justify-center transition-transform duration-75 ${
+                isDel ? 'bg-[#F5EFE2]' : 'bg-white border border-hairline'
+              }`}
+              style={{ touchAction: 'manipulation' }}
+            >
+              {isDel ? (
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#8a6b45" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M20 6H9l-5 6 5 6h11a1 1 0 001-1V7a1 1 0 00-1-1zM15 10l-4 4M11 10l4 4" />
+                </svg>
+              ) : (
+                <span className={k === '000' ? 'text-[18px] text-ink2' : ''}>{k}</span>
+              )}
+            </button>
+          )
+        })}
       </div>
-      <button onClick={onAccept} disabled={disabled}
-        className="h-12 rounded-2xl text-white text-base font-semibold flex items-center justify-center gap-2 disabled:bg-gray-300 dark:disabled:bg-zinc-600"
-        style={!disabled ? { background: accent } : undefined}>
+      <button
+        onClick={onAccept}
+        disabled={disabled}
+        className="h-12 rounded-2xl text-white text-base font-bold flex items-center justify-center gap-2 mt-1"
+        style={!disabled ? { background: accent } : { background: '#d6cab8' }}
+      >
         <TurnoIcon name="check" className="w-5 h-5" stroke={2.4} />{label}
       </button>
     </div>
