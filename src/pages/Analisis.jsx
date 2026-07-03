@@ -28,9 +28,9 @@ function fechaEje(isoDate) {
 }
 
 const KPI_COLORS = {
-  ventas:    { fg: 'var(--brand)',  bg: 'var(--brand-tint)' },
-  proveed:   { fg: 'var(--neg)',    bg: 'var(--neg-tint)' },
-  caja:      { fg: 'var(--pos)',    bg: 'var(--pos-tint)' },
+  ventas:    { fg: 'var(--brand)',  bg: 'var(--brand-tint)',  border: 'rgb(var(--brand-rgb) / 0.2)' },
+  proveed:   { fg: 'var(--neg)',    bg: 'var(--neg-tint)',    border: 'rgb(var(--neg-rgb) / 0.25)' },
+  caja:      { fg: 'var(--pos)',    bg: 'var(--pos-tint)',    border: 'rgb(var(--pos-rgb) / 0.25)' },
 }
 
 export default function Analisis() {
@@ -197,7 +197,7 @@ export default function Analisis() {
               ].map((k) => {
                 const c = KPI_COLORS[k.key]
                 return (
-                  <div key={k.key} className="min-w-0 rounded-2xl p-3 border" style={{ background: c.bg, borderColor: `${c.fg}33` }}>
+                  <div key={k.key} className="min-w-0 rounded-2xl p-3 border" style={{ background: c.bg, borderColor: c.border }}>
                     <p className="eyebrow mb-1.5 truncate" style={{ color: c.fg }}>{k.label}</p>
                     <p className="font-display tabular-nums text-[17px] font-bold leading-none truncate" style={{ color: c.fg }}>
                       {tickFmt(k.value)}
