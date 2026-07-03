@@ -2,7 +2,9 @@ import { useEffect, useState, useRef, useCallback, useMemo } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import Layout from '../components/Layout'
+import PageHeader from '../components/PageHeader'
 import Spinner from '../components/Spinner'
+import Amount from '../components/Amount'
 import { clp, fechaLegible, hoy } from '../utils/format'
 import { totalesVentas, totalesProveedores } from '../utils/totales'
 import Icon from '../components/Icon'
@@ -10,6 +12,33 @@ import { useAuth } from '../hooks/useAuth'
 import { useConfig } from '../hooks/useConfig'
 import { useJornadaRealtime } from '../hooks/useJornadaRealtime'
 import { MetodoLogo, METODOS_VENTA } from '../components/TurnoInput'
+
+const FORM_COLORS = { efectivo: '#1E7A4F', transferencia: '#33518C' }
+
+function TurnoStatusChip({ tipo, presente, usuario }) {
+  const icon = tipo === 'mañana' ? 'sun' : 'moon'
+  const label = tipo === 'mañana' ? 'Mañana' : 'Tarde'
+  if (!presente) {
+    return (
+      <div className="flex-1 rounded-2xl border border-hairline bg-canvas px-3 py-2.5 flex items-center gap-2.5 opacity-60">
+        <Icon name={icon} className="w-4 h-4 text-muted2" stroke={1.6} />
+        <div className="min-w-0 flex-1">
+          <p className="text-[13px] font-semibold text-muted">{label}</p>
+          <p className="text-[11px] text-muted2 leading-tight">Sin registrar</p>
+        </div>
+      </div>
+    )
+  }
+  return (
+    <div className="flex-1 rounded-2xl border border-[#b8dcc7] bg-pos-tint px-3 py-2.5 flex items-center gap-2.5">
+      <Icon name={icon} className="w-4 h-4 text-pos" stroke={1.8} />
+      <div className="min-w-0 flex-1">
+        <p className="text-[13px] font-semibold text-pos">{label}</p>
+        <p className="text-[11px] text-pos/80 truncate leading-tight">{usuario}</p>
+      </div>
+    </div>
+  )
+}
 
 export default function Resumen({ fecha: fechaProp, esDuenoOverride, onBack }) {
   const { esDueno } = useAuth()
@@ -30,7 +59,6 @@ export default function Resumen({ fecha: fechaProp, esDuenoOverride, onBack }) {
     d.setDate(d.getDate() - 1)
     setFecha(d.toISOString().split('T')[0])
   }
-
   function irSiguiente() {
     const d = new Date(fecha + 'T12:00:00')
     d.setDate(d.getDate() + 1)
@@ -114,276 +142,207 @@ export default function Resumen({ fecha: fechaProp, esDuenoOverride, onBack }) {
     ...(turnoTarde?.proveedores || []).map((p) => ({ ...p, turno: 'Tarde' })),
   ]
 
+  const estadoLabel = jornadaEsUnica
+    ? 'Turno único'
+    : ambosPresentes
+      ? 'Completo'
+      : 'Parcial'
+
+  const estadoBg = jornadaEsUnica
+    ? { bg: '#E6F1EA', fg: '#1E7A4F', border: '#b8dcc7' }
+    : ambosPresentes
+      ? { bg: '#E6F1EA', fg: '#1E7A4F', border: '#b8dcc7' }
+      : { bg: '#FBF1DD', fg: '#B98D3E', border: '#B98D3E55' }
+
   return (
     <Layout>
-      <div className="max-w-screen-2xl mx-auto space-y-5">
+      <div className="max-w-screen-2xl mx-auto space-y-3.5">
         {onBack && (
-          <button onClick={onBack} className="btn-secondary flex items-center gap-2">
-            <Icon name="arrowLeft" className="w-4 h-4" />
-            Volver al historial
+          <button
+            onClick={onBack}
+            className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-ink2 hover:text-ink"
+          >
+            <Icon name="arrowLeft" className="w-4 h-4" stroke={2} />
+            Historial
           </button>
         )}
-        <div className="flex items-center justify-between gap-3">
-          <div>
-            <p className="text-xs font-medium text-gray-500 dark:text-zinc-400 capitalize">{fechaLegible(fecha)}</p>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-zinc-100">Resumen del día</h1>
-          </div>
-          <div className="flex items-center gap-1 shrink-0">
-            <button onClick={irAnterior}
-              className="w-9 h-9 rounded-full border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 flex items-center justify-center text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-zinc-100 hover:border-gray-300 dark:hover:border-zinc-600 transition-colors">
-              <Icon name="chevL" className="w-4 h-4" />
+
+        <PageHeader
+          title="Resumen del día"
+          date={fechaLegible(fecha)}
+        />
+
+        {/* Date navigator */}
+        <div className="flex items-center justify-end gap-1.5">
+          <button onClick={irAnterior}
+            className="w-9 h-9 rounded-full border border-hairline bg-white grid place-items-center text-ink2 hover:border-brand hover:text-brand transition-colors">
+            <Icon name="chevL" className="w-4 h-4" />
+          </button>
+          <div className="relative">
+            <button
+              onClick={() => dateInputRef.current?.showPicker()}
+              className="w-9 h-9 rounded-full border border-hairline bg-white grid place-items-center text-ink2 hover:border-brand hover:text-brand transition-colors"
+              title="Ir a una fecha">
+              <Icon name="calendar" className="w-4 h-4" />
             </button>
-            <div className="relative">
-              <button
-                onClick={() => dateInputRef.current?.showPicker()}
-                className="w-9 h-9 rounded-full border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 flex items-center justify-center text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-zinc-100 hover:border-gray-300 dark:hover:border-zinc-600 transition-colors"
-                title="Ir a una fecha">
-                <Icon name="calendar" className="w-4 h-4" />
-              </button>
-              <input
-                ref={dateInputRef}
-                type="date"
-                value={fecha}
-                max={hoy()}
-                onChange={(e) => { if (e.target.value) setFecha(e.target.value) }}
-                className="absolute inset-0 opacity-0 pointer-events-none"
-              />
-            </div>
-            <button onClick={irSiguiente} disabled={esFechaHoy}
-              className="w-9 h-9 rounded-full border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 flex items-center justify-center text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-zinc-100 hover:border-gray-300 dark:hover:border-zinc-600 transition-colors disabled:opacity-30 disabled:pointer-events-none">
-              <Icon name="chevR" className="w-4 h-4" />
-            </button>
+            <input
+              ref={dateInputRef}
+              type="date"
+              value={fecha}
+              max={hoy()}
+              onChange={(e) => { if (e.target.value) setFecha(e.target.value) }}
+              className="absolute inset-0 opacity-0 pointer-events-none"
+            />
           </div>
+          <button onClick={irSiguiente} disabled={esFechaHoy}
+            className="w-9 h-9 rounded-full border border-hairline bg-white grid place-items-center text-ink2 hover:border-brand hover:text-brand transition-colors disabled:opacity-30 disabled:pointer-events-none">
+            <Icon name="chevR" className="w-4 h-4" />
+          </button>
         </div>
 
         {turnos.length === 0 && (
-          <div className="card text-center text-gray-400 dark:text-zinc-500 py-12">
+          <div className="card text-center text-muted py-12">
             No hay turnos registrados para este día.
           </div>
         )}
 
         {/* Chips estado turnos */}
-        <div className="flex gap-2 items-start">
-          {/* Chip Mañana */}
-          {(() => {
-            const presente = turnos.find((tu) => tu.tipo === 'mañana')
-            return (
-              <div className="flex-1 flex flex-col gap-1.5">
-                <div className={`rounded-xl p-3 text-center border ${
-                  presente
-                    ? 'bg-[#E6F1EA] dark:bg-emerald-950/40 border-[#1E7A4F] dark:border-emerald-700 text-[#1E7A4F] dark:text-emerald-400'
-                    : 'bg-gray-50 dark:bg-zinc-800 border-gray-200 dark:border-zinc-700 text-gray-400 dark:text-zinc-500'
-                }`}>
-                  <Icon name="sun" className="w-5 h-5 mx-auto mb-1" />
-                  <div className="text-sm font-medium capitalize">mañana</div>
-                  <div className="text-xs flex items-center justify-center gap-1">
-                    {presente && <Icon name="check" className="w-3 h-3" stroke={2.4} />}
-                    {presente ? presente.usuario?.nombre : 'Sin registrar'}
-                  </div>
-                </div>
-                {puedeEditar && (
-                  <div className="flex gap-1.5">
-                    <button
-                      onClick={() => navigate(`/turno/editar?fecha=${fecha}&tipo=mañana`)}
-                      className={`flex-1 rounded-xl py-1.5 text-xs font-semibold flex items-center justify-center gap-1 border transition
-                        ${presente
-                          ? 'border-amber-200 dark:border-amber-700 text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30 hover:bg-amber-100 dark:hover:bg-amber-950/50'
-                          : 'border-[#5C3317]/30 dark:border-emerald-700/30 text-[#5C3317] dark:text-[#E8C9A8] bg-[#F5EAD4] dark:bg-[#3d2817] hover:bg-[#EDD9BA] dark:hover:bg-[#4a3020]'}`}>
-                      <Icon name={presente ? 'edit' : 'plus'} className="w-3.5 h-3.5" />
-                      {presente ? 'Editar' : 'Agregar'}
-                    </button>
-                    {jornadaEsUnica && !esDiaUnico(fecha) && (
-                      <button onClick={() => setShowDesmarcarConfirm(true)}
-                        className="rounded-xl py-1.5 px-2.5 text-xs font-semibold flex items-center gap-1 border border-gray-200 dark:border-zinc-700 text-gray-500 dark:text-zinc-400 bg-white dark:bg-zinc-900 hover:bg-gray-50 dark:hover:bg-zinc-800 transition">
-                        Desmarcar
-                      </button>
-                    )}
-                  </div>
-                )}
-              </div>
-            )
-          })()}
-
-          {/* Chip Tarde — se oculta cuando es turno único */}
-          {!esTurnoUnico && (() => {
-            const presente = turnos.find((tu) => tu.tipo === 'tarde')
-            return (
-              <div className="flex-1 flex flex-col gap-1.5">
-                <div className={`rounded-xl p-3 text-center border ${
-                  presente
-                    ? 'bg-[#E6F1EA] dark:bg-emerald-950/40 border-[#1E7A4F] dark:border-emerald-700 text-[#1E7A4F] dark:text-emerald-400'
-                    : 'bg-gray-50 dark:bg-zinc-800 border-gray-200 dark:border-zinc-700 text-gray-400 dark:text-zinc-500'
-                }`}>
-                  <Icon name="moon" className="w-5 h-5 mx-auto mb-1" />
-                  <div className="text-sm font-medium capitalize">tarde</div>
-                  <div className="text-xs flex items-center justify-center gap-1">
-                    {presente && <Icon name="check" className="w-3 h-3" stroke={2.4} />}
-                    {presente ? presente.usuario?.nombre : 'Sin registrar'}
-                  </div>
-                </div>
-                {puedeEditar && (
-                  <button
-                    onClick={() => navigate(`/turno/editar?fecha=${fecha}&tipo=tarde`)}
-                    className={`w-full rounded-xl py-1.5 text-xs font-semibold flex items-center justify-center gap-1 border transition
-                      ${presente
-                        ? 'border-amber-200 dark:border-amber-700 text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30 hover:bg-amber-100 dark:hover:bg-amber-950/50'
-                        : 'border-[#5C3317]/30 dark:border-emerald-700/30 text-[#5C3317] dark:text-[#E8C9A8] bg-[#F5EAD4] dark:bg-[#3d2817] hover:bg-[#EDD9BA] dark:hover:bg-[#4a3020]'}`}>
-                    <Icon name={presente ? 'edit' : 'plus'} className="w-3.5 h-3.5" />
-                    {presente ? 'Editar' : 'Agregar'}
-                  </button>
-                )}
-              </div>
-            )
-          })()}
-        </div>
-
-        {/* Fusionar en turno único — acción con etiqueta, solo cuando aplica */}
-        {puedeEditar && !esDiaUnico(fecha) && !esTurnoUnico && datos.jornada && turnoMañana && !turnoTarde && (
-          <button
-            onClick={() => setShowMergeConfirm(true)}
-            className="w-full flex items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-semibold border border-gray-200 dark:border-zinc-700 text-gray-600 dark:text-zinc-300 bg-white dark:bg-zinc-900 hover:border-[#5C3317]/40 hover:text-[#5C3317] dark:hover:text-[#E8C9A8] transition-colors">
-            <Icon name="merge" className="w-4 h-4" stroke={1.8} />
-            Fusionar en turno único
-          </button>
+        {turnos.length > 0 && (
+          <div className="flex gap-2.5 items-start">
+            <TurnoStatusChip
+              tipo="mañana"
+              presente={!!turnoMañana}
+              usuario={turnoMañana?.usuario?.nombre}
+            />
+            {!esTurnoUnico && (
+              <TurnoStatusChip
+                tipo="tarde"
+                presente={!!turnoTarde}
+                usuario={turnoTarde?.usuario?.nombre}
+              />
+            )}
+          </div>
         )}
 
-        {/* Datos del día — 2 columnas en escritorio */}
-        {turnos.length > 0 && (
-        <div className={`grid gap-5 items-start ${todosProveedores.length > 0 ? 'lg:grid-cols-2' : ''}`}>
-        <div className="space-y-5">
+        {/* Acciones de edición: editar / agregar / fusionar / desmarcar */}
+        {puedeEditar && (
+          <div className="flex gap-2 flex-wrap">
+            {!esTurnoUnico && datos.jornada && turnoMañana && !turnoTarde && (
+              <button
+                onClick={() => setShowMergeConfirm(true)}
+                className="flex items-center gap-2 rounded-xl py-2 px-3 text-[13px] font-semibold border border-hairline text-ink2 bg-white hover:border-brand/40 hover:text-brand transition-colors"
+              >
+                <Icon name="merge" className="w-4 h-4" stroke={1.8} />
+                Fusionar en turno único
+              </button>
+            )}
+            {(!turnoMañana || (jornadaEsUnica && !esDiaUnico(fecha))) && (
+              <button
+                onClick={() => navigate(`/turno/editar?fecha=${fecha}&tipo=mañana`)}
+                className="flex items-center gap-2 rounded-xl py-2 px-3 text-[13px] font-semibold bg-brand-tint text-brand border border-brand/30"
+              >
+                <Icon name={turnoMañana ? 'edit' : 'plus'} className="w-4 h-4" stroke={1.8} />
+                {turnoMañana ? 'Editar mañana' : 'Agregar mañana'}
+              </button>
+            )}
+            {!esTurnoUnico && !turnoTarde && (
+              <button
+                onClick={() => navigate(`/turno/editar?fecha=${fecha}&tipo=tarde`)}
+                className="flex items-center gap-2 rounded-xl py-2 px-3 text-[13px] font-semibold bg-brand-tint text-brand border border-brand/30"
+              >
+                <Icon name="plus" className="w-4 h-4" stroke={1.8} />
+                Agregar tarde
+              </button>
+            )}
+            {jornadaEsUnica && !esDiaUnico(fecha) && (
+              <button
+                onClick={() => setShowDesmarcarConfirm(true)}
+                className="rounded-xl py-2 px-3 text-[13px] font-semibold border border-hairline text-ink2 bg-white hover:border-brand/40 hover:text-brand transition-colors"
+              >
+                Desmarcar turno único
+              </button>
+            )}
+          </div>
+        )}
 
-        {/* Ventas comparativo */}
+        {/* Ventas por método */}
+        {turnos.length > 0 && totalVentas > 0 && (
           <div className="card">
-            <h2 className="text-xs font-semibold text-gray-500 dark:text-zinc-400 uppercase tracking-wide mb-3">Ventas por método de pago</h2>
-            <div className="overflow-x-auto">
-              <table className="w-full text-xs">
-                <thead>
-                  <tr className="text-gray-500 dark:text-zinc-400 border-b dark:border-zinc-700">
-                    <th className="text-left py-2 font-medium">Método</th>
-                    <th className="text-right py-2 font-medium">
-                      <span className="hidden sm:inline">Mañana</span>
-                      <span className="sm:hidden">Mañ.</span>
-                    </th>
-                    <th className="text-right py-2 font-medium">
-                      <span className="hidden sm:inline">Tarde</span>
-                      <span className="sm:hidden">Tar.</span>
-                    </th>
-                    <th className="text-right py-2 font-medium text-gray-700 dark:text-zinc-300">Total</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-50 dark:divide-zinc-800">
-                  {METODOS_VENTA.filter((m) => (vm[m.key] || 0) + (vt[m.key] || 0) > 0).map((m) => (
-                    <tr key={m.key}>
-                      <td className="py-1.5 pr-2">
-                        <div className="flex items-center gap-1.5">
-                          <MetodoLogo metodo={m} size="sm" />
-                          <span className="text-gray-700 dark:text-zinc-300 leading-tight">{m.label}</span>
-                        </div>
-                      </td>
-                      <td className="py-1.5 text-right text-gray-600 dark:text-zinc-300 whitespace-nowrap tabular-nums">{clp(vm[m.key] || 0)}</td>
-                      <td className="py-1.5 text-right text-gray-600 dark:text-zinc-300 whitespace-nowrap tabular-nums">{clp(vt[m.key] || 0)}</td>
-                      <td className="py-1.5 text-right font-semibold whitespace-nowrap tabular-nums">{clp((vm[m.key] || 0) + (vt[m.key] || 0))}</td>
-                    </tr>
-                  ))}
-                  <tr className="border-t-2 border-gray-200 dark:border-zinc-700">
-                    <td className="py-2 font-bold text-sm">Total ventas</td>
-                    <td className="py-2 text-right font-bold tabular-nums text-[#5C3317] dark:text-[#E8C9A8] whitespace-nowrap">{clp(vm.total)}</td>
-                    <td className="py-2 text-right font-bold tabular-nums text-[#5C3317] dark:text-[#E8C9A8] whitespace-nowrap">{clp(vt.total)}</td>
-                    <td className="py-2 text-right font-bold tabular-nums text-[#5C3317] dark:text-[#E8C9A8] text-sm whitespace-nowrap">{clp(totalVentas)}</td>
-                  </tr>
-                </tbody>
-              </table>
+            <p className="eyebrow mb-3">Ventas por método de pago</p>
+            <div className="space-y-2.5">
+              {METODOS_VENTA.filter((m) => (vm[m.key] || 0) + (vt[m.key] || 0) > 0).map((m) => (
+                <div key={m.key} className="flex items-center gap-2.5">
+                  <MetodoLogo metodo={m} size="sm" />
+                  <span className="flex-1 text-[13px] text-ink2">{m.label}</span>
+                  <span className="text-[13px] font-bold text-ink tabular-nums">
+                    {clp((vm[m.key] || 0) + (vt[m.key] || 0))}
+                  </span>
+                </div>
+              ))}
+              <div className="flex items-center gap-2.5 pt-3 border-t border-soft mt-1">
+                <span className="flex-1 text-[14px] font-bold text-ink">Total ventas</span>
+                <Amount variant="card" color="brand" value={totalVentas} />
+              </div>
             </div>
           </div>
+        )}
 
         {/* Balance del día */}
+        {turnos.length > 0 && (
+          <div className="card-hero">
+            <div className="flex items-center justify-between mb-1.5">
+              <p className="eyebrow">Balance del día</p>
+              <span
+                className="text-[10px] font-bold uppercase tracking-widest rounded-full px-2.5 py-0.5 border"
+                style={{ background: estadoBg.bg, color: estadoBg.fg, borderColor: estadoBg.border }}
+              >
+                {estadoLabel}
+              </span>
+            </div>
+            <Amount variant="hero" color={ventasNetas >= 0 ? 'pos' : 'neg'} value={ventasNetas} className="mt-1" />
+            <p className="text-[12px] text-muted mt-2">
+              {clp(totalVentas)} ventas − {clp(totalProveedores)} proveedores
+            </p>
+          </div>
+        )}
+
+        {/* Proveedores del día */}
+        {todosProveedores.length > 0 && (
           <div className="card">
-            <div className="flex items-center justify-between mb-3">
-              <p className="text-xs font-semibold text-gray-500 dark:text-zinc-400 uppercase tracking-wide">Balance del día</p>
-              <div className="flex items-center gap-2">
-                {!ambosPresentes && !esTurnoUnico && (
-                  <span className="text-[10px] font-semibold text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-700 rounded-full px-2 py-0.5">
-                    Parcial
+            <p className="eyebrow mb-3">Proveedores del día</p>
+            <div className="space-y-2.5">
+              {todosProveedores.map((p, i) => (
+                <div key={i} className="flex items-center gap-2.5">
+                  <span className="flex-1 text-[13px] text-ink truncate">{p.nombre}</span>
+                  <span
+                    className="text-[10px] font-bold rounded-full px-2.5 py-0.5 capitalize"
+                    style={{ background: `${FORM_COLORS[p.forma_pago] || '#5C3317'}15`, color: FORM_COLORS[p.forma_pago] || '#5C3317' }}
+                  >
+                    {p.forma_pago}
                   </span>
-                )}
-                {jornadaEsUnica && (
-                  <span className="text-[10px] font-semibold text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-700 rounded-full px-2 py-0.5">
-                    Turno único
+                  <span className="text-[13px] font-bold text-ink tabular-nums min-w-[90px] text-right">
+                    {clp(p.monto)}
                   </span>
-                )}
+                </div>
+              ))}
+              <div className="flex items-center gap-2.5 pt-3 border-t border-soft mt-1">
+                <span className="flex-1 text-[14px] font-bold text-ink">Total</span>
+                <Amount variant="card" color="brand" value={totalProveedores} />
               </div>
             </div>
-            <div>
-              <p className="text-[11px] text-gray-400 dark:text-zinc-500 mb-0.5">Neto total</p>
-              <p className="text-2xl font-black tabular-nums leading-tight"
-                style={{ color: ventasNetas >= 0 ? '#1E7A4F' : '#b91c1c' }}>
-                {clp(ventasNetas)}
-              </p>
-              <p className="text-[11px] text-gray-400 dark:text-zinc-500 mt-1">
-                {clp(totalVentas)} ventas − {clp(totalProveedores)} proveedores
-              </p>
-            </div>
           </div>
-        </div>
+        )}
 
-        {todosProveedores.length > 0 && (
-        <div className="space-y-5">
-          {/* Tabla de proveedores consolidada */}
-          <div className="card">
-            <h2 className="text-xs font-semibold text-gray-500 dark:text-zinc-400 uppercase tracking-wide mb-3">Proveedores del día</h2>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="text-gray-500 dark:text-zinc-400 border-b dark:border-zinc-700">
-                    <th className="text-left py-2 font-medium">Proveedor</th>
-                    <th className="text-right py-2 font-medium">Monto</th>
-                    <th className="text-right py-2 font-medium">Pago</th>
-                    <th className="text-right py-2 font-medium">Turno</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-50 dark:divide-zinc-800">
-                  {todosProveedores.map((p, i) => (
-                    <tr key={i}>
-                      <td className="py-2">{p.nombre}</td>
-                      <td className="py-2 text-right font-medium">{clp(p.monto)}</td>
-                      <td className="py-2 text-right">
-                        <span className={`text-xs px-2 py-0.5 rounded-full ${
-                          p.forma_pago === 'efectivo'
-                            ? 'bg-[#E6F1EA] dark:bg-emerald-950/40 text-[#1E7A4F] dark:text-emerald-400'
-                            : 'bg-[#E8EDF6] dark:bg-blue-950/40 text-[#33518C] dark:text-blue-300'
-                        }`}>
-                          {p.forma_pago}
-                        </span>
-                      </td>
-                      <td className="py-2 text-right text-gray-500 dark:text-zinc-400 text-xs">{p.turno}</td>
-                    </tr>
-                  ))}
-                </tbody>
-                <tfoot className="border-t-2 border-gray-200 dark:border-zinc-700">
-                  <tr>
-                    <td className="py-2 font-bold text-sm">Totales</td>
-                    <td className="py-2 text-right font-bold">{clp(pm.efectivo + pt.efectivo + pm.transferencia + pt.transferencia)}</td>
-                    <td colSpan={2}></td>
-                  </tr>
-                </tfoot>
-              </table>
-            </div>
-          </div>
-        </div>
-        )}
-        </div>
-        )}
       </div>
 
-      {/* Modal confirmación desmarcar */}
       {showDesmarcarConfirm && (
         <>
           <div className="fixed inset-0 bg-black/40 z-40" onClick={() => setShowDesmarcarConfirm(false)} />
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <div className="bg-white dark:bg-zinc-900 rounded-2xl shadow-2xl w-full max-w-xs p-6 flex flex-col gap-4">
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-xs p-6 flex flex-col gap-4">
               <div>
-                <p className="font-bold text-gray-900 dark:text-zinc-100 text-base">¿Desmarcar turno único?</p>
-                <p className="text-sm text-gray-500 dark:text-zinc-400 mt-1">
+                <p className="font-bold text-ink text-base">¿Desmarcar turno único?</p>
+                <p className="text-sm text-ink2 mt-1">
                   El turno de tarde volverá a mostrarse de forma separada.
                 </p>
               </div>
@@ -402,15 +361,14 @@ export default function Resumen({ fecha: fechaProp, esDuenoOverride, onBack }) {
         </>
       )}
 
-      {/* Modal confirmación fusionar */}
       {showMergeConfirm && (
         <>
           <div className="fixed inset-0 bg-black/40 z-40" onClick={() => setShowMergeConfirm(false)} />
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <div className="bg-white dark:bg-zinc-900 rounded-2xl shadow-2xl w-full max-w-xs p-6 flex flex-col gap-4">
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-xs p-6 flex flex-col gap-4">
               <div>
-                <p className="font-bold text-gray-900 dark:text-zinc-100 text-base">¿Fusionar como turno único?</p>
-                <p className="text-sm text-gray-500 dark:text-zinc-400 mt-1">
+                <p className="font-bold text-ink text-base">¿Fusionar como turno único?</p>
+                <p className="text-sm text-ink2 mt-1">
                   El turno de tarde quedará oculto y el día se tratará como jornada completa de mañana.
                   Puedes desmarcar esto en cualquier momento.
                 </p>
