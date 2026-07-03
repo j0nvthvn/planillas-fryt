@@ -102,11 +102,15 @@ export default function Historial() {
             const totalVentas = turnos.reduce((sum, t) => sum + totalesVentas(t.ventas).total, 0)
             const esUnico = esDiaUnico(j.fecha) || j.es_turno_unico
             const tipos = esUnico ? ['mañana'] : ['mañana', 'tarde']
+            const open = () => setFechaSeleccionada(j.fecha)
             return (
-              <button
+              <div
                 key={j.id}
-                onClick={() => setFechaSeleccionada(j.fecha)}
-                className="w-full rounded-3xl bg-white border border-hairline p-4 text-left hover:border-brand/30 hover:shadow-card transition-all flex items-center justify-between"
+                role="button"
+                tabIndex={0}
+                onClick={open}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open() } }}
+                className="w-full rounded-3xl bg-card border border-hairline p-4 text-left hover:border-brand/30 hover:shadow-card transition-all flex items-center justify-between cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-canvas"
               >
                 <div className="min-w-0 flex-1">
                   <p className="font-semibold text-ink capitalize text-[14px]">{fechaLegible(j.fecha)}</p>
@@ -137,7 +141,7 @@ export default function Historial() {
                   </p>
                   <p className="text-[10px] text-muted mt-0.5 uppercase tracking-widest">ventas</p>
                 </div>
-              </button>
+              </div>
             )
           })}
         </div>
