@@ -43,7 +43,7 @@ function ToastView({ toast, onHide }) {
     <div className="above-nav fixed inset-x-0 z-50 px-4 pointer-events-none">
       <div
         role="status"
-        className="max-w-md mx-auto mb-3 pointer-events-auto flex items-center gap-3 rounded-2xl bg-gray-900 dark:bg-zinc-700 text-white shadow-2xl px-4 py-3"
+        className="max-w-md mx-auto mb-3 pointer-events-auto flex items-center gap-3 rounded-2xl bg-zinc-900 text-white shadow-2xl px-4 py-3"
         style={{ animation: 'toastUp .26s cubic-bezier(.2,.8,.2,1)' }}
       >
         <style>{`@keyframes toastUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}`}</style>

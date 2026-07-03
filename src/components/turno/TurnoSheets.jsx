@@ -30,20 +30,20 @@ export function TurnoSheets({ sheet, setSheet, isDesktop, sugerencias, usedNames
       {isDesktop && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
           onClick={(e) => { if (e.target === e.currentTarget) setSheet(null) }}>
-          <div className="bg-white dark:bg-zinc-900 rounded-2xl shadow-2xl w-full max-w-md flex flex-col gap-4 p-6 max-h-[85vh] overflow-y-auto">
+          <div className="bg-card rounded-2xl shadow-2xl w-full max-w-md flex flex-col gap-4 p-6 max-h-[85vh] overflow-y-auto">
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-bold text-gray-900 dark:text-zinc-100">
+              <h3 className="text-lg font-bold text-ink">
                 {sheet.mode === 'venta'
                   ? `Ventas · ${metodo.label}`
                   : sheet.idx === -1 ? 'Agregar proveedor' : 'Editar proveedor'}
               </h3>
               <div className="flex gap-2">
                 {sheet.mode === 'prov' && sheet.idx !== -1 && (
-                  <button onClick={() => delProv(sheet.idx)} className="w-8 h-8 rounded-full grid place-items-center bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-400">
+                  <button onClick={() => delProv(sheet.idx)} className="w-8 h-8 rounded-full grid place-items-center bg-neg-tint text-neg">
                     <Icon name="trash" className="w-[18px] h-[18px]" />
                   </button>
                 )}
-                <button onClick={() => setSheet(null)} className="w-8 h-8 rounded-full grid place-items-center bg-gray-100 dark:bg-zinc-700 text-gray-600 dark:text-zinc-300">
+                <button onClick={() => setSheet(null)} className="w-8 h-8 rounded-full grid place-items-center bg-hairline text-ink2">
                   <Icon name="close" className="w-[17px] h-[17px]" />
                 </button>
               </div>
@@ -70,7 +70,7 @@ export function TurnoSheets({ sheet, setSheet, isDesktop, sugerencias, usedNames
             {sheet.mode === 'prov' && (
               <>
                 <div className="relative">
-                  <Icon name="store" className="w-4 h-4 text-gray-400 dark:text-zinc-500 absolute left-3.5 top-3.5" />
+                  <Icon name="store" className="w-4 h-4 text-muted absolute left-3.5 top-3.5" />
                   <input value={sheet.nombre} onChange={(e) => setSheet((s) => ({ ...s, nombre: e.target.value }))}
                     placeholder="Buscar o escribir proveedor" className="input !pl-10"
                     type="text" autoFocus autoComplete="off" autoCorrect="off"
@@ -107,13 +107,13 @@ export function TurnoSheets({ sheet, setSheet, isDesktop, sugerencias, usedNames
             <BottomSheet
               title={sheet.idx === -1 ? 'Agregar proveedor' : 'Editar proveedor'}
               onClose={() => setSheet(null)}
-              extra={sheet.idx !== -1 && (
-                <button onClick={() => delProv(sheet.idx)} className="w-8 h-8 rounded-full grid place-items-center bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-400">
+              extra=              {sheet.idx !== -1 && (
+                <button onClick={() => delProv(sheet.idx)} className="w-8 h-8 rounded-full grid place-items-center bg-neg-tint text-neg">
                   <Icon name="trash" className="w-[18px] h-[18px]" />
                 </button>
               )}>
               <div className="relative">
-                <Icon name="store" className="w-4 h-4 text-gray-400 dark:text-zinc-500 absolute left-3.5 top-3.5" />
+                <Icon name="store" className="w-4 h-4 text-muted absolute left-3.5 top-3.5" />
                 <input value={sheet.nombre} onChange={(e) => setSheet((s) => ({ ...s, nombre: e.target.value }))}
                   placeholder="Buscar o escribir proveedor" className="input !pl-10"
                   type="text" inputMode="text" autoComplete="off" autoCorrect="off"

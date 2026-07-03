@@ -30,7 +30,7 @@ function TurnoStatusChip({ tipo, presente, usuario }) {
     )
   }
   return (
-    <div className="flex-1 rounded-2xl border border-[#b8dcc7] bg-pos-tint px-3 py-2.5 flex items-center gap-2.5">
+    <div className="flex-1 rounded-2xl border border-pos-border bg-pos-tint px-3 py-2.5 flex items-center gap-2.5">
       <Icon name={icon} className="w-4 h-4 text-pos" stroke={1.8} />
       <div className="min-w-0 flex-1">
         <p className="text-[13px] font-semibold text-pos">{label}</p>
@@ -148,11 +148,7 @@ export default function Resumen({ fecha: fechaProp, esDuenoOverride, onBack }) {
       ? 'Completo'
       : 'Parcial'
 
-  const estadoBg = jornadaEsUnica
-    ? { bg: '#E6F1EA', fg: '#1E7A4F', border: '#b8dcc7' }
-    : ambosPresentes
-      ? { bg: '#E6F1EA', fg: '#1E7A4F', border: '#b8dcc7' }
-      : { bg: '#FBF1DD', fg: '#B98D3E', border: '#B98D3E55' }
+  const esCompleto = jornadaEsUnica || ambosPresentes
 
   return (
     <Layout>
@@ -293,8 +289,11 @@ export default function Resumen({ fecha: fechaProp, esDuenoOverride, onBack }) {
             <div className="flex items-center justify-between mb-1.5">
               <p className="eyebrow">Balance del día</p>
               <span
-                className="text-[10px] font-bold uppercase tracking-widest rounded-full px-2.5 py-0.5 border"
-                style={{ background: estadoBg.bg, color: estadoBg.fg, borderColor: estadoBg.border }}
+                className={`text-[10px] font-bold uppercase tracking-widest rounded-full px-2.5 py-0.5 border ${
+                  esCompleto
+                    ? 'bg-pos-tint text-pos border-pos-border'
+                    : 'bg-warn-tint text-warn border-warn/30'
+                }`}
               >
                 {estadoLabel}
               </span>

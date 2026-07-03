@@ -28,9 +28,9 @@ function fechaEje(isoDate) {
 }
 
 const KPI_COLORS = {
-  ventas:    { fg: ACCENT, bg: '#F5EAD4' },
-  proveed:   { fg: '#b91c1c', bg: '#FBE9E9' },
-  caja:      { fg: GREEN,   bg: '#E6F1EA' },
+  ventas:    { fg: 'var(--brand)',  bg: 'var(--brand-tint)' },
+  proveed:   { fg: 'var(--neg)',    bg: 'var(--neg-tint)' },
+  caja:      { fg: 'var(--pos)',    bg: 'var(--pos-tint)' },
 }
 
 export default function Analisis() {
@@ -137,16 +137,16 @@ export default function Analisis() {
   const neto = ventasTotal - proveedoresTotal
   const efectivoEnCaja = datos ? datos.totalesGlobales.efectivo - datos.totalEfectivoProveedores : 0
 
-  const gridStroke = isDark ? '#3f3f46' : '#F6EFE1'
-  const tickColor = isDark ? '#a1a1aa' : '#9C8B78'
-  const legendColor = isDark ? '#a1a1aa' : '#5F5245'
+  const gridStroke = isDark ? '#3f3f46' : 'var(--soft)'
+  const tickColor = isDark ? '#a1a1aa' : 'var(--muted)'
+  const legendColor = isDark ? '#a1a1aa' : 'var(--ink2)'
 
   const tooltipStyle = {
-    background: isDark ? '#27272a' : '#fff',
-    border: `1px solid ${isDark ? '#52525b' : '#F0E7D6'}`,
+    background: isDark ? '#27272a' : 'var(--card)',
+    border: `1px solid ${isDark ? '#52525b' : 'var(--hairline)'}`,
     borderRadius: '12px',
     fontSize: '12px',
-    color: isDark ? '#f4f4f5' : '#2A211A',
+    color: isDark ? '#f4f4f5' : 'var(--ink)',
   }
   const cursorFill = isDark ? 'rgba(255,255,255,.04)' : 'rgba(92,51,23,.04)'
 

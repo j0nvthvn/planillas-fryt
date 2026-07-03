@@ -68,7 +68,7 @@ export default function Login() {
         <div className="w-full max-w-sm md:max-w-md mx-auto">
           <form
             onSubmit={handleSubmit}
-            className="bg-white rounded-3xl border border-[#EDE0C8] p-6 space-y-4"
+            className="bg-card rounded-3xl border border-hairline p-6 space-y-4"
           >
             <p className="eyebrow mb-1">Iniciar sesión</p>
 

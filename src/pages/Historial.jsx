@@ -11,13 +11,10 @@ import Icon from '../components/Icon'
 import { useAuth } from '../hooks/useAuth'
 import { useConfig } from '../hooks/useConfig'
 
-const PENDIENTE_BG = '#FBF1DD'
-const PENDIENTE_FG = '#B98D3E'
-
 function TurnoChip({ tipo, presente, esDueno, fecha, onAdd }) {
   if (presente) {
     return (
-      <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-pos-tint text-pos border border-[#b8dcc7]">
+      <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-pos-tint text-pos border border-pos-border">
         <Icon name={tipo === 'mañana' ? 'sun' : 'moon'} className="w-3 h-3" stroke={1.8} />
         {tipo}
       </span>
@@ -27,8 +24,7 @@ function TurnoChip({ tipo, presente, esDueno, fecha, onAdd }) {
     return (
       <button
         onClick={onAdd}
-        className="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-0.5 rounded-full border hover:opacity-80"
-        style={{ background: PENDIENTE_BG, color: PENDIENTE_FG, borderColor: PENDIENTE_FG + '55' }}
+        className="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-warn-tint text-warn border border-warn/30 hover:opacity-80"
       >
         <Icon name="plus" className="w-3 h-3" stroke={2} />
         {tipo}

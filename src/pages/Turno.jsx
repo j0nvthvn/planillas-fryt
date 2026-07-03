@@ -318,16 +318,16 @@ export default function Turno() {
         )}
 
         {draftRestaurado && (
-          <div className="flex items-center justify-between gap-2 text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+          <div className="flex items-center justify-between gap-2 text-sm text-warn bg-warn-tint border border-warn/30 rounded-lg px-3 py-2">
             <span>Borrador restaurado automáticamente</span>
-            <button onClick={() => setDraftRestaurado(false)} className="shrink-0 text-amber-500 hover:text-amber-700">
+            <button onClick={() => setDraftRestaurado(false)} className="shrink-0 text-warn hover:opacity-80">
               <Icon name="close" className="w-3.5 h-3.5" />
             </button>
           </div>
         )}
 
         {cambioRemotoPendiente && (
-          <div className="flex items-center justify-between gap-3 text-sm text-blue-800 bg-blue-50 border border-blue-200 rounded-lg px-3 py-2">
+          <div className="flex items-center justify-between gap-3 text-sm text-info bg-info-tint border border-info/30 rounded-lg px-3 py-2">
             <span>Hay cambios de otro usuario en este turno.</span>
             <button onClick={refrescarDesdeRemoto} className="shrink-0 font-semibold underline underline-offset-2">
               Recargar

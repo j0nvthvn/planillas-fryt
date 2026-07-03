@@ -125,7 +125,7 @@ export function ProveedorAvatar({ nombre = '', imagen_url, size = 'md' }) {
 export function SectionHead({ title, right }) {
   return (
     <div className="flex items-baseline justify-between px-1 mb-2">
-      <h2 className="text-xs font-semibold text-gray-500 dark:text-zinc-400 uppercase tracking-wide">{title}</h2>
+      <h2 className="text-xs font-semibold text-ink2 uppercase tracking-wide">{title}</h2>
       {right != null && <span className="text-sm font-semibold" style={{ color: ACCENT }}>{right}</span>}
     </div>
   )
@@ -224,7 +224,7 @@ export function FreqChips({ query = '', used = [], sugerencias = [], onPick }) {
           return (
             <button key={s.nombre} onClick={() => onPick(s)}
               className={`shrink-0 flex items-center gap-2 rounded-2xl px-3 py-2 text-sm font-medium border whitespace-nowrap transition ${
-                on ? '' : 'bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 border-gray-200 dark:border-zinc-600'
+                on ? '' : 'bg-card text-ink2 border-hairline'
               }`}
               style={on ? { background: ACCENT_TINT, color: ACCENT, borderColor: ACCENT } : undefined}>
               <ProveedorAvatar nombre={s.nombre} imagen_url={s.imagen_url} size="sm" />
@@ -237,7 +237,7 @@ export function FreqChips({ query = '', used = [], sugerencias = [], onPick }) {
       {hayMas && (
         <button
           onClick={() => setExpandido((v) => !v)}
-          className="self-start text-xs font-medium text-gray-400 dark:text-zinc-500 hover:text-gray-600 dark:hover:text-zinc-300 transition">
+          className="self-start text-xs font-medium text-muted hover:text-ink2 transition">
           {expandido ? 'Ver menos' : `Ver todos (${filtrado.length})`}
         </button>
       )}
@@ -259,8 +259,8 @@ export function DesktopAmountInput({ value, onChange, color = '#191B1F', label, 
     onChange(next)
   }
   return (
-    <div className="rounded-2xl bg-gray-50 dark:bg-zinc-800 border border-gray-100 dark:border-zinc-700 px-4 py-3 focus-within:border-gray-300 dark:focus-within:border-zinc-500 transition-colors">
-      {label && <p className="text-xs font-medium text-gray-500 dark:text-zinc-400 mb-0.5">{label}</p>}
+    <div className="rounded-2xl bg-canvas border border-hairline px-4 py-3 focus-within:border-ink2 transition-colors">
+      {label && <p className="text-xs font-medium text-ink2 mb-0.5">{label}</p>}
       <input
         type="text"
         inputMode="numeric"
@@ -269,7 +269,7 @@ export function DesktopAmountInput({ value, onChange, color = '#191B1F', label, 
         onChange={handleChange}
         onKeyDown={(e) => e.key === 'Enter' && onEnter?.()}
         placeholder="$0"
-        className={`w-full bg-transparent border-0 p-0 outline-none focus:ring-0 text-4xl font-semibold tracking-tight tabular-nums placeholder:text-gray-300 dark:placeholder:text-zinc-600 ${!n ? 'text-gray-300 dark:text-zinc-600' : ''}`}
+        className={`w-full bg-transparent border-0 p-0 outline-none focus:ring-0 text-4xl font-semibold tracking-tight tabular-nums placeholder:text-muted2 ${!n ? 'text-muted2' : ''}`}
         style={n ? { color } : undefined}
       />
     </div>
@@ -306,7 +306,7 @@ export function PayToggle({ value, onChange }) {
         return (
           <button key={o.v} onClick={() => onChange(o.v)}
             className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-medium border ${
-              on ? '' : 'bg-white dark:bg-zinc-800 text-gray-400 dark:text-zinc-500 border-gray-200 dark:border-zinc-600'
+              on ? '' : 'bg-card text-muted border-hairline'
             }`}
             style={on ? { background: o.tint, color: o.c, borderColor: o.c } : undefined}>
             <TurnoIcon name={o.icon} className="w-[18px] h-[18px]" stroke={1.8} />{o.label}

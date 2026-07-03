@@ -99,7 +99,7 @@ export default function AvatarMenu({ open, onClose, anchorRight = true }) {
         <div
           ref={desktopRef}
           role="menu"
-          className="absolute right-4 top-[calc(env(safe-area-inset-top)+56px)] z-50 min-w-[220px] bg-white dark:bg-zinc-900 rounded-2xl shadow-2xl border border-hairline dark:border-zinc-800 py-2"
+          className="absolute right-4 top-[calc(env(safe-area-inset-top)+56px)] z-50 min-w-[220px] bg-card rounded-2xl shadow-2xl border border-hairline py-2"
           style={{ animation: 'menuIn .18s ease-out' }}
         >
           <p className="px-4 py-2 text-xs font-bold uppercase tracking-widest text-muted2">
@@ -134,7 +134,7 @@ export default function AvatarMenu({ open, onClose, anchorRight = true }) {
         <div
           role="dialog"
           aria-label="Más opciones"
-          className="fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-zinc-900 rounded-t-[28px] px-4 pt-3 pb-2"
+          className="fixed bottom-0 left-0 right-0 z-50 bg-card rounded-t-[28px] px-4 pt-3 pb-2"
           style={{
             transform: visible ? 'translateY(0)' : 'translateY(100%)',
             transition: 'transform 220ms cubic-bezier(.2,.8,.2,1)',
@@ -180,7 +180,7 @@ export default function AvatarMenu({ open, onClose, anchorRight = true }) {
         <>
           <div className="fixed inset-0 bg-black/40 z-[60]" onClick={() => setConfirmLogout(false)} />
           <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
-            <div className="bg-white dark:bg-zinc-900 rounded-2xl shadow-2xl w-full max-w-xs p-6 flex flex-col gap-4">
+            <div className="bg-card rounded-2xl shadow-2xl w-full max-w-xs p-6 flex flex-col gap-4">
               <div>
                 <p className="font-bold text-ink text-base">¿Cerrar sesión?</p>
                 <p className="text-sm text-ink2 mt-1">Tendrás que volver a ingresar tus credenciales.</p>
