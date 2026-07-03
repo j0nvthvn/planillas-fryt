@@ -35,8 +35,8 @@ export function MetodoLogo({ metodo, active = false, size = 'md' }) {
   const sz = LOGO_SIZES[size] ?? LOGO_SIZES.md
   return (
     <span
-      className={`relative shrink-0 flex items-center justify-center ${sz.container}`}
-      style={{ background: showImg ? '#F3F4F6' : (fb?.bg ?? '#F3F4F6') }}
+      className="relative shrink-0 flex items-center justify-center bg-image-bg"
+      style={!showImg && fb?.bg ? { background: fb.bg } : undefined}
     >
       {showImg && (
         <img
@@ -62,7 +62,7 @@ export function MetodoLogo({ metodo, active = false, size = 'md' }) {
 export const VENTAS_VACIAS = { efectivo: 0, getnet: 0, mercadopago: 0, edenred: 0, amipass: 0, transferencia: 0 }
 
 /* ── Avatar ───────────────────────────────────────────────── */
-export const AVATAR_COLORS = ['#5C3317', '#1E7A4F', '#33518C', '#B45309', '#0F766E', '#BE185D']
+export const AVATAR_COLORS = ['#8B5D39', '#1E7A4F', '#33518C', '#B45309', '#0F766E', '#BE185D']
 export function avatarColor(nombre) {
   let h = 0
   for (const c of String(nombre)) h = (h * 31 + c.charCodeAt(0)) & 0xffff
@@ -110,9 +110,8 @@ export function ProveedorAvatar({ nombre = '', imagen_url, size = 'md' }) {
   const base = `${sizes[size]} rounded-xl overflow-hidden shrink-0 flex items-center justify-center font-bold text-white`
 
   if (imagen_url && !imgError) {
-    const isDark = typeof document !== 'undefined' && document.documentElement.classList.contains('dark')
     return (
-      <div className={base} style={{ background: isDark ? '#3f3f46' : '#F3F4F6' }}>
+      <div className={base} style={{ background: 'rgb(var(--image-bg-rgb))' }}>
         <img src={imagen_url} alt={nombre} className="w-full h-full object-contain p-0.5"
           onError={() => { console.warn('[Avatar] No se pudo cargar:', imagen_url); setImgError(true) }} />
       </div>
@@ -183,7 +182,7 @@ export function BottomSheet({ title, children, onClose, extra }) {
       <style>{`@keyframes sheetUp{from{transform:translateY(100%)}to{transform:translateY(0)}}`}</style>
       {/* Handle — área de arrastre */}
       <div data-handle className="md:hidden w-full flex justify-center pt-1 pb-2 -mx-5 px-5 cursor-grab active:cursor-grabbing touch-none">
-        <div className="w-10 h-1 rounded-full bg-[#E4D6BF]" />
+        <div className="w-10 h-1 rounded-full bg-hairline" />
       </div>
       {title && (
         <div className="flex items-center justify-between">
@@ -281,10 +280,10 @@ export function AmountDisplay({ value, sub, color }) {
   const n = parseNum(value)
   const empty = !n
   const colorClass = empty
-    ? 'text-[#cdbfa8]'
+    ? 'text-muted2'
     : color ? '' : 'text-ink'
   return (
-    <div className="rounded-2xl bg-white border border-hairline px-4 py-3">
+    <div className="rounded-2xl bg-card border border-hairline px-4 py-3">
       {sub && <p className="text-[10px] font-bold uppercase tracking-widest text-muted2 mb-1">{sub}</p>}
       <p className={`amount text-[46px] leading-none ${colorClass}`} style={!empty && color ? { color } : undefined}>
         {clp(n)}
@@ -330,7 +329,7 @@ export function Keypad({ onKey, onAccept, disabled, accent, label }) {
               key={k}
               onClick={() => onKey(k)}
               className={`h-[54px] md:h-[58px] rounded-[15px] text-[23px] font-semibold text-ink active:scale-95 flex items-center justify-center transition-transform duration-75 ${
-                isDel ? 'bg-[#F5EFE2]' : 'bg-white border border-hairline'
+                isDel ? 'bg-soft' : 'bg-card border border-hairline'
               }`}
               style={{ touchAction: 'manipulation' }}
             >

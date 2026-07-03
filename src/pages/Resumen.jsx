@@ -171,14 +171,14 @@ export default function Resumen({ fecha: fechaProp, esDuenoOverride, onBack }) {
         {/* Date navigator */}
         <div className="flex items-center justify-end gap-1.5">
           <button onClick={irAnterior}
-            className="w-9 h-9 rounded-full border border-hairline bg-white grid place-items-center text-ink2 hover:border-brand hover:text-brand transition-colors">
-            <Icon name="chevL" className="w-4 h-4" />
-          </button>
-          <div className="relative">
-            <button
-              onClick={() => dateInputRef.current?.showPicker()}
-              className="w-9 h-9 rounded-full border border-hairline bg-white grid place-items-center text-ink2 hover:border-brand hover:text-brand transition-colors"
-              title="Ir a una fecha">
+            className="w-9 h-9 rounded-full border border-hairline bg-card grid place-items-center text-ink2 hover:border-brand hover:text-brand transition-colors">
+              <Icon name="chevL" className="w-4 h-4" />
+            </button>
+            <div className="relative">
+              <button
+                onClick={() => dateInputRef.current?.showPicker()}
+            className="w-9 h-9 rounded-full border border-hairline bg-card grid place-items-center text-ink2 hover:border-brand hover:text-brand transition-colors"
+            title="Ir a una fecha">
               <Icon name="calendar" className="w-4 h-4" />
             </button>
             <input
@@ -191,7 +191,7 @@ export default function Resumen({ fecha: fechaProp, esDuenoOverride, onBack }) {
             />
           </div>
           <button onClick={irSiguiente} disabled={esFechaHoy}
-            className="w-9 h-9 rounded-full border border-hairline bg-white grid place-items-center text-ink2 hover:border-brand hover:text-brand transition-colors disabled:opacity-30 disabled:pointer-events-none">
+            className="w-9 h-9 rounded-full border border-hairline bg-card grid place-items-center text-ink2 hover:border-brand hover:text-brand transition-colors disabled:opacity-30 disabled:pointer-events-none">
             <Icon name="chevR" className="w-4 h-4" />
           </button>
         </div>
@@ -226,7 +226,7 @@ export default function Resumen({ fecha: fechaProp, esDuenoOverride, onBack }) {
             {!esTurnoUnico && datos.jornada && turnoMañana && !turnoTarde && (
               <button
                 onClick={() => setShowMergeConfirm(true)}
-                className="flex items-center gap-2 rounded-xl py-2 px-3 text-[13px] font-semibold border border-hairline text-ink2 bg-white hover:border-brand/40 hover:text-brand transition-colors"
+                className="flex items-center gap-2 rounded-xl py-2 px-3 text-[13px] font-semibold border border-hairline text-ink2 bg-card hover:border-brand/40 hover:text-brand transition-colors"
               >
                 <Icon name="merge" className="w-4 h-4" stroke={1.8} />
                 Fusionar en turno único
@@ -253,7 +253,7 @@ export default function Resumen({ fecha: fechaProp, esDuenoOverride, onBack }) {
             {jornadaEsUnica && !esDiaUnico(fecha) && (
               <button
                 onClick={() => setShowDesmarcarConfirm(true)}
-                className="rounded-xl py-2 px-3 text-[13px] font-semibold border border-hairline text-ink2 bg-white hover:border-brand/40 hover:text-brand transition-colors"
+                className="rounded-xl py-2 px-3 text-[13px] font-semibold border border-hairline text-ink2 bg-card hover:border-brand/40 hover:text-brand transition-colors"
               >
                 Desmarcar turno único
               </button>
@@ -336,9 +336,9 @@ export default function Resumen({ fecha: fechaProp, esDuenoOverride, onBack }) {
 
       {showDesmarcarConfirm && (
         <>
-          <div className="fixed inset-0 bg-black/40 z-40" onClick={() => setShowDesmarcarConfirm(false)} />
+          <div className="fixed inset-0 bg-black/40 dark:bg-black/70 z-40" onClick={() => setShowDesmarcarConfirm(false)} />
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-xs p-6 flex flex-col gap-4">
+            <div className="bg-card rounded-2xl shadow-2xl w-full max-w-xs p-6 flex flex-col gap-4">
               <div>
                 <p className="font-bold text-ink text-base">¿Desmarcar turno único?</p>
                 <p className="text-sm text-ink2 mt-1">
@@ -362,9 +362,9 @@ export default function Resumen({ fecha: fechaProp, esDuenoOverride, onBack }) {
 
       {showMergeConfirm && (
         <>
-          <div className="fixed inset-0 bg-black/40 z-40" onClick={() => setShowMergeConfirm(false)} />
+          <div className="fixed inset-0 bg-black/40 dark:bg-black/70 z-40" onClick={() => setShowMergeConfirm(false)} />
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-xs p-6 flex flex-col gap-4">
+            <div className="bg-card rounded-2xl shadow-2xl w-full max-w-xs p-6 flex flex-col gap-4">
               <div>
                 <p className="font-bold text-ink text-base">¿Fusionar como turno único?</p>
                 <p className="text-sm text-ink2 mt-1">

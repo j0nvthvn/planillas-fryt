@@ -166,7 +166,7 @@ export default function Analisis() {
               onClick={() => setPeriodo(p.v)}
               className={`px-4 py-2 rounded-[11px] text-[13px] font-semibold transition ${
                 periodo === p.v
-                  ? 'bg-white text-brand shadow-sm'
+                  ? 'bg-card text-brand shadow-sm'
                   : 'text-muted hover:text-ink2'
               }`}
             >

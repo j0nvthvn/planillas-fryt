@@ -24,7 +24,7 @@ export function TurnoSheets({ sheet, setSheet, isDesktop, sugerencias, usedNames
 
   return (
     <>
-      <div className="fixed inset-0 bg-black/30 z-40" onClick={() => setSheet(null)} />
+      <div className="fixed inset-0 bg-black/40 dark:bg-black/70 z-40" onClick={() => setSheet(null)} />
 
       {/* ── Modal escritorio ───────────────────────────────── */}
       {isDesktop && (

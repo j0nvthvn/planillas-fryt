@@ -90,8 +90,8 @@ export default function AvatarMenu({ open, onClose, anchorRight = true }) {
         type="button"
         aria-label="Cerrar menú"
         onClick={onClose}
-        className="fixed inset-0 z-40 md:hidden"
-        style={{ background: 'rgba(27,18,11,.4)', opacity: visible ? 1 : 0, transition: 'opacity 200ms' }}
+        className="fixed inset-0 z-40 md:hidden bg-black/40 dark:bg-black/70"
+        style={{ opacity: visible ? 1 : 0, transition: 'opacity 200ms' }}
       />
 
       {/* Popover (desktop) */}
@@ -143,7 +143,7 @@ export default function AvatarMenu({ open, onClose, anchorRight = true }) {
           }}
         >
           <div className="flex justify-center pt-1 pb-3">
-            <div className="w-10 h-1 rounded-full bg-[#E4D6BF]" />
+            <div className="w-10 h-1 rounded-full bg-hairline" />
           </div>
           <p className="px-2 pb-2 text-xs font-bold uppercase tracking-widest text-muted2">
             Más opciones
@@ -178,7 +178,7 @@ export default function AvatarMenu({ open, onClose, anchorRight = true }) {
       {/* Modal confirmar cierre de sesión */}
       {confirmLogout && (
         <>
-          <div className="fixed inset-0 bg-black/40 z-[60]" onClick={() => setConfirmLogout(false)} />
+          <div className="fixed inset-0 bg-black/40 dark:bg-black/70 z-[60]" onClick={() => setConfirmLogout(false)} />
           <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
             <div className="bg-card rounded-2xl shadow-2xl w-full max-w-xs p-6 flex flex-col gap-4">
               <div>

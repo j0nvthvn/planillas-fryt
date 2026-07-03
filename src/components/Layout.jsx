@@ -67,7 +67,7 @@ export default function Layout({ children }) {
 
       <div className="flex flex-1 min-h-0 max-w-screen-2xl mx-auto w-full overflow-hidden md:overflow-visible">
 
-        <aside className="hidden md:flex flex-col w-[220px] shrink-0 border-r border-hairline bg-white sticky top-0 h-screen overflow-y-auto">
+        <aside className="hidden md:flex flex-col w-[220px] shrink-0 border-r border-hairline bg-card sticky top-0 h-screen overflow-y-auto">
           <div className="px-5 pt-6 pb-4">
             <p className="eyebrow text-brand">Minimarket Fryt</p>
           </div>
@@ -85,7 +85,7 @@ export default function Layout({ children }) {
 
       <nav
         aria-label="Navegación principal"
-        className="md:hidden shrink-0 bg-white border-t border-hairline"
+        className="md:hidden shrink-0 bg-card border-t border-hairline"
         style={{ paddingBottom: 'max(8px, env(safe-area-inset-bottom))' }}
       >
         <div className="flex items-stretch">

@@ -6,7 +6,7 @@ import PageHeader from '../components/PageHeader'
 import Spinner from '../components/Spinner'
 import Icon from '../components/Icon'
 
-const AVATAR_COLORS = ['#5C3317', '#1E7A4F', '#33518C', '#B45309', '#0F766E', '#BE185D']
+const AVATAR_COLORS = ['#8B5D39', '#1E7A4F', '#33518C', '#B45309', '#0F766E', '#BE185D']
 function avatarColor(nombre) {
   let h = 0
   for (const c of String(nombre)) h = (h * 31 + c.charCodeAt(0)) & 0xffff
@@ -183,7 +183,7 @@ export default function Usuarios() {
           {usuarios.map((u) => (
             <div
               key={u.id}
-              className="rounded-2xl bg-white border border-hairline p-3.5 flex items-center gap-3"
+              className="rounded-2xl bg-card border border-hairline p-3.5 flex items-center gap-3"
             >
               <UsuarioAvatar nombre={u.nombre} />
               <div className="flex-1 min-w-0">

@@ -29,8 +29,9 @@ function Toggle({ on, onChange, label }) {
       role="switch"
       aria-checked={on}
       onClick={onChange}
-      className="w-11 h-6 rounded-full relative transition-colors shrink-0"
-      style={{ background: on ? '#5C3317' : '#E4D6BF' }}
+      className={`w-11 h-6 rounded-full relative transition-colors shrink-0 ${
+        on ? 'bg-brand' : 'bg-hairline'
+      }`}
     >
       <span
         className="absolute top-0.5 w-5 h-5 rounded-full bg-white shadow-sm transition-all"
@@ -115,7 +116,7 @@ export default function Configuracion() {
         {/* Local */}
         <section>
           <p className="eyebrow px-1 mb-2">Local</p>
-          <div className="rounded-2xl bg-white border border-hairline overflow-hidden">
+          <div className="rounded-2xl bg-card border border-hairline overflow-hidden">
             <div className="px-4 py-3.5 border-b border-soft">
               <label className="block text-[13px] font-semibold text-ink mb-1.5">Nombre del local</label>
               <input
@@ -144,7 +145,7 @@ export default function Configuracion() {
         {/* Días turno único */}
         <section>
           <p className="eyebrow px-1 mb-2">Días con turno único</p>
-          <div className="rounded-2xl bg-white border border-hairline overflow-hidden">
+          <div className="rounded-2xl bg-card border border-hairline overflow-hidden">
             {DIAS.map(({ idx, label }, i) => {
               const activo = diasUnicos.includes(idx)
               return (
@@ -166,7 +167,7 @@ export default function Configuracion() {
         {/* Apariencia */}
         <section>
           <p className="eyebrow px-1 mb-2">Apariencia</p>
-          <div className="rounded-2xl bg-white border border-hairline p-1.5">
+          <div className="rounded-2xl bg-card border border-hairline p-1.5">
             <div className="flex gap-1">
               {TEMAS.map(({ value, label, icon }) => {
                 const activo = tema === value
@@ -193,7 +194,7 @@ export default function Configuracion() {
         {/* Notificaciones */}
         <section>
           <p className="eyebrow px-1 mb-2">Notificaciones</p>
-          <div className="rounded-2xl bg-white border border-hairline overflow-hidden">
+          <div className="rounded-2xl bg-card border border-hairline overflow-hidden">
             <div className="flex items-center justify-between px-4 py-3.5">
               <div className="flex-1 min-w-0">
                 <p className="text-[14px] text-ink">Notificaciones activas</p>

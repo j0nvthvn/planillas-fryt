@@ -1,5 +1,4 @@
 import { clp } from '../../utils/format'
-import { ACCENT } from '../TurnoInput'
 
 /* Barra fija inferior: total del turno + botón Guardar.
    En mobile queda sobre la bottom nav; en desktop, abajo. */
@@ -11,7 +10,6 @@ export function TurnoBottomBar({ total, guardando, disabled, label, onGuardar })
           onClick={onGuardar}
           disabled={guardando || disabled}
           className="btn-primary w-full py-3.5 text-base gap-2 disabled:opacity-40"
-          style={{ background: ACCENT }}
         >
           {guardando && (
             <span className="w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin" />

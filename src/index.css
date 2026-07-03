@@ -25,6 +25,7 @@
   --warn-tint-rgb:   251 241 221;
   --info-rgb:        51 81 140;
   --info-tint-rgb:   232 237 246;
+  --image-bg-rgb:    243 244 246;
 
   /* Variables en hex (compatibilidad con código existente que las lee como strings) */
   --brand:       #5C3317;
@@ -72,6 +73,7 @@ html.dark {
   --warn-tint-rgb:   46 36 24;
   --info-rgb:        115 147 210;
   --info-tint-rgb:   27 34 54;
+  --image-bg-rgb:    50 45 38;
 
   --brand:       #D4A77A;
   --brand-hover: #E5BB8E;

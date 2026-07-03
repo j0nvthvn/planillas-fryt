@@ -22,7 +22,7 @@ function SegmentedTipo({ tipo, tiposExistentes, esDiaUnico, onChange }) {
   if (esDiaUnico) {
     return (
       <div className="flex p-1 bg-brand-tint rounded-[15px]">
-        <div className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-[11px] text-[14px] font-semibold bg-white text-ink shadow-sm">
+        <div className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-[11px] text-[14px] font-semibold bg-card text-ink shadow-sm">
           <Icon name="sun" className="w-4 h-4" stroke={1.8} />
           Mañana
           {tiposExistentes.includes('mañana') && (
@@ -44,7 +44,7 @@ function SegmentedTipo({ tipo, tiposExistentes, esDiaUnico, onChange }) {
             onClick={() => onChange(t)}
             className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-[11px] text-[14px] font-semibold capitalize transition ${
               esActivo
-                ? 'bg-white text-ink shadow-sm'
+                ? 'bg-card text-ink shadow-sm'
                 : 'text-muted hover:text-ink2'
             }`}
           >
@@ -382,9 +382,9 @@ export default function Turno() {
 
       {showLimpiarConfirm && (
         <>
-          <div className="fixed inset-0 bg-black/40 z-40" onClick={() => setShowLimpiarConfirm(false)} />
+          <div className="fixed inset-0 bg-black/40 dark:bg-black/70 z-40" onClick={() => setShowLimpiarConfirm(false)} />
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-xs p-6 flex flex-col gap-4">
+            <div className="bg-card rounded-2xl shadow-2xl w-full max-w-xs p-6 flex flex-col gap-4">
               <div>
                 <p className="font-bold text-ink text-base">¿Limpiar el borrador?</p>
                 <p className="text-sm text-ink2 mt-1">

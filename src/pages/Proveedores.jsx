@@ -7,7 +7,7 @@ import Spinner from '../components/Spinner'
 import Icon from '../components/Icon'
 import { useAuth } from '../hooks/useAuth'
 
-const AVATAR_COLORS = ['#5C3317', '#1E7A4F', '#33518C', '#B45309', '#0F766E', '#BE185D']
+const AVATAR_COLORS = ['#8B5D39', '#1E7A4F', '#33518C', '#B45309', '#0F766E', '#BE185D']
 function avatarColor(nombre) {
   let h = 0
   for (const c of String(nombre)) h = (h * 31 + c.charCodeAt(0)) & 0xffff
@@ -24,7 +24,7 @@ function ProveedorAvatar({ nombre = '', imagen_url, size = 'md' }) {
 
   if (imagen_url && !imgError) {
     return (
-      <div className={cls} style={{ background: '#F3F4F6' }}>
+      <div className={cls} style={{ background: 'rgb(var(--image-bg-rgb))' }}>
         <img src={imagen_url} alt={nombre} className="w-full h-full object-contain p-0.5"
           onError={() => { setImgError(true) }} />
       </div>
@@ -195,7 +195,7 @@ export default function Proveedores() {
               <button
                 key={p.id}
                 onClick={() => abrirEditar(p)}
-                className="w-full rounded-2xl bg-white border border-hairline p-3.5 flex items-center gap-3 text-left hover:border-brand/30 hover:shadow-card transition-all"
+                className="w-full rounded-2xl bg-card border border-hairline p-3.5 flex items-center gap-3 text-left hover:border-brand/30 hover:shadow-card transition-all"
               >
                 <ProveedorAvatar nombre={p.nombre} imagen_url={p.imagen_url} size="sm" />
                 <div className="flex-1 min-w-0">
@@ -211,12 +211,12 @@ export default function Proveedores() {
         </div>
       </div>
 
-      {editando && <div className="fixed inset-0 bg-black/30 z-40" onClick={() => setEditando(null)} />}
+      {editando && <div className="fixed inset-0 bg-black/40 dark:bg-black/70 z-40" onClick={() => setEditando(null)} />}
 
       {editando && (
         <div className="fixed inset-x-0 bottom-0 z-50 bg-canvas rounded-t-[30px] px-5 pt-3 pb-10 max-h-[92%] overflow-y-auto flex flex-col gap-4 safe-bottom md:inset-x-auto md:left-1/2 md:bottom-auto md:top-[8vh] md:w-[440px] md:rounded-3xl md:max-h-[80vh]"
           style={{ boxShadow: '0 -22px 55px -22px rgba(0,0,0,.45)' }}>
-          <div className="w-10 h-1 rounded-full bg-[#E4D6BF] mx-auto" />
+          <div className="w-10 h-1 rounded-full bg-hairline mx-auto" />
 
           <div className="flex items-center justify-between">
             <h3 className="text-[16px] font-bold text-ink">
@@ -239,7 +239,7 @@ export default function Proveedores() {
           <div className="flex flex-col items-center gap-2">
             <div className="relative">
               <ProveedorAvatar nombre={editando.nombreNuevo || 'P'} imagen_url={editando.preview} size="lg" />
-              <label className="absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-white border border-hairline shadow grid place-items-center cursor-pointer text-ink2 hover:text-brand transition">
+              <label className="absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-card border border-hairline shadow grid place-items-center cursor-pointer text-ink2 hover:text-brand transition">
                 <input type="file" accept="image/*" className="sr-only" onChange={handlePickImage} />
                 <Icon name="camera" className="w-4 h-4" stroke={1.7} />
               </label>
@@ -272,9 +272,9 @@ export default function Proveedores() {
 
       {showEliminarConfirm && editando && (
         <>
-          <div className="fixed inset-0 bg-black/40 z-[60]" onClick={() => setShowEliminarConfirm(false)} />
+          <div className="fixed inset-0 bg-black/40 dark:bg-black/70 z-[60]" onClick={() => setShowEliminarConfirm(false)} />
           <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-xs p-6 flex flex-col gap-4">
+            <div className="bg-card rounded-2xl shadow-2xl w-full max-w-xs p-6 flex flex-col gap-4">
               <div>
                 <p className="font-bold text-ink text-base">¿Eliminar proveedor?</p>
                 <p className="text-sm text-ink2 mt-1">

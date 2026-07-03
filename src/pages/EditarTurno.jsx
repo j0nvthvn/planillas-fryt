@@ -257,9 +257,9 @@ export default function EditarTurno() {
 
       {showGuardarVacioConfirm && (
         <>
-          <div className="fixed inset-0 bg-black/40 z-40" onClick={() => setShowGuardarVacioConfirm(false)} />
+          <div className="fixed inset-0 bg-black/40 dark:bg-black/70 z-40" onClick={() => setShowGuardarVacioConfirm(false)} />
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-xs p-6 flex flex-col gap-4">
+            <div className="bg-card rounded-2xl shadow-2xl w-full max-w-xs p-6 flex flex-col gap-4">
               <div>
                 <p className="font-bold text-ink text-base">¿Guardar turno vacío?</p>
                 <p className="text-sm text-ink2 mt-1">No hay proveedores ni ventas ingresados.</p>
@@ -275,9 +275,9 @@ export default function EditarTurno() {
 
       {showEliminarConfirm && (
         <>
-          <div className="fixed inset-0 bg-black/40 z-40" onClick={() => setShowEliminarConfirm(false)} />
+          <div className="fixed inset-0 bg-black/40 dark:bg-black/70 z-40" onClick={() => setShowEliminarConfirm(false)} />
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-xs p-6 flex flex-col gap-4">
+            <div className="bg-card rounded-2xl shadow-2xl w-full max-w-xs p-6 flex flex-col gap-4">
               <div>
                 <p className="font-bold text-ink text-base capitalize">¿Eliminar turno de {tipo}?</p>
                 <p className="text-sm text-ink2 mt-1">
