@@ -191,16 +191,16 @@ export default function Analisis() {
             {/* KPIs tintados */}
             <div className="grid grid-cols-3 gap-2.5">
               {[
-                { key: 'ventas',  label: 'Ventas',      value: ventasTotal,      fs: 'text-[19px]' },
-                { key: 'proveed', label: 'Proveed.',    value: proveedoresTotal, fs: 'text-[19px]' },
-                { key: 'caja',    label: 'Caja',        value: efectivoEnCaja,   fs: 'text-[19px]' },
+                { key: 'ventas',  label: 'Ventas',   value: ventasTotal },
+                { key: 'proveed', label: 'Proveed.', value: proveedoresTotal },
+                { key: 'caja',    label: 'Caja',     value: efectivoEnCaja },
               ].map((k) => {
                 const c = KPI_COLORS[k.key]
                 return (
-                  <div key={k.key} className="rounded-2xl p-3.5 border" style={{ background: c.bg, borderColor: `${c.fg}33` }}>
-                    <p className="eyebrow mb-2" style={{ color: c.fg }}>{k.label}</p>
-                    <p className={`font-bold tabular-nums ${k.fs} leading-none`} style={{ color: c.fg }}>
-                      {clp(k.value)}
+                  <div key={k.key} className="min-w-0 rounded-2xl p-3 border" style={{ background: c.bg, borderColor: `${c.fg}33` }}>
+                    <p className="eyebrow mb-1.5 truncate" style={{ color: c.fg }}>{k.label}</p>
+                    <p className="font-display tabular-nums text-[17px] font-bold leading-none truncate" style={{ color: c.fg }}>
+                      {tickFmt(k.value)}
                     </p>
                   </div>
                 )
