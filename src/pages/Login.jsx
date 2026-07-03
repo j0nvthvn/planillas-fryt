@@ -28,7 +28,7 @@ export default function Login() {
     setLoading(true)
     try {
       await signIn(email, password)
-      navigate('/turno')
+      navigate('/hoy')
     } catch (err) {
       setError(
         err?.status === 429

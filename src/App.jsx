@@ -6,18 +6,19 @@ import { ToastProvider } from './components/Toast'
 import ProtectedRoute from './components/ProtectedRoute'
 import Spinner from './components/Spinner'
 
-// Path crítico — carga inmediata (trabajadores lo usan siempre)
+// Path crítico — carga inmediata
 import Login from './pages/Login'
+import Hoy from './pages/Hoy'
 import Turno from './pages/Turno'
-import Resumen from './pages/Resumen'
 
 // Páginas admin/pesadas — carga diferida
-const Dashboard      = lazy(() => import('./pages/Dashboard'))
-const Historial      = lazy(() => import('./pages/Historial'))
-const EditarTurno    = lazy(() => import('./pages/EditarTurno'))
-const Proveedores    = lazy(() => import('./pages/Proveedores'))
-const Usuarios       = lazy(() => import('./pages/Usuarios'))
-const Configuracion  = lazy(() => import('./pages/Configuracion'))
+const Analisis      = lazy(() => import('./pages/Analisis'))
+const Historial     = lazy(() => import('./pages/Historial'))
+const Resumen       = lazy(() => import('./pages/Resumen'))
+const EditarTurno   = lazy(() => import('./pages/EditarTurno'))
+const Proveedores   = lazy(() => import('./pages/Proveedores'))
+const Usuarios      = lazy(() => import('./pages/Usuarios'))
+const Configuracion = lazy(() => import('./pages/Configuracion'))
 
 function ScrollToTop() {
   const { pathname } = useLocation()
@@ -46,19 +47,25 @@ export default function App() {
         <Routes>
           <Route path="/login" element={<Login />} />
 
+          <Route path="/hoy" element={
+            <ProtectedRoute><Hoy /></ProtectedRoute>
+          } />
+
           <Route path="/turno" element={
             <ProtectedRoute><Turno /></ProtectedRoute>
           } />
 
           <Route path="/resumen" element={
-            <ProtectedRoute><Resumen /></ProtectedRoute>
+            <ProtectedRoute><LazyRoute><Resumen /></LazyRoute></ProtectedRoute>
           } />
 
-          <Route path="/dashboard" element={
+          <Route path="/analisis" element={
             <ProtectedRoute solodueno>
-              <LazyRoute><Dashboard /></LazyRoute>
+              <LazyRoute><Analisis /></LazyRoute>
             </ProtectedRoute>
           } />
+
+          <Route path="/dashboard" element={<Navigate to="/analisis" replace />} />
 
           <Route path="/historial" element={
             <ProtectedRoute solodueno>
@@ -90,8 +97,8 @@ export default function App() {
             </ProtectedRoute>
           } />
 
-          <Route path="/" element={<Navigate to="/turno" replace />} />
-          <Route path="*" element={<Navigate to="/turno" replace />} />
+          <Route path="/" element={<Navigate to="/hoy" replace />} />
+          <Route path="*" element={<Navigate to="/hoy" replace />} />
         </Routes>
         </ToastProvider>
         </ConfigProvider>
