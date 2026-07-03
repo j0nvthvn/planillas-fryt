@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import Layout from '../components/Layout'
+import PageHeader from '../components/PageHeader'
 import Icon from '../components/Icon'
 import { useConfig } from '../hooks/useConfig'
 import { useTheme } from '../hooks/useTheme'
@@ -20,7 +22,37 @@ const TEMAS = [
   { value: 'oscuro',  label: 'Oscuro',   icon: 'moon' },
 ]
 
+function Toggle({ on, onChange, label }) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={on}
+      onClick={onChange}
+      className="w-11 h-6 rounded-full relative transition-colors shrink-0"
+      style={{ background: on ? '#5C3317' : '#E4D6BF' }}
+    >
+      <span
+        className="absolute top-0.5 w-5 h-5 rounded-full bg-white shadow-sm transition-all"
+        style={{ left: on ? '22px' : '2px' }}
+      />
+    </button>
+  )
+}
+
+function SettingRow({ children, onClick, last = false }) {
+  return (
+    <div
+      onClick={onClick}
+      className={`flex items-center justify-between px-4 py-3.5 ${last ? '' : 'border-b border-soft'} ${onClick ? 'cursor-pointer hover:bg-canvas' : ''}`}
+    >
+      {children}
+    </div>
+  )
+}
+
 export default function Configuracion() {
+  const navigate = useNavigate()
   const { config, guardar } = useConfig()
   const { tema, setTema } = useTheme()
   const [diasUnicos, setDiasUnicos] = useState(config.diasTurnoUnico)
@@ -69,170 +101,143 @@ export default function Configuracion() {
 
   return (
     <Layout>
-      <div className="max-w-lg mx-auto space-y-6">
-        <h1 className="text-xl font-bold text-gray-900 dark:text-zinc-100">Configuración</h1>
+      <div className="max-w-2xl mx-auto space-y-4">
+        <button
+          onClick={() => navigate(-1)}
+          className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-ink2 hover:text-ink"
+        >
+          <Icon name="arrowLeft" className="w-4 h-4" stroke={2} />
+          Volver
+        </button>
 
-        {/* Apariencia — local, no se guarda en Supabase */}
-        <div className="card space-y-3">
-          <div>
-            <h2 className="font-semibold text-gray-800 dark:text-zinc-200 text-sm">Apariencia</h2>
-            <p className="text-xs text-gray-500 dark:text-zinc-400 mt-0.5">Se guarda en este dispositivo, no afecta a otros usuarios.</p>
-          </div>
-          <div className="grid grid-cols-3 gap-2">
-            {TEMAS.map(({ value, label, icon }) => {
-              const activo = tema === value
-              return (
-                <button
-                  key={value}
-                  type="button"
-                  onClick={() => setTema(value)}
-                  className={`flex flex-col items-center gap-1.5 py-3 rounded-xl border text-xs font-medium transition-colors ${
-                    activo
-                      ? 'bg-brand-tint border-brand text-brand'
-                      : 'bg-gray-50 dark:bg-zinc-700 border-gray-200 dark:border-zinc-600 text-gray-600 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-zinc-600'
-                  }`}
-                >
-                  <Icon name={icon} className="w-5 h-5" stroke={activo ? 2.2 : 1.8} />
-                  {label}
-                </button>
-              )
-            })}
-          </div>
-        </div>
+        <PageHeader title="Configuración" />
 
-        {/* Nombre del local */}
-        <div className="card space-y-3">
-          <div>
-            <h2 className="font-semibold text-gray-800 dark:text-zinc-200 text-sm">Nombre del local</h2>
-            <p className="text-xs text-gray-500 dark:text-zinc-400 mt-0.5">Aparece en el encabezado y en los reportes por email.</p>
+        {/* Local */}
+        <section>
+          <p className="eyebrow px-1 mb-2">Local</p>
+          <div className="rounded-2xl bg-white border border-hairline overflow-hidden">
+            <div className="px-4 py-3.5 border-b border-soft">
+              <label className="block text-[13px] font-semibold text-ink mb-1.5">Nombre del local</label>
+              <input
+                type="text"
+                value={nombreLocal}
+                onChange={(e) => { setNombreLocal(e.target.value); setGuardado(false) }}
+                placeholder="Minimarket Fryt"
+                className="w-full bg-transparent border-0 p-0 text-[14px] text-ink2 focus:outline-none focus:ring-0"
+                maxLength={40}
+              />
+            </div>
+            <div className="flex items-center justify-between px-4 py-3.5">
+              <span className="text-[14px] text-ink">Hora de corte mañana</span>
+              <input
+                type="number"
+                min={0}
+                max={23}
+                value={horaCorte}
+                onChange={(e) => { setHoraCorte(e.target.value); setGuardado(false) }}
+                className="w-16 text-right bg-transparent border-0 p-0 text-[14px] font-semibold text-ink2 focus:outline-none focus:ring-0 tabular-nums"
+              />
+            </div>
           </div>
-          <input
-            type="text"
-            value={nombreLocal}
-            onChange={(e) => { setNombreLocal(e.target.value); setGuardado(false) }}
-            placeholder="Ej: Minimarket Fryt"
-            className="input"
-            maxLength={40}
-          />
-        </div>
+        </section>
 
-        {/* Días de turno único */}
-        <div className="card space-y-4">
-          <div>
-            <h2 className="font-semibold text-gray-800 dark:text-zinc-200 text-sm">Días con un solo turno</h2>
-            <p className="text-xs text-gray-500 dark:text-zinc-400 mt-0.5">En estos días solo se registra el turno de mañana.</p>
-          </div>
-          <div className="space-y-1">
-            {DIAS.map(({ idx, label }) => {
+        {/* Días turno único */}
+        <section>
+          <p className="eyebrow px-1 mb-2">Días con turno único</p>
+          <div className="rounded-2xl bg-white border border-hairline overflow-hidden">
+            {DIAS.map(({ idx, label }, i) => {
               const activo = diasUnicos.includes(idx)
               return (
-                <button
+                <div
                   key={idx}
-                  type="button"
                   onClick={() => toggleDia(idx)}
-                  className={`flex w-full items-center justify-between rounded-xl px-4 py-3 text-sm transition-colors ${
-                    activo ? 'bg-brand-tint' : 'hover:bg-gray-50 dark:hover:bg-zinc-800'
+                  className={`flex items-center justify-between px-4 py-3 cursor-pointer hover:bg-canvas transition-colors ${
+                    i === DIAS.length - 1 ? '' : 'border-b border-soft'
                   }`}
                 >
-                  <span className={`font-medium ${activo ? 'text-brand' : 'text-gray-700 dark:text-zinc-300'}`}>{label}</span>
-                  <span className={`flex items-center gap-1.5 text-xs font-medium ${activo ? 'text-brand' : 'text-gray-400 dark:text-zinc-500'}`}>
-                    {activo ? (
-                      <>
-                        <Icon name="sun" className="w-3.5 h-3.5" /> Solo mañana
-                      </>
-                    ) : (
-                      <>
-                        <Icon name="check" className="w-3.5 h-3.5" stroke={2} /> 2 turnos
-                      </>
-                    )}
-                  </span>
-                </button>
+                  <span className="text-[14px] text-ink">{label}</span>
+                  <Toggle on={activo} onChange={() => {}} />
+                </div>
               )
             })}
           </div>
-        </div>
+        </section>
 
-        {/* Hora de corte */}
-        <div className="card space-y-3">
-          <div>
-            <h2 className="font-semibold text-gray-800 dark:text-zinc-200 text-sm">Hora de corte mañana / tarde</h2>
-            <p className="text-xs text-gray-500 dark:text-zinc-400 mt-0.5">
-              Antes de esta hora el turno se sugiere como "mañana", después como "tarde".
-            </p>
+        {/* Apariencia */}
+        <section>
+          <p className="eyebrow px-1 mb-2">Apariencia</p>
+          <div className="rounded-2xl bg-white border border-hairline p-1.5">
+            <div className="flex gap-1">
+              {TEMAS.map(({ value, label, icon }) => {
+                const activo = tema === value
+                return (
+                  <button
+                    key={value}
+                    type="button"
+                    onClick={() => setTema(value)}
+                    className={`flex-1 flex flex-col items-center gap-1.5 py-2.5 rounded-[10px] text-[12px] font-semibold transition-colors ${
+                      activo
+                        ? 'bg-brand-tint text-brand'
+                        : 'text-ink2 hover:bg-canvas'
+                    }`}
+                  >
+                    <Icon name={icon} className="w-4 h-4" stroke={activo ? 2.2 : 1.8} />
+                    {label}
+                  </button>
+                )
+              })}
+            </div>
           </div>
-          <div className="flex items-center gap-3">
-            <input
-              type="number"
-              min={0}
-              max={23}
-              value={horaCorte}
-              onChange={(e) => { setHoraCorte(e.target.value); setGuardado(false) }}
-              className="input w-24 text-center text-lg font-semibold"
-            />
-            <span className="text-sm text-gray-500 dark:text-zinc-400">horas (formato 24h)</span>
-          </div>
-        </div>
+        </section>
 
-        {/* Notificaciones por email */}
-        <div className="card space-y-4">
-          <div>
-            <h2 className="font-semibold text-gray-800 dark:text-zinc-200 text-sm">Notificaciones por email</h2>
-            <p className="text-xs text-gray-500 dark:text-zinc-400 mt-0.5">
-              Resúmenes automáticos al guardar un turno y reportes diarios/semanales al dueño.
-            </p>
-          </div>
-
-          {/* Toggle activar */}
-          <button
-            type="button"
-            onClick={() => { setNotifActivas((v) => !v); setGuardado(false) }}
-            className={`flex w-full items-center justify-between rounded-xl px-4 py-3 text-sm transition-colors ${
-              notifActivas ? 'bg-brand-tint' : 'hover:bg-gray-50 dark:hover:bg-zinc-800'
-            }`}
-          >
-            <span className={`font-medium ${notifActivas ? 'text-brand' : 'text-gray-700 dark:text-zinc-300'}`}>
-              Notificaciones activas
-            </span>
-            <span className={`w-10 h-6 rounded-full relative transition-colors ${notifActivas ? 'bg-brand' : 'bg-gray-200 dark:bg-zinc-600'}`}>
-              <span className={`absolute top-1 w-4 h-4 rounded-full bg-white shadow-sm transition-all ${notifActivas ? 'left-5' : 'left-1'}`} />
-            </span>
-          </button>
-
-          {/* Email extra */}
-          {notifActivas && (
-            <div className="space-y-1.5">
-              <label className="label">Email adicional <span className="font-normal text-gray-400 dark:text-zinc-500">(opcional)</span></label>
-              <input
-                type="email"
-                placeholder="contador@ejemplo.com"
-                value={notifEmailExtra}
-                onChange={(e) => { setNotifEmailExtra(e.target.value); setGuardado(false) }}
-                className="input"
+        {/* Notificaciones */}
+        <section>
+          <p className="eyebrow px-1 mb-2">Notificaciones</p>
+          <div className="rounded-2xl bg-white border border-hairline overflow-hidden">
+            <div className="flex items-center justify-between px-4 py-3.5">
+              <div className="flex-1 min-w-0">
+                <p className="text-[14px] text-ink">Notificaciones activas</p>
+                <p className="text-[12px] text-muted mt-0.5">Resúmenes al guardar y reportes diarios</p>
+              </div>
+              <Toggle
+                on={notifActivas}
+                onChange={() => { setNotifActivas((v) => !v); setGuardado(false) }}
               />
-              <p className="text-xs text-gray-400 dark:text-zinc-500">Ej: contador o socio que también recibe los resúmenes.</p>
             </div>
-          )}
-
-          {/* Qué se envía */}
-          {notifActivas && (
-            <div className="rounded-xl bg-gray-50 dark:bg-zinc-800 px-4 py-3 space-y-1.5">
-              <p className="text-xs font-semibold text-gray-500 dark:text-zinc-400 uppercase tracking-wide mb-2">Qué recibirás</p>
-              {[
-                'Resumen inmediato al guardar cada turno',
-                'Resumen diario automático a las 23:00',
-                'Resumen semanal los lunes a las 8:00',
-              ].map((item) => (
-                <div key={item} className="flex items-start gap-2">
-                  <Icon name="check" className="w-3.5 h-3.5 text-green-600 dark:text-green-400 shrink-0 mt-0.5" stroke={2.5} />
-                  <span className="text-xs text-gray-600 dark:text-zinc-300">{item}</span>
+            {notifActivas && (
+              <>
+                <div className="border-t border-soft px-4 py-3.5">
+                  <label className="block text-[13px] font-semibold text-ink mb-1.5">Email adicional</label>
+                  <input
+                    type="email"
+                    placeholder="contador@ejemplo.com"
+                    value={notifEmailExtra}
+                    onChange={(e) => { setNotifEmailExtra(e.target.value); setGuardado(false) }}
+                    className="w-full bg-transparent border-0 p-0 text-[14px] text-ink2 placeholder-muted2 focus:outline-none focus:ring-0"
+                  />
                 </div>
-              ))}
-            </div>
-          )}
-        </div>
+                <div className="border-t border-soft bg-canvas px-4 py-3 space-y-1.5">
+                  <p className="eyebrow mb-2">Qué recibirás</p>
+                  {[
+                    'Resumen inmediato al guardar cada turno',
+                    'Resumen diario automático a las 23:00',
+                    'Resumen semanal los lunes a las 8:00',
+                  ].map((item) => (
+                    <div key={item} className="flex items-start gap-2">
+                      <Icon name="check" className="w-3.5 h-3.5 text-pos shrink-0 mt-0.5" stroke={2.5} />
+                      <span className="text-[12px] text-ink2">{item}</span>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+        </section>
 
         {error && (
-          <p className="text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-lg px-3 py-2">{error}</p>
+          <p className="text-sm text-neg bg-neg-tint border border-neg/20 rounded-lg px-3 py-2">
+            {error}
+          </p>
         )}
 
         <button
@@ -246,7 +251,7 @@ export default function Configuracion() {
         </button>
 
         {guardado && (
-          <p className="text-center text-sm text-green-700 font-medium">
+          <p className="text-center text-sm text-pos font-medium">
             ✓ Configuración guardada correctamente
           </p>
         )}
