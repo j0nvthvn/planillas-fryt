@@ -1,9 +1,10 @@
 import { useEffect } from 'react'
 import { parseNum } from '../../utils/format'
+import Icon from '../Icon'
 import {
   ACCENT, GREEN, NAVY, METODOS_VENTA, applyKey,
-  TurnoIcon as Icon, BottomSheet, FreqChips, AmountDisplay,
-  PayToggle, Keypad, DesktopAmountInput,
+  BottomSheet, FreqChips, AmountDisplay,
+  PayToggle, Keypad, DesktopAmountInput, MetodoLogo,
 } from '../TurnoInput'
 
 /**
@@ -51,6 +52,13 @@ export function TurnoSheets({ sheet, setSheet, isDesktop, sugerencias, usedNames
 
             {sheet.mode === 'venta' && (
               <>
+                <div className="flex items-center gap-2.5">
+                  <MetodoLogo metodo={metodo} size="md" />
+                  <div className="min-w-0">
+                    <p className="text-[15px] font-bold text-ink">{metodo.label}</p>
+                    <p className="text-[12px] text-muted">{metodo.sub}</p>
+                  </div>
+                </div>
                 <DesktopAmountInput
                   value={sheet.monto}
                   onChange={(v) => setSheet((s) => ({ ...s, monto: v }))}
@@ -131,6 +139,13 @@ export function TurnoSheets({ sheet, setSheet, isDesktop, sugerencias, usedNames
           )}
           {sheet.mode === 'venta' && (
             <BottomSheet title={`Ventas · ${metodo.label}`} onClose={() => setSheet(null)}>
+              <div className="flex items-center gap-2.5 -mt-1">
+                <MetodoLogo metodo={metodo} size="md" />
+                <div className="min-w-0">
+                  <p className="text-[15px] font-bold text-ink">{metodo.label}</p>
+                  <p className="text-[12px] text-muted">{metodo.sub}</p>
+                </div>
+              </div>
               <AmountDisplay value={sheet.monto} sub={metodo.sub} />
               <Keypad onKey={(k) => setSheet((s) => ({ ...s, monto: applyKey(s.monto, k) }))}
                 onAccept={commitVenta} accent={ACCENT} label="Listo" />

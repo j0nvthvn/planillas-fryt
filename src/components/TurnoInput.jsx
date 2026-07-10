@@ -1,25 +1,35 @@
 import { useState, useRef, useEffect } from 'react'
 import { parseNum, clp } from '../utils/format'
+import Icon from './Icon'
 
 /* ── Colores de marca ─────────────────────────────────────── */
-export const ACCENT = '#5C3317'
-export const ACCENT_TINT = '#F5EAD4'
-export const GREEN = '#1E7A4F'
-export const NAVY = '#33518C'
+// Referencian las variables de tema (index.css) para que los acentos de UI
+// (keypad, toggles, chips) cambien junto con el modo oscuro, igual que el
+// resto de la app. Los colores por método de pago en METODOS_VENTA (más abajo)
+// se mantienen como hex fijos: son identidad de marca de cada método (logos),
+// no acentos de tema.
+export const ACCENT = 'rgb(var(--brand-rgb))'
+export const ACCENT_TINT = 'rgb(var(--brand-tint-rgb))'
+export const GREEN = 'rgb(var(--pos-rgb))'
+export const NAVY = 'rgb(var(--info-rgb))'
 
 export const METODOS_VENTA = [
-  { key: 'efectivo',      label: 'Efectivo',      sub: 'Caja',              logo: '/metodos/efectivo.png',      color: '#1E7A4F' },
-  { key: 'getnet',        label: 'Getnet',         sub: 'Débito / Crédito',  logo: '/metodos/getnet.png',        color: '#33518C' },
-  { key: 'mercadopago',   label: 'Mercado Pago',   sub: 'Débito / Crédito',  logo: '/metodos/mercadopago.png',   color: '#00b1ea' },
-  { key: 'edenred',       label: 'Edenred',        sub: 'Sodexo / Ticket',   logo: '/metodos/edenred.png',       color: '#f59e0b' },
-  { key: 'amipass',       label: 'Amipass',        sub: 'Tarjeta beneficio', logo: '/metodos/amipass.png',       color: '#a16207' },
-  { key: 'transferencia', label: 'Transferencia',  sub: 'Banco',             logo: '/metodos/transferencia.png', color: '#5C3317' },
+  { key: 'efectivo',      label: 'Efectivo',      sub: 'Caja',              logo: '/metodos/efectivo.png',      color: '#1E7A4F', tint: '#E6F1EA' },
+  { key: 'getnet',        label: 'Getnet',         sub: 'Débito / Crédito',  logo: '/metodos/getnet.png',        color: '#33518C', tint: '#E8EDF6' },
+  { key: 'mercadopago',   label: 'Mercado Pago',   sub: 'Débito / Crédito',  logo: '/metodos/mercadopago.png',   color: '#00B1EA', tint: '#E2F6FC' },
+  { key: 'edenred',       label: 'Edenred',        sub: 'Sodexo / Ticket',   logo: '/metodos/edenred.png',       color: '#F59E0B', tint: '#FDF1DD' },
+  { key: 'amipass',       label: 'Amipass',        sub: 'Tarjeta beneficio', logo: '/metodos/amipass.png',       color: '#A16207', tint: '#F3ECDD' },
+  { key: 'transferencia', label: 'Transferencia',  sub: 'Banco',             logo: '/metodos/transferencia.png', color: '#5C3317', tint: '#F5EAD4' },
 ]
 
 /* ── Logo de método de pago ──────────────────────────────── */
 const METODO_FALLBACK = {
-  efectivo:      { d: 'M3 7h18v10H3zM12 9.7a2.3 2.3 0 100 4.6', color: '#1E7A4F', bg: '#EDFAF3' },
-  transferencia: { d: 'M4 10l8-5 8 5M5 10v7M19 10v7M9 10v7M15 10v7M3 19h18', color: '#33518C', bg: '#EBF0FA' },
+  efectivo:      { d: 'M3 7h18v10H3zM12 9.7a2.3 2.3 0 100 4.6',                         bg: '#E6F1EA' },
+  getnet:        { d: 'M3 6h18a1 1 0 011 1v10a1 1 0 01-1 1H3a1 1 0 01-1-1V7a1 1 0 011-1zM2 10h20', bg: '#E8EDF6' },
+  mercadopago:   { d: 'M3 6h18a1 1 0 011 1v10a1 1 0 01-1 1H3a1 1 0 01-1-1V7a1 1 0 011-1zM7 12h6M7 15h4', bg: '#E2F6FC' },
+  edenred:       { d: 'M3 8a2 2 0 012-2h14a2 2 0 012 2v2a2 2 0 100 4v2a2 2 0 01-2 2H5a2 2 0 01-2-2v-2a2 2 0 100-4V8zM9 8v8', bg: '#FDF1DD' },
+  amipass:       { d: 'M3 6h18a1 1 0 011 1v10a1 1 0 01-1 1H3a1 1 0 01-1-1V7a1 1 0 011-1zM7 12l2 2 4-4', bg: '#F3ECDD' },
+  transferencia: { d: 'M4 10l8-5 8 5M5 10v7M19 10v7M9 10v7M15 10v7M3 19h18',             bg: '#F5EAD4' },
 }
 
 const LOGO_SIZES = {
@@ -35,8 +45,8 @@ export function MetodoLogo({ metodo, active = false, size = 'md' }) {
   const sz = LOGO_SIZES[size] ?? LOGO_SIZES.md
   return (
     <span
-      className="relative shrink-0 flex items-center justify-center bg-image-bg"
-      style={!showImg && fb?.bg ? { background: fb.bg } : undefined}
+      className={`relative shrink-0 flex items-center justify-center ${sz.container} ${showImg ? 'bg-image-bg' : ''}`}
+      style={!showImg && fb ? { background: fb.bg } : undefined}
     >
       {showImg && (
         <img
@@ -48,7 +58,7 @@ export function MetodoLogo({ metodo, active = false, size = 'md' }) {
       )}
       {!showImg && fb && (
         <svg viewBox="0 0 24 24" fill="none" className={sz.icon}
-          stroke={fb.color} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
+          stroke={metodo.color} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
           <path d={fb.d} />
         </svg>
       )}
@@ -76,28 +86,6 @@ export function applyKey(cur, k) {
   if (k === '000') v = v === '' ? '' : v + '000'
   else v = v === '' || v === '0' ? k : v + k
   return v.replace(/^0+(?=\d)/, '').slice(0, 9)
-}
-
-/* ── Iconos locales (paths propios del flujo de turno) ───── */
-export function TurnoIcon({ name, className = 'w-5 h-5', stroke = 1.7 }) {
-  const paths = {
-    plus: 'M12 5v14M5 12h14',
-    check: 'M4 12.5l5 5L20 6.5',
-    trash: 'M5 7h14M10 7V5h4v2M7 7l1 12h8l1-12',
-    chevR: 'M9 5l7 7-7 7',
-    close: 'M6 6l12 12M18 6L6 18',
-    store: 'M4 9l1-4h14l1 4M4 9v10h16V9M4 9h16',
-    cash: 'M3 7h18v10H3zM12 9.7a2.3 2.3 0 100 4.6 2.3 2.3 0 000-4.6',
-    bank: 'M4 10l8-5 8 5M5 10v7M19 10v7M9 10v7M15 10v7M3 19h18',
-    sun: 'M12 8a4 4 0 100 8 4 4 0 000-8M12 3v2M12 19v2M3 12h2M19 12h2M5.5 5.5l1.5 1.5M17 17l1.5 1.5M18.5 5.5L17 7M7 17l-1.5 1.5',
-    moon: 'M20 14.5A8 8 0 119.5 4a6.5 6.5 0 0010.5 10.5z',
-  }
-  return (
-    <svg viewBox="0 0 24 24" fill="none" className={className}
-      stroke="currentColor" strokeWidth={stroke} strokeLinecap="round" strokeLinejoin="round">
-      <path d={paths[name]} />
-    </svg>
-  )
 }
 
 /* ── ProveedorAvatar ─────────────────────────────────────── */
@@ -190,7 +178,7 @@ export function BottomSheet({ title, children, onClose, extra }) {
           <div className="flex gap-2">
             {extra}
             <button onClick={onClose} className="w-8 h-8 rounded-full grid place-items-center bg-hairline text-ink2" aria-label="Cerrar">
-              <TurnoIcon name="close" className="w-[15px] h-[15px]" stroke={2.2} />
+              <Icon name="close" className="w-[15px] h-[15px]" stroke={2.2} />
             </button>
           </div>
         </div>
@@ -228,7 +216,7 @@ export function FreqChips({ query = '', used = [], sugerencias = [], onPick }) {
               style={on ? { background: ACCENT_TINT, color: ACCENT, borderColor: ACCENT } : undefined}>
               <ProveedorAvatar nombre={s.nombre} imagen_url={s.imagen_url} size="sm" />
               {s.nombre}
-              {on && <TurnoIcon name="check" className="w-3 h-3" stroke={2.4} />}
+              {on && <Icon name="check" className="w-3 h-3" stroke={2.4} />}
             </button>
           )
         })}
@@ -295,8 +283,8 @@ export function AmountDisplay({ value, sub, color }) {
 /* ── PayToggle ───────────────────────────────────────────── */
 export function PayToggle({ value, onChange }) {
   const opts = [
-    { v: 'efectivo', label: 'Efectivo', icon: 'cash', c: GREEN, tint: '#E6F1EA' },
-    { v: 'transferencia', label: 'Transferencia', icon: 'bank', c: NAVY, tint: '#E8EDF6' },
+    { v: 'efectivo', label: 'Efectivo', icon: 'cash', c: GREEN, tint: 'rgb(var(--pos-tint-rgb))' },
+    { v: 'transferencia', label: 'Transferencia', icon: 'bank', c: NAVY, tint: 'rgb(var(--info-tint-rgb))' },
   ]
   return (
     <div className="flex gap-2">
@@ -308,7 +296,7 @@ export function PayToggle({ value, onChange }) {
               on ? '' : 'bg-card text-muted border-hairline'
             }`}
             style={on ? { background: o.tint, color: o.c, borderColor: o.c } : undefined}>
-            <TurnoIcon name={o.icon} className="w-[18px] h-[18px]" stroke={1.8} />{o.label}
+            <Icon name={o.icon} className="w-[18px] h-[18px]" stroke={1.8} />{o.label}
           </button>
         )
       })}
@@ -350,7 +338,7 @@ export function Keypad({ onKey, onAccept, disabled, accent, label }) {
         className="h-12 rounded-2xl text-white text-base font-bold flex items-center justify-center gap-2 mt-1"
         style={!disabled ? { background: accent } : { background: '#d6cab8' }}
       >
-        <TurnoIcon name="check" className="w-5 h-5" stroke={2.4} />{label}
+        <Icon name="check" className="w-5 h-5" stroke={2.4} />{label}
       </button>
     </div>
   )

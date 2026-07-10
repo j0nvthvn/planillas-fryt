@@ -31,6 +31,7 @@ export default {
         warn:  { DEFAULT: 'rgb(var(--warn-rgb) / <alpha-value>)', tint: 'rgb(var(--warn-tint-rgb) / <alpha-value>)' },
         info:  { DEFAULT: 'rgb(var(--info-rgb) / <alpha-value>)', tint: 'rgb(var(--info-tint-rgb) / <alpha-value>)' },
         wirec: { DEFAULT: '#33518C', tint: '#E8EDF6' },
+        'image-bg': 'rgb(var(--image-bg-rgb) / <alpha-value>)',
       },
       borderRadius: {
         xl2: '20px',

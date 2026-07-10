@@ -5,6 +5,8 @@ import PageHeader from '../components/PageHeader'
 import Icon from '../components/Icon'
 import { useConfig } from '../hooks/useConfig'
 import { useTheme } from '../hooks/useTheme'
+import { useToast } from '../components/Toast'
+import { useErrorToast } from '../hooks/useErrorToast'
 
 const DIAS = [
   { idx: 1, label: 'Lunes' },
@@ -28,7 +30,14 @@ function Toggle({ on, onChange, label }) {
       type="button"
       role="switch"
       aria-checked={on}
-      onClick={onChange}
+      aria-label={label}
+      onClick={(e) => {
+        // Algunos usos envuelven el Toggle en una fila con su propio onClick
+        // (tap target más grande). Frenamos la propagación para que el click
+        // en el switch no dispare doblemente el mismo cambio.
+        e.stopPropagation()
+        onChange()
+      }}
       className={`w-11 h-6 rounded-full relative transition-colors shrink-0 ${
         on ? 'bg-brand' : 'bg-hairline'
       }`}
@@ -56,14 +65,24 @@ export default function Configuracion() {
   const navigate = useNavigate()
   const { config, guardar } = useConfig()
   const { tema, setTema } = useTheme()
+  const toast = useToast()
   const [diasUnicos, setDiasUnicos] = useState(config.diasTurnoUnico)
   const [horaCorte, setHoraCorte] = useState(String(config.horaCorteManana))
   const [notifActivas, setNotifActivas] = useState(config.notificacionesActivas)
   const [notifEmailExtra, setNotifEmailExtra] = useState(config.notificacionesEmailExtra)
   const [nombreLocal, setNombreLocal] = useState(config.nombreLocal)
+  const [fondoCaja, setFondoCaja] = useState(String(config.fondoCajaInicial ?? 0))
   const [guardando, setGuardando] = useState(false)
   const [guardado, setGuardado] = useState(false)
   const [error, setError] = useState('')
+
+  useErrorToast(error)
+
+  useEffect(() => {
+    if (!guardado) return
+    const id = toast.show({ message: 'Configuración guardada correctamente', duration: 4000 })
+    return () => toast.hide(id)
+  }, [guardado, toast])
 
   useEffect(() => {
     setDiasUnicos(config.diasTurnoUnico)
@@ -71,6 +90,7 @@ export default function Configuracion() {
     setNotifActivas(config.notificacionesActivas)
     setNotifEmailExtra(config.notificacionesEmailExtra)
     setNombreLocal(config.nombreLocal)
+    setFondoCaja(String(config.fondoCajaInicial ?? 0))
   }, [config])
 
   function toggleDia(idx) {
@@ -86,6 +106,11 @@ export default function Configuracion() {
       setError('La hora debe estar entre 0 y 23.')
       return
     }
+    const fondo = parseInt(fondoCaja, 10)
+    if (isNaN(fondo) || fondo < 0) {
+      setError('El fondo de caja debe ser un monto válido.')
+      return
+    }
     setGuardando(true)
     setError('')
     const { error: err } = await guardar({
@@ -94,6 +119,7 @@ export default function Configuracion() {
       notificacionesActivas: notifActivas,
       notificacionesEmailExtra: notifEmailExtra.trim(),
       nombreLocal: nombreLocal.trim() || 'Fryt',
+      fondoCajaInicial: fondo,
     })
     setGuardando(false)
     if (err) setError('No se pudo guardar. Inténtalo de nuevo.')
@@ -128,7 +154,7 @@ export default function Configuracion() {
                 maxLength={40}
               />
             </div>
-            <div className="flex items-center justify-between px-4 py-3.5">
+            <div className="flex items-center justify-between px-4 py-3.5 border-b border-soft">
               <span className="text-[14px] text-ink">Hora de corte mañana</span>
               <input
                 type="number"
@@ -137,6 +163,20 @@ export default function Configuracion() {
                 value={horaCorte}
                 onChange={(e) => { setHoraCorte(e.target.value); setGuardado(false) }}
                 className="w-16 text-right bg-transparent border-0 p-0 text-[14px] font-semibold text-ink2 focus:outline-none focus:ring-0 tabular-nums"
+              />
+            </div>
+            <div className="flex items-center justify-between px-4 py-3.5">
+              <div className="min-w-0 flex-1 pr-3">
+                <p className="text-[14px] text-ink">Fondo de caja inicial</p>
+                <p className="text-[12px] text-muted mt-0.5">Vuelto con el que se abre cada turno nuevo</p>
+              </div>
+              <input
+                type="number"
+                min={0}
+                step={100}
+                value={fondoCaja}
+                onChange={(e) => { setFondoCaja(e.target.value); setGuardado(false) }}
+                className="w-24 text-right bg-transparent border-0 p-0 text-[14px] font-semibold text-ink2 focus:outline-none focus:ring-0 tabular-nums"
               />
             </div>
           </div>
@@ -157,7 +197,7 @@ export default function Configuracion() {
                   }`}
                 >
                   <span className="text-[14px] text-ink">{label}</span>
-                  <Toggle on={activo} onChange={() => {}} />
+                  <Toggle on={activo} onChange={() => toggleDia(idx)} label={`Turno único los ${label.toLowerCase()}`} />
                 </div>
               )
             })}
@@ -203,6 +243,7 @@ export default function Configuracion() {
               <Toggle
                 on={notifActivas}
                 onChange={() => { setNotifActivas((v) => !v); setGuardado(false) }}
+                label="Notificaciones activas"
               />
             </div>
             {notifActivas && (
@@ -235,12 +276,6 @@ export default function Configuracion() {
           </div>
         </section>
 
-        {error && (
-          <p className="text-sm text-neg bg-neg-tint border border-neg/20 rounded-lg px-3 py-2">
-            {error}
-          </p>
-        )}
-
         <button
           type="button"
           onClick={handleGuardar}
@@ -250,12 +285,6 @@ export default function Configuracion() {
           {guardando && <span className="w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin" />}
           {guardando ? 'Guardando…' : 'Guardar cambios'}
         </button>
-
-        {guardado && (
-          <p className="text-center text-sm text-pos font-medium">
-            ✓ Configuración guardada correctamente
-          </p>
-        )}
       </div>
     </Layout>
   )

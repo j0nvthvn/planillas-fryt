@@ -8,9 +8,11 @@ import { METODOS_VENTA, VENTAS_VACIAS } from '../TurnoInput'
  *
  * @param {object}   opts
  * @param {Function} [opts.onDirty] - se llama cuando el usuario modifica datos
- *                                     (sirve para marcar cambios locales / borrador).
+ * @param {Function} [opts.onProvCommit] - (row, idx, newProvs) tras commitProv
+ * @param {Function} [opts.onVentaCommit] - (newVentas) tras commitVenta
+ * @param {Function} [opts.onProvDelete] - (row, idx) tras delProv
  */
-export function useTurnoForm({ onDirty } = {}) {
+export function useTurnoForm({ onDirty, onProvCommit, onVentaCommit, onProvDelete } = {}) {
   const [provs, setProvs] = useState([])
   const [ventas, setVentas] = useState(VENTAS_VACIAS)
   const [sheet, setSheet] = useState(null)
@@ -42,21 +44,36 @@ export function useTurnoForm({ onDirty } = {}) {
   }
 
   function commitProv() {
-    const row = { nombre: sheet.nombre.trim() || 'Proveedor', monto: parseNum(sheet.monto), forma_pago: sheet.forma_pago, imagen_url: sheet.imagen_url }
-    if (sheet.idx === -1) setProvs((p) => [...p, row])
-    else setProvs((p) => p.map((x, i) => (i === sheet.idx ? row : x)))
+    const existing = sheet.idx >= 0 ? provs[sheet.idx] : null
+    const row = {
+      id: existing?.id || null,
+      nombre: sheet.nombre.trim() || 'Proveedor',
+      monto: parseNum(sheet.monto),
+      forma_pago: sheet.forma_pago,
+      imagen_url: sheet.imagen_url,
+    }
+    const newProvs = sheet.idx === -1
+      ? [...provs, row]
+      : provs.map((x, i) => (i === sheet.idx ? row : x))
+    setProvs(newProvs)
     onDirty?.()
     setSheet(null)
+    onProvCommit?.(row, sheet.idx, newProvs)
   }
   function commitVenta() {
-    setVentas((v) => ({ ...v, [sheet.key]: parseNum(sheet.monto) }))
+    const newVentas = { ...ventas, [sheet.key]: parseNum(sheet.monto) }
+    setVentas(newVentas)
     onDirty?.()
     setSheet(null)
+    onVentaCommit?.(newVentas)
   }
   function delProv(i) {
-    setProvs((p) => p.filter((_, j) => j !== i))
+    const removed = provs[i]
+    const newProvs = provs.filter((_, j) => j !== i)
+    setProvs(newProvs)
     onDirty?.()
     setSheet(null)
+    onProvDelete?.(removed, i, newProvs)
   }
 
   return {

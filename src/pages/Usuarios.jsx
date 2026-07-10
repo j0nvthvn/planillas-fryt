@@ -5,14 +5,14 @@ import Layout from '../components/Layout'
 import PageHeader from '../components/PageHeader'
 import Spinner from '../components/Spinner'
 import Icon from '../components/Icon'
+import IconButton from '../components/IconButton'
+import { useToast } from '../components/Toast'
+import { useErrorToast } from '../hooks/useErrorToast'
+import { avatarColor } from '../components/TurnoInput'
 
-const AVATAR_COLORS = ['#8B5D39', '#1E7A4F', '#33518C', '#B45309', '#0F766E', '#BE185D']
-function avatarColor(nombre) {
-  let h = 0
-  for (const c of String(nombre)) h = (h * 31 + c.charCodeAt(0)) & 0xffff
-  return AVATAR_COLORS[h % AVATAR_COLORS.length]
-}
-
+// Usuarios no tiene imagen_url (a diferencia de proveedores), por eso usa su
+// propio wrapper de avatar en vez de ProveedorAvatar — pero comparte el mismo
+// avatarColor() de TurnoInput.jsx para que la paleta no se desincronice.
 function UsuarioAvatar({ nombre }) {
   const inicial = (nombre?.[0] || '?').toUpperCase()
   return (
@@ -42,6 +42,7 @@ function RolBadge({ rol }) {
 
 export default function Usuarios() {
   const navigate = useNavigate()
+  const toast = useToast()
   const [usuarios, setUsuarios] = useState([])
   const [cargando, setCargando] = useState(true)
   const [mostrarForm, setMostrarForm] = useState(false)
@@ -49,6 +50,14 @@ export default function Usuarios() {
   const [guardando, setGuardando] = useState(false)
   const [error, setError] = useState('')
   const [exito, setExito] = useState('')
+
+  useErrorToast(error)
+
+  useEffect(() => {
+    if (!exito) return
+    const id = toast.show({ message: exito, duration: 4000 })
+    return () => toast.hide(id)
+  }, [exito, toast])
 
   useEffect(() => {
     cargarUsuarios()
@@ -114,22 +123,17 @@ export default function Usuarios() {
           Volver
         </button>
 
-        <div className="flex items-center justify-between gap-3">
-          <PageHeader title="Usuarios" />
-          <button
-            onClick={() => { setMostrarForm(!mostrarForm); setError(''); setExito('') }}
-            aria-label="Nuevo trabajador"
-            className="w-10 h-10 rounded-[13px] bg-brand text-white grid place-items-center shrink-0 hover:bg-brand-hover transition-colors"
-          >
-            <Icon name="plus" className="w-5 h-5" stroke={2.2} />
-          </button>
-        </div>
-
-        {exito && (
-          <p className="text-sm text-pos bg-pos-tint border border-pos/30 rounded-lg px-4 py-3">
-            {exito}
-          </p>
-        )}
+        <PageHeader
+          title="Usuarios"
+          action={(
+            <IconButton
+              icon="plus"
+              stroke={2.2}
+              label="Nuevo trabajador"
+              onClick={() => { setMostrarForm(!mostrarForm); setError(''); setExito('') }}
+            />
+          )}
+        />
 
         {mostrarForm && (
           <form onSubmit={crearTrabajador} className="card space-y-4">
@@ -168,11 +172,6 @@ export default function Usuarios() {
                 placeholder="Mínimo 6 caracteres"
               />
             </div>
-            {error && (
-              <p className="text-sm text-neg bg-neg-tint border border-neg/20 rounded-lg px-3 py-2">
-                {error}
-              </p>
-            )}
             <button type="submit" disabled={guardando} className="btn-primary w-full py-3">
               {guardando ? 'Creando…' : 'Crear trabajador'}
             </button>

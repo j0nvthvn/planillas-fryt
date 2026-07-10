@@ -11,6 +11,8 @@ import Amount from '../components/Amount'
 import { clp, toNum } from '../utils/format'
 import { totalesVentas, totalesProveedores } from '../utils/totales'
 import { METODOS_VENTA, ACCENT, GREEN } from '../components/TurnoInput'
+import { descargarCSV } from '../utils/csv'
+import Icon from '../components/Icon'
 
 function tickFmt(v) {
   if (v === 0) return '$0'
@@ -19,6 +21,43 @@ function tickFmt(v) {
   if (abs >= 1_000_000) return `${sign}$${(abs / 1_000_000).toFixed(1)}M`
   if (abs >= 1_000) return `${sign}$${Math.round(abs / 1_000)}k`
   return `${sign}$${abs}`
+}
+
+// Variación vs. el mismo largo de período inmediatamente anterior. Sin dato
+// previo (negocio nuevo, o período anterior sin actividad) no se puede
+// calcular un %, así que se omite o se marca "nuevo". "Caja" además puede
+// ser negativa (una semana en que se pagó más a proveedores en efectivo que
+// lo que entró en ventas en efectivo); si el signo cambia entre períodos, un
+// % es engañoso — un salto de -$24.358 a +$425.962 da +1849%, técnicamente
+// correcto pero sin significado útil — así que en ese caso se muestra la
+// diferencia en pesos en vez del porcentaje.
+function DeltaBadge({ actual, anterior }) {
+  if (anterior == null) return null
+  if (anterior === 0) {
+    if (actual === 0) return null
+    return <span className="text-[10.5px] font-semibold text-muted2">nuevo</span>
+  }
+  const diff = actual - anterior
+  const subiendo = diff > 0
+  const cruzaCero = (actual >= 0) !== (anterior >= 0)
+  if (cruzaCero) {
+    return (
+      <span className={`inline-flex items-center gap-0.5 text-[10.5px] font-bold ${subiendo ? 'text-pos' : 'text-neg'}`}>
+        <Icon name={subiendo ? 'caretUp' : 'caretDown'} className="w-3 h-3" stroke={3} />
+        {subiendo ? '+' : '−'}{clp(Math.abs(diff))}
+      </span>
+    )
+  }
+  const pct = (diff / Math.abs(anterior)) * 100
+  if (Math.abs(pct) < 0.5) {
+    return <span className="text-[10.5px] font-medium text-muted2">≈ igual</span>
+  }
+  return (
+    <span className={`inline-flex items-center gap-0.5 text-[10.5px] font-bold ${subiendo ? 'text-pos' : 'text-neg'}`}>
+      <Icon name={subiendo ? 'caretUp' : 'caretDown'} className="w-3 h-3" stroke={3} />
+      {Math.abs(pct).toFixed(0)}%
+    </span>
+  )
 }
 
 function fechaEje(isoDate) {
@@ -33,11 +72,27 @@ const KPI_COLORS = {
   caja:      { fg: 'var(--pos)',    bg: 'var(--pos-tint)',    border: 'rgb(var(--pos-rgb) / 0.25)' },
 }
 
+// Paleta propia del gráfico "Ventas por día". METODOS_VENTA usa colores de
+// marca fijos (para reconocer cada logo en chips/keypad), pero como fill de
+// barras/áreas apiladas esos mismos hex fallan: el café de transferencia casi
+// desaparece en modo oscuro y edenred/amipass (ambos ámbar) se confunden entre
+// sí. Esta paleta prioriza contraste y distinción de tono en el gráfico,
+// separada del resto de la app donde sí importa la identidad de marca.
+const CHART_COLORS = {
+  efectivo:      { light: '#1E7A4F', dark: '#34D399' },
+  getnet:        { light: '#33518C', dark: '#7C9CE0' },
+  mercadopago:   { light: '#0EA5C4', dark: '#22D3EE' },
+  edenred:       { light: '#EA8C00', dark: '#FBBF24' },
+  amipass:       { light: '#B23A8C', dark: '#F472B6' },
+  transferencia: { light: '#5C3317', dark: '#C99B6D' },
+}
+
 export default function Analisis() {
   const [periodo, setPeriodo] = useState('7')
   const [datos, setDatos] = useState(null)
   const [cargando, setCargando] = useState(true)
   const [isDark, setIsDark] = useState(() => document.documentElement.classList.contains('dark'))
+  const [exportando, setExportando] = useState(false)
 
   useEffect(() => {
     const observer = new MutationObserver(() => {
@@ -57,23 +112,71 @@ export default function Analisis() {
     desde.setDate(hoy.getDate() - dias)
     const desdeStr = desde.toISOString().split('T')[0]
 
-    const { data: jornadas } = await supabase
-      .from('jornadas')
-      .select(`
-        id, fecha,
-        turnos(
-          id, tipo,
-          ventas:ventas_turno(efectivo, getnet, mercadopago, edenred, amipass, transferencia),
-          proveedores:proveedores_turno(nombre, monto, forma_pago)
-        )
-      `)
-      .gte('fecha', desdeStr)
-      .order('fecha')
+    // Ventana inmediatamente anterior, del mismo largo, para poder mostrar
+    // "vs período anterior" junto al neto y los KPIs (p. ej. últimos 7 días
+    // vs los 7 días previos a esos).
+    const anteriorHasta = new Date(desde)
+    anteriorHasta.setDate(desde.getDate() - 1)
+    const anteriorDesde = new Date(anteriorHasta)
+    anteriorDesde.setDate(anteriorHasta.getDate() - dias)
+    const anteriorHastaStr = anteriorHasta.toISOString().split('T')[0]
+    const anteriorDesdeStr = anteriorDesde.toISOString().split('T')[0]
+
+    const [{ data: jornadas }, { data: jornadasAnterior }] = await Promise.all([
+      supabase
+        .from('jornadas')
+        .select(`
+          id, fecha,
+          turnos(
+            id, tipo,
+            ventas:ventas_turno(efectivo, getnet, mercadopago, edenred, amipass, transferencia),
+            proveedores:proveedores_turno(nombre, monto, forma_pago)
+          )
+        `)
+        .gte('fecha', desdeStr)
+        .order('fecha'),
+      supabase
+        .from('jornadas')
+        .select(`
+          turnos(
+            ventas:ventas_turno(efectivo, getnet, mercadopago, edenred, amipass, transferencia),
+            proveedores:proveedores_turno(monto, forma_pago)
+          )
+        `)
+        .gte('fecha', anteriorDesdeStr)
+        .lte('fecha', anteriorHastaStr),
+    ])
 
     startTransition(() => {
-      setDatos(procesarDatos(jornadas || [], desdeStr))
+      const procesado = procesarDatos(jornadas || [], desdeStr)
+      procesado.anterior = totalesPeriodo(jornadasAnterior || [])
+      setDatos(procesado)
       setCargando(false)
     })
+  }
+
+  // Solo necesita los totales agregados del período anterior (no el desglose
+  // por día que usa el gráfico), así que recorre las jornadas con una pasada
+  // más liviana que procesarDatos.
+  function totalesPeriodo(jornadas) {
+    let ventasTotal = 0, efectivoVentas = 0, provEf = 0, provTr = 0
+    for (const j of jornadas) {
+      for (const t of j.turnos || []) {
+        const vt = totalesVentas(t.ventas)
+        const pt = totalesProveedores(t.proveedores)
+        ventasTotal += vt.total
+        efectivoVentas += vt.efectivo
+        provEf += pt.efectivo
+        provTr += pt.transferencia
+      }
+    }
+    const proveedoresTotal = provEf + provTr
+    return {
+      ventasTotal,
+      proveedoresTotal,
+      neto: ventasTotal - proveedoresTotal,
+      efectivoEnCaja: efectivoVentas - provEf,
+    }
   }
 
   function procesarDatos(jornadas, desdeStr) {
@@ -132,6 +235,80 @@ export default function Analisis() {
     }
   }
 
+  // Exporta el detalle turno por turno del período seleccionado (no el
+  // agregado diario que ya se usa para los gráficos) — es lo que un
+  // contador necesita: una fila por turno, con quién lo registró, su
+  // estado, y el cuadre de caja si se contó al cerrar.
+  async function exportarCSV() {
+    if (!datos) return
+    setExportando(true)
+    try {
+      const { data: jornadas, error } = await supabase
+        .from('jornadas')
+        .select(`
+          fecha,
+          turnos(
+            tipo, is_draft, fondo_inicial,
+            usuario:usuarios(nombre),
+            ventas:ventas_turno(efectivo, getnet, mercadopago, edenred, amipass, transferencia),
+            proveedores:proveedores_turno(monto, forma_pago),
+            cierres:turno_cierres(es_correccion, cerrado_en, efectivo_esperado, efectivo_contado, diferencia_efectivo)
+          )
+        `)
+        .gte('fecha', datos.desdeStr)
+        .order('fecha')
+      if (error) throw error
+
+      const columnas = [
+        'Fecha', 'Turno', 'Registrado por', 'Estado',
+        'Efectivo', 'Getnet', 'Mercado Pago', 'Edenred', 'Amipass', 'Transferencia', 'Total ventas',
+        'Proveedores efectivo', 'Proveedores transferencia', 'Total proveedores', 'Neto',
+        'Fondo de caja', 'Efectivo esperado', 'Efectivo contado', 'Diferencia',
+      ]
+
+      const filas = []
+      const totales = Array(11).fill(0) // Efectivo..Neto (11 columnas numéricas antes de fondo/conteo)
+
+      for (const j of jornadas || []) {
+        for (const t of (j.turnos || []).sort((a, b) => a.tipo.localeCompare(b.tipo))) {
+          const vt = totalesVentas(t.ventas)
+          const pt = totalesProveedores(t.proveedores)
+          const totalVentas = vt.total
+          const totalProveedores = pt.total
+          const neto = totalVentas - totalProveedores
+          const cierres = t.cierres || []
+          const ultimoCierre = cierres.length
+            ? [...cierres].sort((a, b) => new Date(b.cerrado_en) - new Date(a.cerrado_en))[0]
+            : null
+          const estado = t.is_draft ? 'Borrador' : cierres.some((c) => c.es_correccion) ? 'Corregido' : 'Cerrado'
+
+          const fila = [
+            j.fecha, t.tipo, t.usuario?.nombre || '', estado,
+            vt.efectivo, vt.getnet, vt.mercadopago, vt.edenred, vt.amipass, vt.transferencia, totalVentas,
+            pt.efectivo, pt.transferencia, totalProveedores, neto,
+            t.fondo_inicial ?? 0,
+            ultimoCierre?.efectivo_esperado ?? '',
+            ultimoCierre?.efectivo_contado ?? '',
+            ultimoCierre?.diferencia_efectivo ?? '',
+          ]
+          filas.push(fila)
+
+          const numericos = [vt.efectivo, vt.getnet, vt.mercadopago, vt.edenred, vt.amipass, vt.transferencia, totalVentas, pt.efectivo, pt.transferencia, totalProveedores, neto]
+          numericos.forEach((v, i) => { totales[i] += v })
+        }
+      }
+
+      filas.push(['', '', '', 'TOTAL', ...totales, '', '', '', ''])
+
+      const nombreArchivo = `frytcontrol-turnos-${datos.desdeStr}-a-${datos.fechaHoy}.csv`
+      descargarCSV(nombreArchivo, columnas, filas)
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setExportando(false)
+    }
+  }
+
   const ventasTotal = datos ? Object.values(datos.totalesGlobales).reduce((a, b) => a + b, 0) : 0
   const proveedoresTotal = datos ? datos.totalEfectivoProveedores + datos.totalTransferenciaProveedores : 0
   const neto = ventasTotal - proveedoresTotal
@@ -140,6 +317,7 @@ export default function Analisis() {
   const gridStroke = isDark ? '#3f3f46' : 'var(--soft)'
   const tickColor = isDark ? '#a1a1aa' : 'var(--muted)'
   const legendColor = isDark ? '#a1a1aa' : 'var(--ink2)'
+  const chartColor = (key) => (isDark ? CHART_COLORS[key]?.dark : CHART_COLORS[key]?.light) || (isDark ? '#a1a1aa' : 'var(--muted)')
 
   const tooltipStyle = {
     background: isDark ? '#27272a' : 'var(--card)',
@@ -158,21 +336,37 @@ export default function Analisis() {
           date={`Últimos ${periodo} días`}
         />
 
-        {/* Toggle 7 / 30 */}
-        <div className="flex gap-1 p-1 bg-brand-tint rounded-[15px] w-fit">
-          {[{ v: '7', l: '7 días' }, { v: '30', l: '30 días' }].map((p) => (
+        {/* Toggle 7 / 30 + exportar */}
+        <div className="flex items-center justify-between gap-2 flex-wrap">
+          <div className="flex gap-1 p-1 bg-brand-tint rounded-[15px] w-fit">
+            {[{ v: '7', l: '7 días' }, { v: '30', l: '30 días' }].map((p) => (
+              <button
+                key={p.v}
+                onClick={() => setPeriodo(p.v)}
+                className={`px-4 py-2 rounded-[11px] text-[13px] font-semibold transition ${
+                  periodo === p.v
+                    ? 'bg-card text-brand shadow-sm'
+                    : 'text-muted hover:text-ink2'
+                }`}
+              >
+                {p.l}
+              </button>
+            ))}
+          </div>
+          {datos?.hayVentas && (
             <button
-              key={p.v}
-              onClick={() => setPeriodo(p.v)}
-              className={`px-4 py-2 rounded-[11px] text-[13px] font-semibold transition ${
-                periodo === p.v
-                  ? 'bg-card text-brand shadow-sm'
-                  : 'text-muted hover:text-ink2'
-              }`}
+              onClick={exportarCSV}
+              disabled={exportando}
+              className="flex items-center gap-2 rounded-xl py-2 px-3 text-[13px] font-semibold border border-hairline text-ink2 bg-card hover:border-brand/40 hover:text-brand transition-colors disabled:opacity-50"
             >
-              {p.l}
+              {exportando ? (
+                <span className="w-3.5 h-3.5 rounded-full border-2 border-ink2 border-t-transparent animate-spin" />
+              ) : (
+                <Icon name="note" className="w-4 h-4" stroke={1.8} />
+              )}
+              Exportar CSV
             </button>
-          ))}
+          )}
         </div>
 
         {cargando && <Spinner className="py-16" />}
@@ -186,22 +380,33 @@ export default function Analisis() {
               <p className="text-[12px] text-muted mt-2">
                 {clp(ventasTotal)} ventas − {clp(proveedoresTotal)} proveedores
               </p>
+              {datos.anterior && (
+                <div className="flex items-center gap-1.5 mt-2">
+                  <DeltaBadge actual={neto} anterior={datos.anterior.neto} />
+                  <span className="text-[11px] text-muted2">vs período anterior</span>
+                </div>
+              )}
             </div>
 
             {/* KPIs tintados */}
             <div className="grid grid-cols-3 gap-2.5">
               {[
-                { key: 'ventas',  label: 'Ventas',   value: ventasTotal },
-                { key: 'proveed', label: 'Proveed.', value: proveedoresTotal },
-                { key: 'caja',    label: 'Caja',     value: efectivoEnCaja },
+                { key: 'ventas',  label: 'Ventas',   value: ventasTotal,     anteriorKey: 'ventasTotal' },
+                { key: 'proveed', label: 'Proveed.', value: proveedoresTotal, anteriorKey: 'proveedoresTotal' },
+                { key: 'caja',    label: 'Caja',     value: efectivoEnCaja,  anteriorKey: 'efectivoEnCaja' },
               ].map((k) => {
                 const c = KPI_COLORS[k.key]
                 return (
                   <div key={k.key} className="min-w-0 rounded-2xl p-3 border" style={{ background: c.bg, borderColor: c.border }}>
                     <p className="eyebrow mb-1.5 truncate" style={{ color: c.fg }}>{k.label}</p>
-                    <p className="font-display tabular-nums text-[17px] font-bold leading-none truncate" style={{ color: c.fg }}>
+                    <p className="font-display tabular-nums text-[17px] leading-none truncate" style={{ color: c.fg }}>
                       {tickFmt(k.value)}
                     </p>
+                    {datos.anterior && (
+                      <div className="mt-1">
+                        <DeltaBadge actual={k.value} anterior={datos.anterior[k.anteriorKey]} />
+                      </div>
+                    )}
                   </div>
                 )
               })}
@@ -228,7 +433,7 @@ export default function Analisis() {
                           key={m.key}
                           dataKey={m.label}
                           stackId="a"
-                          fill={m.color}
+                          fill={chartColor(m.key)}
                           radius={i === arr.length - 1 ? [4, 4, 0, 0] : undefined}
                         />
                       ))}
@@ -242,7 +447,7 @@ export default function Analisis() {
                       <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 10, paddingTop: 8, color: legendColor }} />
                       {METODOS_VENTA.map((m) => (
                         <Area key={m.key} type="monotone" dataKey={m.label} stackId="a"
-                          fill={m.color} stroke={m.color} fillOpacity={0.85} strokeWidth={0} />
+                          fill={chartColor(m.key)} stroke={chartColor(m.key)} fillOpacity={0.85} strokeWidth={0} />
                       ))}
                     </AreaChart>
                   )}

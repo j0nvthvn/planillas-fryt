@@ -1,31 +1,40 @@
 import { useState, useEffect, useRef } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useNavigate, useSearchParams, useLocation } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
+import { useConfig } from '../hooks/useConfig'
 import { supabase } from '../lib/supabase'
 import { useToast } from '../components/Toast'
+import { useErrorToast } from '../hooks/useErrorToast'
+import { useConflictoRemoto } from '../hooks/useConflictoRemoto'
 import Layout from '../components/Layout'
 import PageHeader from '../components/PageHeader'
 import Spinner from '../components/Spinner'
 import { fechaLegible } from '../utils/format'
-import { ACCENT, ACCENT_TINT, VENTAS_VACIAS, TurnoIcon as Icon } from '../components/TurnoInput'
+import IconButton from '../components/IconButton'
+import ConfirmDialog from '../components/ConfirmDialog'
+import { ACCENT, ACCENT_TINT, VENTAS_VACIAS } from '../components/TurnoInput'
 import { useTurnoForm } from '../components/turno/useTurnoForm'
 import { useIsDesktop } from '../components/turno/useIsDesktop'
 import { ProveedoresSection, VentasSection } from '../components/turno/TurnoSections'
 import { TurnoSheets } from '../components/turno/TurnoSheets'
 import { TurnoBottomBar } from '../components/turno/TurnoBottomBar'
-import { crearTurno, escribirTurno, versionTurno, borrarTurno } from '../components/turno/turnoApi'
+import { guardarTurno, finalizarTurno, corregirTurno, versionTurno, borrarTurno } from '../components/turno/turnoApi'
 
 export default function EditarTurno() {
   const { usuario } = useAuth()
+  const { config } = useConfig()
   const navigate = useNavigate()
+  const location = useLocation()
   const toast = useToast()
   const isDesktop = useIsDesktop()
   const [params] = useSearchParams()
   const fecha = params.get('fecha') || ''
   const tipo = params.get('tipo') || 'mañana'
+  const from = location.state?.from
 
   const [cargando, setCargando] = useState(true)
   const [turnoId, setTurnoId] = useState(null)
+  const [turnoEsDraft, setTurnoEsDraft] = useState(true)
   const [error, setError] = useState('')
   const [guardando, setGuardando] = useState(false)
   const [showGuardarVacioConfirm, setShowGuardarVacioConfirm] = useState(false)
@@ -74,7 +83,7 @@ export default function EditarTurno() {
 
       const { data: turno, error: errTurno } = await supabase
         .from('turnos')
-        .select('id, updated_at, proveedores:proveedores_turno(nombre, monto, forma_pago), ventas:ventas_turno(efectivo, getnet, mercadopago, edenred, amipass, transferencia)')
+        .select('id, updated_at, is_draft, proveedores:proveedores_turno(id, nombre, monto, forma_pago), ventas:ventas_turno(efectivo, getnet, mercadopago, edenred, amipass, transferencia)')
         .eq('jornada_id', jornada.id)
         .eq('tipo', tipo)
         .maybeSingle()
@@ -87,13 +96,14 @@ export default function EditarTurno() {
       if (turno) {
         setTurnoId(turno.id)
         setTurnoVersion(turno.updated_at)
+        setTurnoEsDraft(!!turno.is_draft)
         setCambioRemotoPendiente(false)
         const v = Array.isArray(turno.ventas) ? turno.ventas[0] : turno.ventas
         const ventasCargadas = v
           ? { efectivo: +v.efectivo || 0, getnet: +v.getnet || 0, mercadopago: +v.mercadopago || 0, edenred: +v.edenred || 0, amipass: +v.amipass || 0, transferencia: +v.transferencia || 0 }
           : VENTAS_VACIAS
         const provsCargados = (turno.proveedores || []).map((p) => ({
-          nombre: p.nombre, monto: +p.monto, forma_pago: p.forma_pago, imagen_url: '',
+          id: p.id, nombre: p.nombre, monto: +p.monto, forma_pago: p.forma_pago, imagen_url: '',
         }))
         setVentas(ventasCargadas)
         setProvs(provsCargados)
@@ -113,9 +123,22 @@ export default function EditarTurno() {
     setLoadKey((k) => k + 1)
   }
 
+  useErrorToast(error)
+  useConflictoRemoto(cambioRemotoPendiente, recargarDesdeRemoto)
+
+  useEffect(() => {
+    if (!turnoId) return
+    const id = toast.show({
+      message: turnoEsDraft
+        ? 'Estás editando un borrador existente'
+        : 'Este turno ya fue cerrado — guardar quedará registrado como una corrección',
+      duration: null,
+    })
+    return () => toast.hide(id)
+  }, [turnoId, turnoEsDraft, toast])
+
   async function guardar(forzar = false) {
     if (cambioRemotoPendiente) {
-      setError('Este turno cambió en otro dispositivo. Recarga antes de guardar para evitar sobrescribir datos.')
       return
     }
     const proveedoresValidos = provs.filter((p) => p.nombre.trim() && p.monto > 0)
@@ -123,26 +146,39 @@ export default function EditarTurno() {
       setShowGuardarVacioConfirm(true)
       return
     }
+    if (totalVentas === 0 && !forzar) {
+      setError('Ingresa las ventas del turno antes de guardar.')
+      return
+    }
     setGuardando(true); setError('')
     try {
       if (turnoId) {
         if (turnoVersion && (await versionTurno(turnoId)) !== turnoVersion) {
           setCambioRemotoPendiente(true)
-          setError('Este turno cambió en otro dispositivo. Recarga antes de guardar para evitar sobrescribir datos.')
           return
         }
         const original = originalRef.current
-        await escribirTurno(turnoId, provs, ventas)
+        await guardarTurno({ fecha, tipo, usuarioId: usuario.id, proveedores: provs, ventas })
+        // El turno ya tenía un cierre (no era borrador): esta edición es
+        // una corrección sobre un Z-report ya emitido, y queda su propio
+        // registro encadenado en turno_cierres en vez de una
+        // sobreescritura silenciosa.
+        if (!turnoEsDraft) await corregirTurno(turnoId)
         toast.show({
-          message: 'Cambios guardados',
+          message: turnoEsDraft ? 'Cambios guardados' : 'Corrección registrada',
           actionLabel: 'Deshacer',
           onAction: async () => {
-            await escribirTurno(turnoId, original.provs, original.ventas)
+            await guardarTurno({ fecha, tipo, usuarioId: usuario.id, proveedores: original.provs, ventas: original.ventas })
+            if (!turnoEsDraft) await corregirTurno(turnoId)
             toast.show({ message: 'Cambios deshechos', duration: 3000 })
           },
         })
       } else {
-        const nuevoId = await crearTurno({ fecha, tipo, usuarioId: usuario.id, provs, ventas })
+        const { turnoId: nuevoId } = await guardarTurno({ fecha, tipo, usuarioId: usuario.id, proveedores: provs, ventas, fondoInicial: config.fondoCajaInicial ?? 0 })
+        // Un turno histórico se ingresa completo desde el principio, así
+        // que queda cerrado de inmediato — mismo camino (cerrar_turno)
+        // que usa el botón "Listo" del turno de hoy.
+        await finalizarTurno(nuevoId)
         toast.show({
           message: `Turno de ${tipo} creado`,
           actionLabel: 'Deshacer',
@@ -152,7 +188,7 @@ export default function EditarTurno() {
           },
         })
       }
-      navigate('/resumen', { state: { fecha } })
+      navigate(from === 'historial' ? `/historial?fecha=${fecha}` : '/hoy')
     } catch (err) {
       console.error(err)
       setError(err?.code === '23505'
@@ -186,28 +222,19 @@ export default function EditarTurno() {
   return (
     <Layout>
       <div className="max-w-lg md:max-w-4xl mx-auto space-y-4">
-        <div className="flex items-center justify-between gap-3">
-          <PageHeader
-            title={titulo}
-            date={fechaLegible(fecha)}
-          />
-          {modoEditar && (
-            <button
+        <PageHeader
+          title={titulo}
+          date={fechaLegible(fecha)}
+          action={modoEditar && (
+            <IconButton
+              icon="trash"
+              iconClassName="w-4 h-4"
+              variant="danger"
+              label="Eliminar turno"
               onClick={() => setShowEliminarConfirm(true)}
-              aria-label="Eliminar turno"
-              className="shrink-0 w-10 h-10 rounded-[13px] border border-hairline text-neg grid place-items-center hover:bg-neg-tint transition-colors mt-1"
-            >
-              <Icon name="trash" className="w-4 h-4" />
-            </button>
+            />
           )}
-        </div>
-
-        {modoEditar && (
-          <div className="rounded-2xl bg-warn-tint border border-warn/30 px-3.5 py-2 text-[13px] text-warn flex items-center gap-2">
-            <Icon name="edit" className="w-3.5 h-3.5" stroke={2} />
-            Estás editando un turno existente
-          </div>
-        )}
+        />
 
         <div className="grid lg:grid-cols-2 gap-4 items-start">
           <ProveedoresSection
@@ -219,20 +246,6 @@ export default function EditarTurno() {
           />
           <VentasSection ventas={ventas} onEdit={form.openVenta} />
         </div>
-
-        {error && (
-          <p className="text-sm text-neg bg-neg-tint border border-neg/20 rounded-lg px-4 py-3">
-            {error}
-          </p>
-        )}
-        {cambioRemotoPendiente && (
-          <div className="flex items-center justify-between gap-3 text-sm text-info bg-info-tint border border-info/30 rounded-lg px-3 py-2">
-            <span>Hay cambios de otro usuario en este turno.</span>
-            <button onClick={recargarDesdeRemoto} className="shrink-0 font-semibold underline underline-offset-2">
-              Recargar
-            </button>
-          </div>
-        )}
       </div>
 
       <TurnoBottomBar
@@ -255,48 +268,24 @@ export default function EditarTurno() {
         delProv={form.delProv}
       />
 
-      {showGuardarVacioConfirm && (
-        <>
-          <div className="fixed inset-0 bg-black/40 dark:bg-black/70 z-40" onClick={() => setShowGuardarVacioConfirm(false)} />
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <div className="bg-card rounded-2xl shadow-2xl w-full max-w-xs p-6 flex flex-col gap-4">
-              <div>
-                <p className="font-bold text-ink text-base">¿Guardar turno vacío?</p>
-                <p className="text-sm text-ink2 mt-1">No hay proveedores ni ventas ingresados.</p>
-              </div>
-              <div className="flex gap-3">
-                <button onClick={() => setShowGuardarVacioConfirm(false)} className="flex-1 btn-secondary">Cancelar</button>
-                <button onClick={() => { setShowGuardarVacioConfirm(false); guardar(true) }} className="flex-1 btn-primary">Guardar igual</button>
-              </div>
-            </div>
-          </div>
-        </>
-      )}
+      <ConfirmDialog
+        open={showGuardarVacioConfirm}
+        title="¿Guardar turno vacío?"
+        description="No hay proveedores ni ventas ingresados."
+        confirmLabel="Guardar igual"
+        onCancel={() => setShowGuardarVacioConfirm(false)}
+        onConfirm={() => { setShowGuardarVacioConfirm(false); guardar(true) }}
+      />
 
-      {showEliminarConfirm && (
-        <>
-          <div className="fixed inset-0 bg-black/40 dark:bg-black/70 z-40" onClick={() => setShowEliminarConfirm(false)} />
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <div className="bg-card rounded-2xl shadow-2xl w-full max-w-xs p-6 flex flex-col gap-4">
-              <div>
-                <p className="font-bold text-ink text-base capitalize">¿Eliminar turno de {tipo}?</p>
-                <p className="text-sm text-ink2 mt-1">
-                  Se eliminarán todos los datos de este turno. Esta acción no se puede deshacer.
-                </p>
-              </div>
-              <div className="flex gap-3">
-                <button onClick={() => setShowEliminarConfirm(false)} className="flex-1 btn-secondary">Cancelar</button>
-                <button
-                  onClick={() => { setShowEliminarConfirm(false); eliminarTurno() }}
-                  className="flex-1 btn-danger"
-                >
-                  Eliminar
-                </button>
-              </div>
-            </div>
-          </div>
-        </>
-      )}
+      <ConfirmDialog
+        open={showEliminarConfirm}
+        title={<>¿Eliminar turno de <span className="capitalize">{tipo}</span>?</>}
+        description="Se eliminarán todos los datos de este turno. Esta acción no se puede deshacer."
+        confirmLabel="Eliminar"
+        danger
+        onCancel={() => setShowEliminarConfirm(false)}
+        onConfirm={() => { setShowEliminarConfirm(false); eliminarTurno() }}
+      />
     </Layout>
   )
 }

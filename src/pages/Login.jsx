@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
+import { useErrorToast } from '../hooks/useErrorToast'
 
 function saludo() {
   const h = new Date().getHours()
@@ -21,6 +22,8 @@ export default function Login() {
   const [error, setError]       = useState('')
   const [loading, setLoading]   = useState(false)
   const errorMessage = error || authError
+
+  useErrorToast(errorMessage)
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -56,7 +59,7 @@ export default function Login() {
         <h1 className="font-display text-[34px] leading-none text-brand">
           Minimarket Fryt
         </h1>
-        <p className="text-sm text-muted mt-1">Planilla de Caja</p>
+        <p className="text-sm text-muted mt-1">FrytControl · Caja y turnos</p>
 
         <div className="mt-5 text-center">
           <p className="text-base font-semibold text-ink2">{saludo()}</p>
@@ -98,12 +101,6 @@ export default function Login() {
               />
             </div>
 
-            {errorMessage && (
-              <p className="text-sm text-neg bg-neg-tint border border-neg/20 rounded-lg px-3 py-2">
-                {errorMessage}
-              </p>
-            )}
-
             <button
               type="submit"
               disabled={loading}
@@ -117,7 +114,7 @@ export default function Login() {
           </form>
 
           <p className="text-center text-xs text-muted mt-5">
-            Minimarket Fryt · Sistema interno
+            FrytControl — Minimarket Fryt
           </p>
         </div>
       </div>

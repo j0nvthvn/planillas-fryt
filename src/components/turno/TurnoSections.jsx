@@ -1,6 +1,7 @@
 import { clp } from '../../utils/format'
+import Icon from '../Icon'
 import {
-  METODOS_VENTA, TurnoIcon as Icon, ProveedorAvatar, MetodoLogo,
+  METODOS_VENTA, ProveedorAvatar, MetodoLogo,
 } from '../TurnoInput'
 
 const FORM_COLORS = { efectivo: '#1E7A4F', transferencia: '#33518C' }
@@ -66,20 +67,6 @@ function AmountTotal({ value }) {
   )
 }
 
-function MethodDot({ color }) {
-  return (
-    <span
-      className="w-[30px] h-[30px] rounded-[10px] shrink-0"
-      style={{ background: `${color}1A`, boxShadow: `inset 0 0 0 1px ${color}33` }}
-    >
-      <span
-        className="block w-3 h-3 rounded-[3px] m-auto mt-[7px]"
-        style={{ background: color }}
-      />
-    </span>
-  )
-}
-
 export function VentasSection({ ventas, onEdit }) {
   const total = METODOS_VENTA.reduce((s, m) => s + (ventas[m.key] || 0), 0)
   return (
@@ -98,7 +85,7 @@ export function VentasSection({ ventas, onEdit }) {
               onClick={() => onEdit(m.key)}
               className="w-full flex items-center gap-3 py-2.5 px-2 text-left first:pt-1 last:pb-1"
             >
-              <MethodDot color={m.color} />
+              <MetodoLogo metodo={m} size="sm" />
               <span className="flex-1 min-w-0">
                 <span className="block text-[14px] font-semibold text-ink">{m.label}</span>
               </span>

@@ -76,7 +76,7 @@ Deno.serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        from: Deno.env.get('RESEND_FROM') ?? 'Fryt Planillas <onboarding@resend.dev>',
+        from: Deno.env.get('RESEND_FROM') ?? 'FrytControl <onboarding@resend.dev>',
         to: destinatarios,
         subject: `Turno ${capitalizar(turno.tipo)} registrado · ${fechaLegible(jornada?.fecha ?? '')}`,
         html,
@@ -165,7 +165,7 @@ function buildEmailTurno({ fecha, tipo, ventas, proveedores, registrador }: Buil
 
     <!-- Header -->
     <div style="background:#5C3317;padding:24px 28px;">
-      <p style="margin:0 0 4px;color:#F5EAD4;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;">Fryt Planillas</p>
+      <p style="margin:0 0 4px;color:#F5EAD4;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;">FrytControl</p>
       <h1 style="margin:0;color:#fff;font-size:20px;font-weight:700;">Turno ${capitalizar(tipo)} registrado</h1>
       <p style="margin:6px 0 0;color:#e9d5b4;font-size:14px;text-transform:capitalize;">${fechaLegible(fecha)}</p>
     </div>

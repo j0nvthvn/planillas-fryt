@@ -1,6 +1,6 @@
 {
-  "name": "Planilla Caja — Minimarket Fryt",
-  "short_name": "Planilla Caja",
+  "name": "FrytControl — Minimarket Fryt",
+  "short_name": "FrytControl",
   "description": "Registro de turnos y ventas diarias",
   "start_url": "/turno",
   "display": "standalone",

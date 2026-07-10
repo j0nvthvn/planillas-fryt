@@ -8,37 +8,16 @@ import Amount from '../components/Amount'
 import { clp, fechaLegible, hoy } from '../utils/format'
 import { totalesVentas, totalesProveedores } from '../utils/totales'
 import Icon from '../components/Icon'
+import TurnoStatusChip from '../components/TurnoStatusChip'
 import { useAuth } from '../hooks/useAuth'
 import { useConfig } from '../hooks/useConfig'
 import { useJornadaRealtime } from '../hooks/useJornadaRealtime'
 import { MetodoLogo, METODOS_VENTA } from '../components/TurnoInput'
+import { CorreccionModal } from '../components/turno/CorreccionModal'
+import ConfirmDialog from '../components/ConfirmDialog'
+import Badge from '../components/Badge'
 
 const FORM_COLORS = { efectivo: '#1E7A4F', transferencia: '#33518C' }
-
-function TurnoStatusChip({ tipo, presente, usuario }) {
-  const icon = tipo === 'mañana' ? 'sun' : 'moon'
-  const label = tipo === 'mañana' ? 'Mañana' : 'Tarde'
-  if (!presente) {
-    return (
-      <div className="flex-1 rounded-2xl border border-hairline bg-canvas px-3 py-2.5 flex items-center gap-2.5 opacity-60">
-        <Icon name={icon} className="w-4 h-4 text-muted2" stroke={1.6} />
-        <div className="min-w-0 flex-1">
-          <p className="text-[13px] font-semibold text-muted">{label}</p>
-          <p className="text-[11px] text-muted2 leading-tight">Sin registrar</p>
-        </div>
-      </div>
-    )
-  }
-  return (
-    <div className="flex-1 rounded-2xl border border-pos-border bg-pos-tint px-3 py-2.5 flex items-center gap-2.5">
-      <Icon name={icon} className="w-4 h-4 text-pos" stroke={1.8} />
-      <div className="min-w-0 flex-1">
-        <p className="text-[13px] font-semibold text-pos">{label}</p>
-        <p className="text-[11px] text-pos/80 truncate leading-tight">{usuario}</p>
-      </div>
-    </div>
-  )
-}
 
 export default function Resumen({ fecha: fechaProp, esDuenoOverride, onBack }) {
   const { esDueno } = useAuth()
@@ -46,12 +25,15 @@ export default function Resumen({ fecha: fechaProp, esDuenoOverride, onBack }) {
   const navigate = useNavigate()
   const location = useLocation()
   const puedeEditar = esDuenoOverride ?? esDueno
+  const editState = onBack ? { from: 'historial' } : undefined
   const [fecha, setFecha] = useState(() => fechaProp || location.state?.fecha || hoy())
   const [datos, setDatos] = useState(null)
   const [cargando, setCargando] = useState(true)
   const [jornadaEsUnica, setJornadaEsUnica] = useState(false)
   const [showMergeConfirm, setShowMergeConfirm] = useState(false)
   const [showDesmarcarConfirm, setShowDesmarcarConfirm] = useState(false)
+  const [turnoCorreccion, setTurnoCorreccion] = useState(null)
+  const [showSelectorCorreccion, setShowSelectorCorreccion] = useState(false)
   const dateInputRef = useRef(null)
 
   function irAnterior() {
@@ -86,10 +68,15 @@ export default function Resumen({ fecha: fechaProp, esDuenoOverride, onBack }) {
     const { data: turnos } = await supabase
       .from('turnos')
       .select(`
-        id, tipo, creado_en,
+        id, tipo, is_draft, creado_en,
         usuario:usuarios(nombre),
         proveedores:proveedores_turno(nombre, monto, forma_pago),
-        ventas:ventas_turno(efectivo, getnet, mercadopago, edenred, amipass, transferencia)
+        ventas:ventas_turno(efectivo, getnet, mercadopago, edenred, amipass, transferencia),
+        cierres:turno_cierres(
+          es_correccion, cerrado_en, efectivo_esperado, efectivo_contado, diferencia_efectivo,
+          ventas_snapshot, proveedores_snapshot, total_ventas, total_proveedores,
+          cerrado_por_usuario:usuarios!cerrado_por(nombre)
+        )
       `)
       .eq('jornada_id', jornada.id)
       .order('tipo')
@@ -137,6 +124,23 @@ export default function Resumen({ fecha: fechaProp, esDuenoOverride, onBack }) {
   const ambosPresentes = turnoMañana && turnoTarde
   const ventasNetas = totalVentas - totalProveedores
 
+  const turnosCorregidos = turnos.filter((t) => (t.cierres || []).some((c) => c.es_correccion))
+
+  function abrirCorreccion() {
+    if (turnosCorregidos.length === 1) setTurnoCorreccion(turnosCorregidos[0])
+    else setShowSelectorCorreccion(true)
+  }
+
+  const cuadres = turnos
+    .map((t) => {
+      const cierres = t.cierres || []
+      if (cierres.length === 0) return null
+      const ultimo = cierres.reduce((a, b) => (new Date(b.cerrado_en) > new Date(a.cerrado_en) ? b : a))
+      if (ultimo.efectivo_contado === null || ultimo.efectivo_contado === undefined) return null
+      return { tipo: t.tipo, ...ultimo }
+    })
+    .filter(Boolean)
+
   const todosProveedores = [
     ...(turnoMañana?.proveedores || []).map((p) => ({ ...p, turno: 'Mañana' })),
     ...(turnoTarde?.proveedores || []).map((p) => ({ ...p, turno: 'Tarde' })),
@@ -153,13 +157,21 @@ export default function Resumen({ fecha: fechaProp, esDuenoOverride, onBack }) {
   return (
     <Layout>
       <div className="max-w-screen-2xl mx-auto space-y-3.5">
-        {onBack && (
+        {onBack ? (
           <button
             onClick={onBack}
             className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-ink2 hover:text-ink"
           >
             <Icon name="arrowLeft" className="w-4 h-4" stroke={2} />
             Historial
+          </button>
+        ) : (
+          <button
+            onClick={() => navigate(-1)}
+            className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-ink2 hover:text-ink"
+          >
+            <Icon name="arrowLeft" className="w-4 h-4" stroke={2} />
+            Volver
           </button>
         )}
 
@@ -222,38 +234,36 @@ export default function Resumen({ fecha: fechaProp, esDuenoOverride, onBack }) {
 
         {/* Acciones de edición: editar / agregar / fusionar / desmarcar */}
         {puedeEditar && (
-          <div className="flex gap-2 flex-wrap">
+          <div className="flex flex-col sm:flex-row sm:flex-wrap gap-2">
             {!esTurnoUnico && datos.jornada && turnoMañana && !turnoTarde && (
               <button
                 onClick={() => setShowMergeConfirm(true)}
-                className="flex items-center gap-2 rounded-xl py-2 px-3 text-[13px] font-semibold border border-hairline text-ink2 bg-card hover:border-brand/40 hover:text-brand transition-colors"
+                className="flex items-center justify-center gap-2 rounded-xl py-2 px-3 text-[13px] font-semibold border border-hairline text-ink2 bg-card hover:border-brand/40 hover:text-brand transition-colors w-full sm:w-auto"
               >
                 <Icon name="merge" className="w-4 h-4" stroke={1.8} />
                 Fusionar en turno único
               </button>
             )}
-            {(!turnoMañana || (jornadaEsUnica && !esDiaUnico(fecha))) && (
+            <button
+              onClick={() => navigate(`/turno/editar?fecha=${fecha}&tipo=mañana`, { state: editState })}
+              className="flex items-center justify-center gap-2 rounded-xl py-2 px-3 text-[13px] font-semibold bg-brand-tint text-brand border border-brand/30 w-full sm:w-auto"
+            >
+              <Icon name={turnoMañana ? 'edit' : 'plus'} className="w-4 h-4" stroke={1.8} />
+              {turnoMañana ? 'Editar mañana' : 'Agregar mañana'}
+            </button>
+            {!esTurnoUnico && (
               <button
-                onClick={() => navigate(`/turno/editar?fecha=${fecha}&tipo=mañana`)}
-                className="flex items-center gap-2 rounded-xl py-2 px-3 text-[13px] font-semibold bg-brand-tint text-brand border border-brand/30"
+                onClick={() => navigate(`/turno/editar?fecha=${fecha}&tipo=tarde`, { state: editState })}
+                className="flex items-center justify-center gap-2 rounded-xl py-2 px-3 text-[13px] font-semibold bg-brand-tint text-brand border border-brand/30 w-full sm:w-auto"
               >
-                <Icon name={turnoMañana ? 'edit' : 'plus'} className="w-4 h-4" stroke={1.8} />
-                {turnoMañana ? 'Editar mañana' : 'Agregar mañana'}
-              </button>
-            )}
-            {!esTurnoUnico && !turnoTarde && (
-              <button
-                onClick={() => navigate(`/turno/editar?fecha=${fecha}&tipo=tarde`)}
-                className="flex items-center gap-2 rounded-xl py-2 px-3 text-[13px] font-semibold bg-brand-tint text-brand border border-brand/30"
-              >
-                <Icon name="plus" className="w-4 h-4" stroke={1.8} />
-                Agregar tarde
+                <Icon name={turnoTarde ? 'edit' : 'plus'} className="w-4 h-4" stroke={1.8} />
+                {turnoTarde ? 'Editar tarde' : 'Agregar tarde'}
               </button>
             )}
             {jornadaEsUnica && !esDiaUnico(fecha) && (
               <button
                 onClick={() => setShowDesmarcarConfirm(true)}
-                className="rounded-xl py-2 px-3 text-[13px] font-semibold border border-hairline text-ink2 bg-card hover:border-brand/40 hover:text-brand transition-colors"
+                className="flex items-center justify-center rounded-xl py-2 px-3 text-[13px] font-semibold border border-hairline text-ink2 bg-card hover:border-brand/40 hover:text-brand transition-colors w-full sm:w-auto"
               >
                 Desmarcar turno único
               </button>
@@ -286,22 +296,47 @@ export default function Resumen({ fecha: fechaProp, esDuenoOverride, onBack }) {
         {/* Balance del día */}
         {turnos.length > 0 && (
           <div className="card-hero">
-            <div className="flex items-center justify-between mb-1.5">
+            <div className="flex items-center justify-between mb-1.5 gap-2">
               <p className="eyebrow">Balance del día</p>
-              <span
-                className={`text-[10px] font-bold uppercase tracking-widest rounded-full px-2.5 py-0.5 border ${
-                  esCompleto
-                    ? 'bg-pos-tint text-pos border-pos-border'
-                    : 'bg-warn-tint text-warn border-warn/30'
-                }`}
-              >
-                {estadoLabel}
-              </span>
+              <div className="flex items-center gap-1.5">
+                {turnos.some((t) => t.is_draft) && (
+                  <Badge tone="warn" dot>Borrador</Badge>
+                )}
+                {turnosCorregidos.length > 0 && (
+                  <Badge tone="info" icon="edit" onClick={abrirCorreccion}>Corregido</Badge>
+                )}
+                <Badge tone={esCompleto ? 'pos' : 'warn'}>{estadoLabel}</Badge>
+              </div>
             </div>
             <Amount variant="hero" color={ventasNetas >= 0 ? 'pos' : 'neg'} value={ventasNetas} className="mt-1" />
             <p className="text-[12px] text-muted mt-2">
               {clp(totalVentas)} ventas − {clp(totalProveedores)} proveedores
             </p>
+          </div>
+        )}
+
+        {/* Cuadre de caja (conteo físico vs. esperado) */}
+        {cuadres.length > 0 && (
+          <div className="card">
+            <p className="eyebrow mb-3">Cuadre de caja</p>
+            <div className="space-y-3">
+              {cuadres.map((c) => {
+                const dif = +c.diferencia_efectivo
+                const color = dif === 0 ? 'text-pos' : dif > 0 ? 'text-info' : 'text-neg'
+                const label = dif === 0 ? 'Cuadra exacto' : dif > 0 ? `Sobran ${clp(dif)}` : `Faltan ${clp(Math.abs(dif))}`
+                return (
+                  <div key={c.tipo} className="flex items-center justify-between gap-2">
+                    <div>
+                      <p className="text-[13px] font-semibold text-ink capitalize">{c.tipo}</p>
+                      <p className="text-[11px] text-muted">
+                        Esperado {clp(c.efectivo_esperado)} · Contado {clp(c.efectivo_contado)}
+                      </p>
+                    </div>
+                    <span className={`text-[13px] font-bold ${color}`}>{label}</span>
+                  </div>
+                )
+              })}
+            </div>
           </div>
         )}
 
@@ -334,57 +369,49 @@ export default function Resumen({ fecha: fechaProp, esDuenoOverride, onBack }) {
 
       </div>
 
-      {showDesmarcarConfirm && (
+      <ConfirmDialog
+        open={showDesmarcarConfirm}
+        title="¿Desmarcar turno único?"
+        description="El turno de tarde volverá a mostrarse de forma separada."
+        confirmLabel="Desmarcar"
+        onCancel={() => setShowDesmarcarConfirm(false)}
+        onConfirm={() => { setShowDesmarcarConfirm(false); toggleTurnoUnico() }}
+      />
+
+      <ConfirmDialog
+        open={showMergeConfirm}
+        title="¿Fusionar como turno único?"
+        description="El turno de tarde quedará oculto y el día se tratará como jornada completa de mañana. Puedes desmarcar esto en cualquier momento."
+        confirmLabel="Fusionar"
+        onCancel={() => setShowMergeConfirm(false)}
+        onConfirm={() => { setShowMergeConfirm(false); toggleTurnoUnico() }}
+      />
+
+      {showSelectorCorreccion && (
         <>
-          <div className="fixed inset-0 bg-black/40 dark:bg-black/70 z-40" onClick={() => setShowDesmarcarConfirm(false)} />
+          <div className="fixed inset-0 bg-black/40 dark:bg-black/70 z-40" onClick={() => setShowSelectorCorreccion(false)} />
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <div className="bg-card rounded-2xl shadow-2xl w-full max-w-xs p-6 flex flex-col gap-4">
-              <div>
-                <p className="font-bold text-ink text-base">¿Desmarcar turno único?</p>
-                <p className="text-sm text-ink2 mt-1">
-                  El turno de tarde volverá a mostrarse de forma separada.
-                </p>
+              <p className="font-bold text-ink text-base">¿Qué turno quieres revisar?</p>
+              <div className="flex flex-col gap-2">
+                {turnosCorregidos.map((t) => (
+                  <button
+                    key={t.id}
+                    onClick={() => { setShowSelectorCorreccion(false); setTurnoCorreccion(t) }}
+                    className="capitalize rounded-xl py-2.5 px-3 text-[13px] font-semibold bg-brand-tint text-brand border border-brand/30"
+                  >
+                    {t.tipo}
+                  </button>
+                ))}
               </div>
-              <div className="flex gap-3">
-                <button onClick={() => setShowDesmarcarConfirm(false)} className="flex-1 btn-secondary">
-                  Cancelar
-                </button>
-                <button
-                  onClick={() => { setShowDesmarcarConfirm(false); toggleTurnoUnico() }}
-                  className="flex-1 btn-primary">
-                  Desmarcar
-                </button>
-              </div>
+              <button onClick={() => setShowSelectorCorreccion(false)} className="btn-secondary">Cancelar</button>
             </div>
           </div>
         </>
       )}
 
-      {showMergeConfirm && (
-        <>
-          <div className="fixed inset-0 bg-black/40 dark:bg-black/70 z-40" onClick={() => setShowMergeConfirm(false)} />
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <div className="bg-card rounded-2xl shadow-2xl w-full max-w-xs p-6 flex flex-col gap-4">
-              <div>
-                <p className="font-bold text-ink text-base">¿Fusionar como turno único?</p>
-                <p className="text-sm text-ink2 mt-1">
-                  El turno de tarde quedará oculto y el día se tratará como jornada completa de mañana.
-                  Puedes desmarcar esto en cualquier momento.
-                </p>
-              </div>
-              <div className="flex gap-3">
-                <button onClick={() => setShowMergeConfirm(false)} className="flex-1 btn-secondary">
-                  Cancelar
-                </button>
-                <button
-                  onClick={() => { setShowMergeConfirm(false); toggleTurnoUnico() }}
-                  className="flex-1 btn-primary">
-                  Fusionar
-                </button>
-              </div>
-            </div>
-          </div>
-        </>
+      {turnoCorreccion && (
+        <CorreccionModal turno={turnoCorreccion} onClose={() => setTurnoCorreccion(null)} />
       )}
     </Layout>
   )

@@ -5,33 +5,11 @@ import Layout from '../components/Layout'
 import PageHeader from '../components/PageHeader'
 import Spinner from '../components/Spinner'
 import Icon from '../components/Icon'
+import IconButton from '../components/IconButton'
+import ConfirmDialog from '../components/ConfirmDialog'
 import { useAuth } from '../hooks/useAuth'
-
-const AVATAR_COLORS = ['#8B5D39', '#1E7A4F', '#33518C', '#B45309', '#0F766E', '#BE185D']
-function avatarColor(nombre) {
-  let h = 0
-  for (const c of String(nombre)) h = (h * 31 + c.charCodeAt(0)) & 0xffff
-  return AVATAR_COLORS[h % AVATAR_COLORS.length]
-}
-
-function ProveedorAvatar({ nombre = '', imagen_url, size = 'md' }) {
-  const [imgError, setImgError] = useState(false)
-  useEffect(() => { setImgError(false) }, [imagen_url])
-  const inicial = (nombre[0] || '?').toUpperCase()
-  const color = avatarColor(nombre || '?')
-  const sizes = { sm: 'w-9 h-9 text-sm', md: 'w-12 h-12 text-lg', lg: 'w-20 h-20 text-3xl' }
-  const cls = `${sizes[size]} rounded-xl overflow-hidden shrink-0 flex items-center justify-center font-bold text-white`
-
-  if (imagen_url && !imgError) {
-    return (
-      <div className={cls} style={{ background: 'rgb(var(--image-bg-rgb))' }}>
-        <img src={imagen_url} alt={nombre} className="w-full h-full object-contain p-0.5"
-          onError={() => { setImgError(true) }} />
-      </div>
-    )
-  }
-  return <div className={cls} style={{ background: color }}>{inicial}</div>
-}
+import { useErrorToast } from '../hooks/useErrorToast'
+import { ProveedorAvatar } from '../components/TurnoInput'
 
 export default function Proveedores() {
   const { esDueno } = useAuth()
@@ -43,6 +21,8 @@ export default function Proveedores() {
   const [guardando, setGuardando] = useState(false)
   const [error, setError] = useState('')
   const [showEliminarConfirm, setShowEliminarConfirm] = useState(false)
+
+  useErrorToast(error)
 
   useEffect(() => {
     cargar()
@@ -168,18 +148,12 @@ export default function Proveedores() {
           Volver
         </button>
 
-        <div className="flex items-center justify-between gap-3">
-          <PageHeader title="Proveedores" />
-          {esDueno && (
-            <button
-              onClick={abrirNuevo}
-              aria-label="Nuevo proveedor"
-              className="w-10 h-10 rounded-[13px] bg-brand text-white grid place-items-center shrink-0 hover:bg-brand-hover transition-colors"
-            >
-              <Icon name="plus" className="w-5 h-5" stroke={2.2} />
-            </button>
+        <PageHeader
+          title="Proveedores"
+          action={esDueno && (
+            <IconButton icon="plus" stroke={2.2} label="Nuevo proveedor" onClick={abrirNuevo} />
           )}
-        </div>
+        />
 
         {proveedores.length === 0 && (
           <div className="card text-center text-muted py-12">
@@ -257,10 +231,6 @@ export default function Proveedores() {
             />
           </div>
 
-          {error && (
-            <p className="text-sm text-neg bg-neg-tint border border-neg/20 rounded-lg px-3 py-2">{error}</p>
-          )}
-
           <button onClick={guardar} disabled={guardando || !editando.nombreNuevo.trim()}
             className="btn-primary py-3 disabled:opacity-50 gap-2">
             {guardando
@@ -270,29 +240,16 @@ export default function Proveedores() {
         </div>
       )}
 
-      {showEliminarConfirm && editando && (
-        <>
-          <div className="fixed inset-0 bg-black/40 dark:bg-black/70 z-[60]" onClick={() => setShowEliminarConfirm(false)} />
-          <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
-            <div className="bg-card rounded-2xl shadow-2xl w-full max-w-xs p-6 flex flex-col gap-4">
-              <div>
-                <p className="font-bold text-ink text-base">¿Eliminar proveedor?</p>
-                <p className="text-sm text-ink2 mt-1">
-                  Se eliminará <span className="font-medium text-ink">{editando.nombre}</span> de los frecuentes. Los registros históricos no se borran.
-                </p>
-              </div>
-              <div className="flex gap-3">
-                <button onClick={() => setShowEliminarConfirm(false)} className="flex-1 btn-secondary">Cancelar</button>
-                <button
-                  onClick={() => { setShowEliminarConfirm(false); eliminar(editando.id) }}
-                  className="flex-1 btn-danger">
-                  Eliminar
-                </button>
-              </div>
-            </div>
-          </div>
-        </>
-      )}
+      <ConfirmDialog
+        open={showEliminarConfirm && !!editando}
+        title="¿Eliminar proveedor?"
+        description={<>Se eliminará <span className="font-medium text-ink">{editando?.nombre}</span> de los frecuentes. Los registros históricos no se borran.</>}
+        confirmLabel="Eliminar"
+        danger
+        zIndex={60}
+        onCancel={() => setShowEliminarConfirm(false)}
+        onConfirm={() => { setShowEliminarConfirm(false); eliminar(editando.id) }}
+      />
     </Layout>
   )
 }

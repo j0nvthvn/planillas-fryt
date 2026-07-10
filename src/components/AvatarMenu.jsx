@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import Icon from './Icon'
+import ConfirmDialog from './ConfirmDialog'
 
 const ITEMS = [
   { to: '/proveedores',   label: 'Proveedores',   icon: 'suppliers' },
@@ -11,7 +12,8 @@ const ITEMS = [
 
 export default function AvatarMenu({ open, onClose, anchorRight = true }) {
   const navigate = useNavigate()
-  const { usuario, signOut } = useAuth()
+  const { usuario, esDueno, signOut } = useAuth()
+  const items = esDueno ? ITEMS : []
   const [confirmLogout, setConfirmLogout] = useState(false)
   const [mounted, setMounted] = useState(false)
   const [visible, setVisible] = useState(false)
@@ -19,6 +21,8 @@ export default function AvatarMenu({ open, onClose, anchorRight = true }) {
     () => typeof window !== 'undefined' && window.matchMedia('(min-width: 768px)').matches
   )
   const desktopRef = useRef(null)
+  const onCloseRef = useRef(onClose)
+  useEffect(() => { onCloseRef.current = onClose }, [onClose])
 
   useEffect(() => {
     const mq = window.matchMedia('(min-width: 768px)')
@@ -42,32 +46,24 @@ export default function AvatarMenu({ open, onClose, anchorRight = true }) {
     if (!mounted) return
     const prev = document.body.style.overflow
     document.body.style.overflow = 'hidden'
-    function onKey(e) { if (e.key === 'Escape') onClose() }
+    function onKey(e) { if (e.key === 'Escape') onCloseRef.current() }
     window.addEventListener('keydown', onKey)
     return () => {
       document.body.style.overflow = prev
       window.removeEventListener('keydown', onKey)
     }
-  }, [mounted, onClose])
-
-  useEffect(() => {
-    if (!mounted) return
-    window.history.pushState({ menu: true }, '')
-    function onPop() { onClose() }
-    window.addEventListener('popstate', onPop)
-    return () => window.removeEventListener('popstate', onPop)
-  }, [mounted, onClose])
+  }, [mounted])
 
   useEffect(() => {
     if (!mounted || !isDesktop) return
     function onClickOutside(e) {
       if (desktopRef.current && !desktopRef.current.contains(e.target)) {
-        onClose()
+        onCloseRef.current()
       }
     }
     document.addEventListener('mousedown', onClickOutside)
     return () => document.removeEventListener('mousedown', onClickOutside)
-  }, [mounted, isDesktop, onClose])
+  }, [mounted, isDesktop])
 
   function go(to) {
     onClose()
@@ -106,7 +102,7 @@ export default function AvatarMenu({ open, onClose, anchorRight = true }) {
             {usuario?.nombre ?? 'Usuario'}
           </p>
           <div className="h-px bg-hairline mx-2 mb-1" />
-          {ITEMS.map((item) => (
+          {items.map((item) => (
             <button
               key={item.to}
               role="menuitem"
@@ -149,7 +145,7 @@ export default function AvatarMenu({ open, onClose, anchorRight = true }) {
             Más opciones
           </p>
           <nav className="space-y-0.5">
-            {ITEMS.map((item) => (
+            {items.map((item) => (
               <button
                 key={item.to}
                 role="menuitem"
@@ -176,23 +172,16 @@ export default function AvatarMenu({ open, onClose, anchorRight = true }) {
       )}
 
       {/* Modal confirmar cierre de sesión */}
-      {confirmLogout && (
-        <>
-          <div className="fixed inset-0 bg-black/40 dark:bg-black/70 z-[60]" onClick={() => setConfirmLogout(false)} />
-          <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
-            <div className="bg-card rounded-2xl shadow-2xl w-full max-w-xs p-6 flex flex-col gap-4">
-              <div>
-                <p className="font-bold text-ink text-base">¿Cerrar sesión?</p>
-                <p className="text-sm text-ink2 mt-1">Tendrás que volver a ingresar tus credenciales.</p>
-              </div>
-              <div className="flex gap-3">
-                <button onClick={() => setConfirmLogout(false)} className="flex-1 btn-secondary">Cancelar</button>
-                <button onClick={handleSignOut} className="flex-1 btn-danger">Cerrar sesión</button>
-              </div>
-            </div>
-          </div>
-        </>
-      )}
+      <ConfirmDialog
+        open={confirmLogout}
+        title="¿Cerrar sesión?"
+        description="Tendrás que volver a ingresar tus credenciales."
+        confirmLabel="Cerrar sesión"
+        danger
+        zIndex={60}
+        onCancel={() => setConfirmLogout(false)}
+        onConfirm={handleSignOut}
+      />
 
       <style>{`@keyframes menuIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}`}</style>
     </>

@@ -106,7 +106,7 @@ Deno.serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        from: Deno.env.get('RESEND_FROM') ?? 'Fryt Planillas <onboarding@resend.dev>',
+        from: Deno.env.get('RESEND_FROM') ?? 'FrytControl <onboarding@resend.dev>',
         to: destinatarios,
         subject: asunto,
         html,
@@ -264,7 +264,7 @@ function buildEmailPeriodico({ tipo, desdeStr, hastaStr, jornadas, totales, tota
 
     <!-- Header -->
     <div style="background:#5C3317;padding:24px 28px;">
-      <p style="margin:0 0 4px;color:#F5EAD4;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;">Fryt Planillas</p>
+      <p style="margin:0 0 4px;color:#F5EAD4;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;">FrytControl</p>
       <h1 style="margin:0;color:#fff;font-size:20px;font-weight:700;">${titulo}</h1>
       <p style="margin:6px 0 0;color:#e9d5b4;font-size:14px;text-transform:capitalize;">${subtitulo}</p>
     </div>
@@ -315,7 +315,7 @@ function buildEmailPeriodico({ tipo, desdeStr, hastaStr, jornadas, totales, tota
 
     <!-- Footer -->
     <div style="padding:20px 28px 24px;margin-top:8px;border-top:1px solid #f0ebe3;">
-      <p style="margin:0;font-size:12px;color:#9ca3af;">Enviado automáticamente por <strong style="color:#374151;">Fryt Planillas</strong></p>
+      <p style="margin:0;font-size:12px;color:#9ca3af;">Enviado automáticamente por <strong style="color:#374151;">FrytControl</strong></p>
     </div>
   </div>
 </body>

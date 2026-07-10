@@ -7,6 +7,7 @@ const DEFAULTS = {
   notificacionesActivas: true,
   notificacionesEmailExtra: '',
   nombreLocal: 'Fryt',
+  fondoCajaInicial: 0,
 }
 
 const ConfigContext = createContext(null)
@@ -29,6 +30,7 @@ export function ConfigProvider({ children }) {
           notificacionesActivas:   map.notificaciones_activas !== false,
           notificacionesEmailExtra: typeof map.notificaciones_email_extra === 'string' ? map.notificaciones_email_extra : '',
           nombreLocal:             typeof map.nombre_local === 'string' && map.nombre_local ? map.nombre_local : DEFAULTS.nombreLocal,
+          fondoCajaInicial:        typeof map.fondo_caja_inicial === 'number' ? map.fondo_caja_inicial : DEFAULTS.fondoCajaInicial,
         })
       }
       setLoading(false)
@@ -49,6 +51,7 @@ export function ConfigProvider({ children }) {
       { clave: 'notificaciones_activas',     valor: nuevaConfig.notificacionesActivas },
       { clave: 'notificaciones_email_extra', valor: nuevaConfig.notificacionesEmailExtra || '' },
       { clave: 'nombre_local',               valor: nuevaConfig.nombreLocal || DEFAULTS.nombreLocal },
+      { clave: 'fondo_caja_inicial',         valor: nuevaConfig.fondoCajaInicial ?? 0 },
     ]
     const { error } = await supabase
       .from('configuracion')
