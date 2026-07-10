@@ -19,6 +19,9 @@ const EditarTurno   = lazy(() => import('./pages/EditarTurno'))
 const Proveedores   = lazy(() => import('./pages/Proveedores'))
 const Usuarios      = lazy(() => import('./pages/Usuarios'))
 const Configuracion = lazy(() => import('./pages/Configuracion'))
+const Papelera       = lazy(() => import('./pages/Papelera'))
+const ProveedorDetalle = lazy(() => import('./pages/ProveedorDetalle'))
+const RegistroErrores  = lazy(() => import('./pages/RegistroErrores'))
 
 function ScrollToTop() {
   const { pathname } = useLocation()
@@ -94,6 +97,24 @@ export default function App() {
           <Route path="/configuracion" element={
             <ProtectedRoute solodueno>
               <LazyRoute><Configuracion /></LazyRoute>
+            </ProtectedRoute>
+          } />
+
+          <Route path="/papelera" element={
+            <ProtectedRoute solodueno>
+              <LazyRoute><Papelera /></LazyRoute>
+            </ProtectedRoute>
+          } />
+
+          <Route path="/proveedor" element={
+            <ProtectedRoute solodueno>
+              <LazyRoute><ProveedorDetalle /></LazyRoute>
+            </ProtectedRoute>
+          } />
+
+          <Route path="/errores" element={
+            <ProtectedRoute solodueno>
+              <LazyRoute><RegistroErrores /></LazyRoute>
             </ProtectedRoute>
           } />
 

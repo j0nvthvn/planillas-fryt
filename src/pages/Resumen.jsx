@@ -79,6 +79,7 @@ export default function Resumen({ fecha: fechaProp, esDuenoOverride, onBack }) {
         )
       `)
       .eq('jornada_id', jornada.id)
+      .is('deleted_at', null)
       .order('tipo')
 
     setDatos({ jornada, turnos: turnos || [] })
@@ -221,12 +222,14 @@ export default function Resumen({ fecha: fechaProp, esDuenoOverride, onBack }) {
               tipo="mañana"
               presente={!!turnoMañana}
               usuario={turnoMañana?.usuario?.nombre}
+              subtotal={turnoMañana ? vm.total : 0}
             />
             {!esTurnoUnico && (
               <TurnoStatusChip
                 tipo="tarde"
                 presente={!!turnoTarde}
                 usuario={turnoTarde?.usuario?.nombre}
+                subtotal={turnoTarde ? vt.total : 0}
               />
             )}
           </div>

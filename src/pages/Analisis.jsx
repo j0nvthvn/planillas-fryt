@@ -1,4 +1,5 @@
 import { useEffect, useState, startTransition } from 'react'
+import { useNavigate } from 'react-router-dom'
 import {
   BarChart, Bar, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
   ResponsiveContainer, Cell,
@@ -88,6 +89,7 @@ const CHART_COLORS = {
 }
 
 export default function Analisis() {
+  const navigate = useNavigate()
   const [periodo, setPeriodo] = useState('7')
   const [datos, setDatos] = useState(null)
   const [cargando, setCargando] = useState(true)
@@ -133,6 +135,7 @@ export default function Analisis() {
             proveedores:proveedores_turno(nombre, monto, forma_pago)
           )
         `)
+        .is('turnos.deleted_at', null)
         .gte('fecha', desdeStr)
         .order('fecha'),
       supabase
@@ -143,6 +146,7 @@ export default function Analisis() {
             proveedores:proveedores_turno(monto, forma_pago)
           )
         `)
+        .is('turnos.deleted_at', null)
         .gte('fecha', anteriorDesdeStr)
         .lte('fecha', anteriorHastaStr),
     ])
@@ -255,6 +259,7 @@ export default function Analisis() {
             cierres:turno_cierres(es_correccion, cerrado_en, efectivo_esperado, efectivo_contado, diferencia_efectivo)
           )
         `)
+        .is('turnos.deleted_at', null)
         .gte('fecha', datos.desdeStr)
         .order('fecha')
       if (error) throw error
@@ -467,14 +472,19 @@ export default function Analisis() {
                     const maxMonto = datos.topProveedores[0].monto
                     const pct = (p.monto / maxMonto) * 100
                     return (
-                      <div key={p.nombre} className="flex items-center gap-2.5">
+                      <button
+                        key={p.nombre}
+                        onClick={() => navigate(`/proveedor?nombre=${encodeURIComponent(p.nombre)}`)}
+                        className="w-full flex items-center gap-2.5 text-left rounded-lg -mx-1 px-1 py-0.5 hover:bg-canvas transition-colors"
+                      >
                         <span className="text-xs text-muted w-4 text-right shrink-0 tabular-nums">{i + 1}</span>
                         <span className="text-[13px] text-ink2 w-28 truncate">{p.nombre}</span>
                         <div className="flex-1 bg-soft rounded-full h-1.5 overflow-hidden">
                           <div className="h-full rounded-full" style={{ width: `${pct}%`, background: ACCENT }} />
                         </div>
                         <span className="text-[13px] font-semibold text-ink tabular-nums w-20 text-right">{clp(p.monto)}</span>
-                      </div>
+                        <Icon name="chevR" className="w-3.5 h-3.5 text-muted2 shrink-0" />
+                      </button>
                     )
                   })}
                 </div>

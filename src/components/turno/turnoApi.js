@@ -24,8 +24,12 @@ async function ensureJornada(fecha) {
 export async function asegurarTurno({ fecha, tipo, usuarioId, fondoInicial = 0 }) {
   const jornadaId = await ensureJornada(fecha)
 
+  // Solo cuenta como "ya existe" un turno activo — uno eliminado (en la
+  // papelera) no debe reutilizarse silenciosamente ni bloquear la creación
+  // de uno nuevo para el mismo día/tipo (el índice único parcial en la
+  // base de datos permite esto: solo exige unicidad entre turnos activos).
   const { data: tEx } = await supabase
-    .from('turnos').select('id').eq('jornada_id', jornadaId).eq('tipo', tipo).maybeSingle()
+    .from('turnos').select('id').eq('jornada_id', jornadaId).eq('tipo', tipo).is('deleted_at', null).maybeSingle()
   if (tEx) return tEx.id
 
   // fondoInicial solo aplica al crear el turno (es un valor que queda
@@ -154,9 +158,58 @@ export async function versionTurno(turnoId) {
   return data?.updated_at ?? null
 }
 
-/** Borra un turno (usado por "eliminar turno" y por "deshacer" tras crear uno nuevo). */
+/**
+ * Borra un turno de verdad (hard delete). Se usa solo para "deshacer"
+ * inmediatamente después de crear un turno histórico nuevo — ahí no tiene
+ * sentido dejar un rastro en la papelera, porque el usuario está
+ * deshaciendo su propia acción al instante, no recuperándose de un error
+ * que descubrió después.
+ */
 export async function borrarTurno(turnoId) {
   return supabase.from('turnos').delete().eq('id', turnoId)
+}
+
+/**
+ * "Eliminar turno" real (botón de basurero en Turno.jsx/EditarTurno.jsx):
+ * no borra la fila, solo la marca con deleted_at. Queda disponible para
+ * que el dueño la restaure desde la papelera si fue un error.
+ */
+export async function eliminarTurno(turnoId) {
+  const { error } = await supabase.from('turnos').update({ deleted_at: new Date().toISOString() }).eq('id', turnoId)
+  if (error) throw error
+}
+
+/** Restaura un turno eliminado (limpia deleted_at). Solo dueño vía RLS. */
+export async function restaurarTurno(turnoId) {
+  const { error } = await supabase.from('turnos').update({ deleted_at: null }).eq('id', turnoId)
+  if (error) throw error
+}
+
+/** Borra definitivamente un turno de la papelera. Solo dueño vía RLS. */
+export async function eliminarTurnoDefinitivo(turnoId) {
+  const { error } = await supabase.from('turnos').delete().eq('id', turnoId)
+  if (error) throw error
+}
+
+/**
+ * Lista los turnos en la papelera (deleted_at IS NOT NULL), con su fecha,
+ * tipo, quién lo registró y los totales para poder identificarlo antes de
+ * restaurar o purgar.
+ */
+export async function listarPapelera() {
+  const { data, error } = await supabase
+    .from('turnos')
+    .select(`
+      id, tipo, deleted_at, fondo_inicial,
+      usuario:usuarios(nombre),
+      jornada:jornadas(fecha),
+      ventas:ventas_turno(efectivo, getnet, mercadopago, edenred, amipass, transferencia),
+      proveedores:proveedores_turno(monto, forma_pago)
+    `)
+    .not('deleted_at', 'is', null)
+    .order('deleted_at', { ascending: false })
+  if (error) throw error
+  return data || []
 }
 
 /**

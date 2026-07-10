@@ -23,13 +23,18 @@ export const METODOS_VENTA = [
 ]
 
 /* ── Logo de método de pago ──────────────────────────────── */
+// Efectivo y Transferencia no tienen PNG real (no son marcas externas), así
+// que siempre caen a este ícono de respaldo — por eso su fondo usa el mismo
+// token de tema (bg-image-bg) que el resto de los logos, en vez de un hex
+// fijo que se veía mal en oscuro. Getnet/Mercado Pago/Edenred/Amipass sí
+// tienen logo real y solo usan esto si la imagen falla al cargar.
 const METODO_FALLBACK = {
-  efectivo:      { d: 'M3 7h18v10H3zM12 9.7a2.3 2.3 0 100 4.6',                         bg: '#E6F1EA' },
-  getnet:        { d: 'M3 6h18a1 1 0 011 1v10a1 1 0 01-1 1H3a1 1 0 01-1-1V7a1 1 0 011-1zM2 10h20', bg: '#E8EDF6' },
-  mercadopago:   { d: 'M3 6h18a1 1 0 011 1v10a1 1 0 01-1 1H3a1 1 0 01-1-1V7a1 1 0 011-1zM7 12h6M7 15h4', bg: '#E2F6FC' },
-  edenred:       { d: 'M3 8a2 2 0 012-2h14a2 2 0 012 2v2a2 2 0 100 4v2a2 2 0 01-2 2H5a2 2 0 01-2-2v-2a2 2 0 100-4V8zM9 8v8', bg: '#FDF1DD' },
-  amipass:       { d: 'M3 6h18a1 1 0 011 1v10a1 1 0 01-1 1H3a1 1 0 01-1-1V7a1 1 0 011-1zM7 12l2 2 4-4', bg: '#F3ECDD' },
-  transferencia: { d: 'M4 10l8-5 8 5M5 10v7M19 10v7M9 10v7M15 10v7M3 19h18',             bg: '#F5EAD4' },
+  efectivo:      { d: 'M3 7h18v10H3zM12 9.7a2.3 2.3 0 100 4.6' },
+  getnet:        { d: 'M3 6h18a1 1 0 011 1v10a1 1 0 01-1 1H3a1 1 0 01-1-1V7a1 1 0 011-1zM2 10h20' },
+  mercadopago:   { d: 'M3 6h18a1 1 0 011 1v10a1 1 0 01-1 1H3a1 1 0 01-1-1V7a1 1 0 011-1zM7 12h6M7 15h4' },
+  edenred:       { d: 'M3 8a2 2 0 012-2h14a2 2 0 012 2v2a2 2 0 100 4v2a2 2 0 01-2 2H5a2 2 0 01-2-2v-2a2 2 0 100-4V8zM9 8v8' },
+  amipass:       { d: 'M3 6h18a1 1 0 011 1v10a1 1 0 01-1 1H3a1 1 0 01-1-1V7a1 1 0 011-1zM7 12l2 2 4-4' },
+  transferencia: { d: 'M4 10l8-5 8 5M5 10v7M19 10v7M9 10v7M15 10v7M3 19h18' },
 }
 
 const LOGO_SIZES = {
@@ -44,10 +49,7 @@ export function MetodoLogo({ metodo, active = false, size = 'md' }) {
   const showImg = !!metodo.logo && !imgError
   const sz = LOGO_SIZES[size] ?? LOGO_SIZES.md
   return (
-    <span
-      className={`relative shrink-0 flex items-center justify-center ${sz.container} ${showImg ? 'bg-image-bg' : ''}`}
-      style={!showImg && fb ? { background: fb.bg } : undefined}
-    >
+    <span className={`relative shrink-0 flex items-center justify-center bg-image-bg ${sz.container}`}>
       {showImg && (
         <img
           src={metodo.logo}

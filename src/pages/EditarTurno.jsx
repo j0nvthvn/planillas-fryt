@@ -11,6 +11,7 @@ import PageHeader from '../components/PageHeader'
 import Spinner from '../components/Spinner'
 import { fechaLegible } from '../utils/format'
 import IconButton from '../components/IconButton'
+import Icon from '../components/Icon'
 import ConfirmDialog from '../components/ConfirmDialog'
 import { ACCENT, ACCENT_TINT, VENTAS_VACIAS } from '../components/TurnoInput'
 import { useTurnoForm } from '../components/turno/useTurnoForm'
@@ -18,7 +19,7 @@ import { useIsDesktop } from '../components/turno/useIsDesktop'
 import { ProveedoresSection, VentasSection } from '../components/turno/TurnoSections'
 import { TurnoSheets } from '../components/turno/TurnoSheets'
 import { TurnoBottomBar } from '../components/turno/TurnoBottomBar'
-import { guardarTurno, finalizarTurno, corregirTurno, versionTurno, borrarTurno } from '../components/turno/turnoApi'
+import { guardarTurno, finalizarTurno, corregirTurno, versionTurno, borrarTurno, eliminarTurno as eliminarTurnoApi } from '../components/turno/turnoApi'
 
 export default function EditarTurno() {
   const { usuario } = useAuth()
@@ -86,6 +87,7 @@ export default function EditarTurno() {
         .select('id, updated_at, is_draft, proveedores:proveedores_turno(id, nombre, monto, forma_pago), ventas:ventas_turno(efectivo, getnet, mercadopago, edenred, amipass, transferencia)')
         .eq('jornada_id', jornada.id)
         .eq('tipo', tipo)
+        .is('deleted_at', null)
         .maybeSingle()
 
       if (!activo) return
@@ -197,10 +199,15 @@ export default function EditarTurno() {
     } finally { setGuardando(false) }
   }
 
-  async function eliminarTurno() {
+  async function confirmarEliminar() {
     if (!turnoId) return
-    const { error: err } = await supabase.from('turnos').delete().eq('id', turnoId)
-    if (err) { setError('Error al eliminar el turno.'); return }
+    try {
+      await eliminarTurnoApi(turnoId)
+    } catch (err) {
+      console.error(err)
+      setError('Error al eliminar el turno.')
+      return
+    }
     navigate('/historial')
   }
 
@@ -219,9 +226,22 @@ export default function EditarTurno() {
   const modoEditar = !!turnoId
   const titulo = modoEditar ? 'Editar turno' : 'Registrar turno'
 
+  function volver() {
+    navigate(from === 'historial' ? `/historial?fecha=${fecha}` : '/hoy')
+  }
+
   return (
     <Layout>
       <div className="max-w-lg md:max-w-4xl mx-auto space-y-4">
+        <button
+          type="button"
+          onClick={volver}
+          className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-ink2 hover:text-ink -ml-1"
+        >
+          <Icon name="arrowLeft" className="w-4 h-4" stroke={2} />
+          Volver
+        </button>
+
         <PageHeader
           title={titulo}
           date={fechaLegible(fecha)}
@@ -280,11 +300,11 @@ export default function EditarTurno() {
       <ConfirmDialog
         open={showEliminarConfirm}
         title={<>¿Eliminar turno de <span className="capitalize">{tipo}</span>?</>}
-        description="Se eliminarán todos los datos de este turno. Esta acción no se puede deshacer."
+        description="El turno se moverá a la papelera. El dueño podrá restaurarlo si fue un error."
         confirmLabel="Eliminar"
         danger
         onCancel={() => setShowEliminarConfirm(false)}
-        onConfirm={() => { setShowEliminarConfirm(false); eliminarTurno() }}
+        onConfirm={() => { setShowEliminarConfirm(false); confirmarEliminar() }}
       />
     </Layout>
   )

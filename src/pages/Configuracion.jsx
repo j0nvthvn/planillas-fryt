@@ -68,8 +68,6 @@ export default function Configuracion() {
   const toast = useToast()
   const [diasUnicos, setDiasUnicos] = useState(config.diasTurnoUnico)
   const [horaCorte, setHoraCorte] = useState(String(config.horaCorteManana))
-  const [notifActivas, setNotifActivas] = useState(config.notificacionesActivas)
-  const [notifEmailExtra, setNotifEmailExtra] = useState(config.notificacionesEmailExtra)
   const [nombreLocal, setNombreLocal] = useState(config.nombreLocal)
   const [fondoCaja, setFondoCaja] = useState(String(config.fondoCajaInicial ?? 0))
   const [guardando, setGuardando] = useState(false)
@@ -87,8 +85,6 @@ export default function Configuracion() {
   useEffect(() => {
     setDiasUnicos(config.diasTurnoUnico)
     setHoraCorte(String(config.horaCorteManana))
-    setNotifActivas(config.notificacionesActivas)
-    setNotifEmailExtra(config.notificacionesEmailExtra)
     setNombreLocal(config.nombreLocal)
     setFondoCaja(String(config.fondoCajaInicial ?? 0))
   }, [config])
@@ -116,8 +112,10 @@ export default function Configuracion() {
     const { error: err } = await guardar({
       diasTurnoUnico: diasUnicos,
       horaCorteManana: hora,
-      notificacionesActivas: notifActivas,
-      notificacionesEmailExtra: notifEmailExtra.trim(),
+      // La UI de notificaciones se quitó (no hay envío real detrás); se
+      // preservan los valores existentes tal cual para no pisarlos.
+      notificacionesActivas: config.notificacionesActivas,
+      notificacionesEmailExtra: config.notificacionesEmailExtra,
       nombreLocal: nombreLocal.trim() || 'Fryt',
       fondoCajaInicial: fondo,
     })
@@ -228,51 +226,6 @@ export default function Configuracion() {
                 )
               })}
             </div>
-          </div>
-        </section>
-
-        {/* Notificaciones */}
-        <section>
-          <p className="eyebrow px-1 mb-2">Notificaciones</p>
-          <div className="rounded-2xl bg-card border border-hairline overflow-hidden">
-            <div className="flex items-center justify-between px-4 py-3.5">
-              <div className="flex-1 min-w-0">
-                <p className="text-[14px] text-ink">Notificaciones activas</p>
-                <p className="text-[12px] text-muted mt-0.5">Resúmenes al guardar y reportes diarios</p>
-              </div>
-              <Toggle
-                on={notifActivas}
-                onChange={() => { setNotifActivas((v) => !v); setGuardado(false) }}
-                label="Notificaciones activas"
-              />
-            </div>
-            {notifActivas && (
-              <>
-                <div className="border-t border-soft px-4 py-3.5">
-                  <label className="block text-[13px] font-semibold text-ink mb-1.5">Email adicional</label>
-                  <input
-                    type="email"
-                    placeholder="contador@ejemplo.com"
-                    value={notifEmailExtra}
-                    onChange={(e) => { setNotifEmailExtra(e.target.value); setGuardado(false) }}
-                    className="w-full bg-transparent border-0 p-0 text-[14px] text-ink2 placeholder-muted2 focus:outline-none focus:ring-0"
-                  />
-                </div>
-                <div className="border-t border-soft bg-canvas px-4 py-3 space-y-1.5">
-                  <p className="eyebrow mb-2">Qué recibirás</p>
-                  {[
-                    'Resumen inmediato al guardar cada turno',
-                    'Resumen diario automático a las 23:00',
-                    'Resumen semanal los lunes a las 8:00',
-                  ].map((item) => (
-                    <div key={item} className="flex items-start gap-2">
-                      <Icon name="check" className="w-3.5 h-3.5 text-pos shrink-0 mt-0.5" stroke={2.5} />
-                      <span className="text-[12px] text-ink2">{item}</span>
-                    </div>
-                  ))}
-                </div>
-              </>
-            )}
           </div>
         </section>
 

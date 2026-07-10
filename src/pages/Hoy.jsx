@@ -7,6 +7,7 @@ import Amount from '../components/Amount'
 import Icon from '../components/Icon'
 import IconButton from '../components/IconButton'
 import TurnoStatusChip from '../components/TurnoStatusChip'
+import InstallBanner from '../components/InstallBanner'
 import { supabase } from '../lib/supabase'
 import { fechaLegible, hoy } from '../utils/format'
 import { totalesVentas, totalesProveedores } from '../utils/totales'
@@ -40,6 +41,7 @@ export default function Hoy() {
           proveedores:proveedores_turno(monto, forma_pago)
         `)
         .eq('jornada_id', jornada.id)
+        .is('deleted_at', null)
         .order('tipo')
       if (!activo) return
       setTurnos(turnosData || [])
@@ -104,6 +106,8 @@ export default function Hoy() {
           />
         )}
       />
+
+      <InstallBanner />
 
       {/* Alerta: turno abandonado (borrador sin actividad hace horas) */}
       {turnosAbandonados.length > 0 && (

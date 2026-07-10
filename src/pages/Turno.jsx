@@ -22,7 +22,7 @@ import { TurnoSheets } from '../components/turno/TurnoSheets'
 import { TurnoBottomBar } from '../components/turno/TurnoBottomBar'
 import { ConteoCajaSheet } from '../components/turno/ConteoCajaSheet'
 import { FondoCajaSheet } from '../components/turno/FondoCajaSheet'
-import { borrarTurno, guardarTurno, finalizarTurno as finalizarTurnoApi, actualizarFondoInicial } from '../components/turno/turnoApi'
+import { eliminarTurno, guardarTurno, finalizarTurno as finalizarTurnoApi, actualizarFondoInicial } from '../components/turno/turnoApi'
 
 function SegmentedTipo({ tipo, tiposExistentes, turnosDraft, esDiaUnico, onChange }) {
   if (esDiaUnico) {
@@ -107,6 +107,7 @@ export default function Turno() {
   const savingCountRef = useRef(0)
   const saveQueueRef = useRef(Promise.resolve())
   const tipoInicializadoRef = useRef(false)
+  const tipoAnteriorRef = useRef(null)
 
   // Cola de saves: encadena promesas para que corran en serie
   // y la última escritura gana, evitando race conditions.
@@ -126,10 +127,12 @@ export default function Turno() {
     savingCountRef.current = Math.max(0, savingCountRef.current - 1)
     if (savingCountRef.current === 0) {
       setAutoguardando(false)
-      // Mantener savingRef activo durante la ventana del debounce de realtime (180ms)
+      // Mantener savingRef activo un poco más que el debounce de realtime (180ms)
+      // para absorber el eco de nuestra propia escritura — la latencia real de
+      // Realtime puede superar holgadamente los 180ms, así que damos margen extra.
       setTimeout(() => {
         if (savingCountRef.current === 0) savingRef.current = false
-      }, 250)
+      }, 900)
     }
   }
 
@@ -203,18 +206,29 @@ export default function Turno() {
   // cambian por nuestras propias escrituras optimistas (autoguardado de
   // proveedores) y solo alimentan indicadores visuales. Si dependiera de eso,
   // cada autoguardado dispararía un refetch completo y un parpadeo del formulario.
+  //
+  // loadKey también se incrementa cuando llega un cambio remoto (incluido el
+  // eco de nuestro propio guardado si llega fuera de la ventana de gracia de
+  // savingRef). Para que eso nunca se sienta como "se recargó toda la
+  // pantalla", solo limpiamos a blanco + mostramos el spinner cuando el tipo
+  // de turno realmente cambió; un refresco del mismo tipo actualiza los
+  // datos en su lugar una vez que llegan, sin pasar por un estado vacío.
   useEffect(() => {
     if (!tipo) return
     let activo = true
-    turnoIdRef.current = null
-    setTurnoIdExistente(null)
-    setTurnoVersion(null)
-    setProvs([])
-    setVentas(VENTAS_VACIAS)
-    setCambioRemotoPendiente(false)
-    setCambiosLocales(false)
-    setFondoInicial(config.fondoCajaInicial ?? 0)
-    setCargandoDatos(true)
+    const esCambioDeTipo = tipoAnteriorRef.current !== tipo
+    tipoAnteriorRef.current = tipo
+    if (esCambioDeTipo) {
+      turnoIdRef.current = null
+      setTurnoIdExistente(null)
+      setTurnoVersion(null)
+      setProvs([])
+      setVentas(VENTAS_VACIAS)
+      setCambioRemotoPendiente(false)
+      setCambiosLocales(false)
+      setFondoInicial(config.fondoCajaInicial ?? 0)
+      setCargandoDatos(true)
+    }
     async function cargar() {
       try {
       const [{ data: jornada }, { data: frecuentes }] = await Promise.all([
@@ -223,15 +237,33 @@ export default function Turno() {
       ])
       if (!activo) return
       setJornadaId(jornada?.id || null)
-      if (!jornada) return
+      if (!jornada) {
+        if (esCambioDeTipo) return
+        turnoIdRef.current = null
+        setTurnoIdExistente(null)
+        setTurnoVersion(null)
+        setProvs([])
+        setVentas(VENTAS_VACIAS)
+        return
+      }
       const imgMap = Object.fromEntries((frecuentes || []).map((f) => [f.nombre, f.imagen_url || '']))
       const { data: turno } = await supabase
         .from('turnos')
         .select('id, updated_at, fondo_inicial, proveedores:proveedores_turno(nombre, monto, forma_pago), ventas:ventas_turno(efectivo, getnet, mercadopago, edenred, amipass, transferencia)')
         .eq('jornada_id', jornada.id)
         .eq('tipo', tipo)
+        .is('deleted_at', null)
         .maybeSingle()
-      if (!activo || !turno) return
+      if (!activo) return
+      if (!turno) {
+        if (esCambioDeTipo) return
+        turnoIdRef.current = null
+        setTurnoIdExistente(null)
+        setTurnoVersion(null)
+        setProvs([])
+        setVentas(VENTAS_VACIAS)
+        return
+      }
       setTurnoIdExistente(turno.id)
       turnoIdRef.current = turno.id
       setTurnoVersion(turno.updated_at)
@@ -263,7 +295,7 @@ export default function Turno() {
       setJornadaId(jornada?.id || null)
       if (jornada) {
         const { data: turnos } = await supabase
-          .from('turnos').select('tipo, is_draft').eq('jornada_id', jornada.id)
+          .from('turnos').select('tipo, is_draft').eq('jornada_id', jornada.id).is('deleted_at', null)
         existentes = (turnos || []).map((t) => t.tipo)
         drafts = Object.fromEntries((turnos || []).map((t) => [t.tipo, !!t.is_draft]))
       }
@@ -403,7 +435,7 @@ export default function Turno() {
       return rest
     })
     if (idToDelete) {
-      try { await borrarTurno(idToDelete) } catch (err) { console.error(err) }
+      try { await eliminarTurno(idToDelete) } catch (err) { console.error(err) }
       setTiposExistentes((prev) => prev.filter((t) => t !== tipo))
     }
   }
@@ -523,7 +555,9 @@ export default function Turno() {
       <ConfirmDialog
         open={showLimpiarConfirm}
         title={turnoExistente ? '¿Eliminar el turno?' : '¿Limpiar el borrador?'}
-        description={`Se borrarán todos los proveedores y ventas ingresados${turnoExistente ? ' en la base de datos' : ''}. Esta acción no se puede deshacer.`}
+        description={turnoExistente
+          ? 'El turno se moverá a la papelera. El dueño podrá restaurarlo si fue un error.'
+          : 'Se borrarán todos los proveedores y ventas ingresados en este borrador. Esta acción no se puede deshacer.'}
         confirmLabel="Limpiar"
         danger
         onCancel={() => setShowLimpiarConfirm(false)}

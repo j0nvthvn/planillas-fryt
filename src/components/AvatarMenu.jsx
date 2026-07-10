@@ -8,6 +8,8 @@ const ITEMS = [
   { to: '/proveedores',   label: 'Proveedores',   icon: 'suppliers' },
   { to: '/usuarios',      label: 'Usuarios',       icon: 'users' },
   { to: '/configuracion', label: 'Configuración',  icon: 'settings' },
+  { to: '/papelera',      label: 'Papelera',       icon: 'trash' },
+  { to: '/errores',       label: 'Registro de errores', icon: 'warning' },
 ]
 
 export default function AvatarMenu({ open, onClose, anchorRight = true }) {

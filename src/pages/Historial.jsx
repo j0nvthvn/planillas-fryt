@@ -100,6 +100,7 @@ export default function Historial() {
           cierres:turno_cierres(es_correccion)
         )
       `)
+      .is('turnos.deleted_at', null)
       .order('fecha', { ascending: false })
       .limit(90)
     setJornadas(data || [])
