@@ -11,7 +11,7 @@ import Spinner from '../components/Spinner'
 import Amount from '../components/Amount'
 import { clp, toNum, hoy } from '../utils/format'
 import { totalesVentas, totalesProveedores } from '../utils/totales'
-import { METODOS_VENTA, ACCENT, GREEN } from '../components/TurnoInput'
+import { METODOS_VENTA, ACCENT, GREEN, BottomSheet } from '../components/TurnoInput'
 import { descargarCSV } from '../utils/csv'
 import Icon from '../components/Icon'
 
@@ -101,6 +101,15 @@ function DateField({ value, onChange, min, max }) {
   )
 }
 
+function MetricaInfo({ label, desc }) {
+  return (
+    <div>
+      <p className="text-[13px] font-semibold text-ink mb-1">{label}</p>
+      <p className="text-[12.5px] text-ink2 leading-relaxed">{desc}</p>
+    </div>
+  )
+}
+
 const KPI_COLORS = {
   ventas:    { fg: 'var(--brand)',  bg: 'var(--brand-tint)',  border: 'rgb(var(--brand-rgb) / 0.2)' },
   proveed:   { fg: 'var(--neg)',    bg: 'var(--neg-tint)',    border: 'rgb(var(--neg-rgb) / 0.25)' },
@@ -134,6 +143,7 @@ export default function Analisis() {
   const [cargando, setCargando] = useState(true)
   const [isDark, setIsDark] = useState(() => document.documentElement.classList.contains('dark'))
   const [exportando, setExportando] = useState(false)
+  const [showMetricas, setShowMetricas] = useState(false)
 
   useEffect(() => {
     const observer = new MutationObserver(() => {
@@ -469,6 +479,17 @@ export default function Analisis() {
             </div>
 
             {/* KPIs tintados */}
+            <div className="flex items-center gap-1.5 px-1">
+              <p className="text-[11px] font-bold uppercase tracking-widest text-muted2">Resumen del período</p>
+              <button
+                type="button"
+                onClick={() => setShowMetricas(true)}
+                aria-label="Cómo se calculan estas métricas"
+                className="text-muted2 hover:text-brand transition-colors"
+              >
+                <Icon name="info" className="w-3.5 h-3.5" stroke={2} />
+              </button>
+            </div>
             <div className="grid grid-cols-3 gap-2.5">
               {[
                 { key: 'ventas',  label: 'Ventas',   value: ventasTotal,     anteriorKey: 'ventasTotal' },
@@ -574,6 +595,35 @@ export default function Analisis() {
           </>
         )}
       </div>
+
+      {showMetricas && (
+        <BottomSheet title="Cómo se calculan estas métricas" onClose={() => setShowMetricas(false)}>
+          <div className="space-y-4 pb-4">
+            <MetricaInfo
+              label="Ventas"
+              desc="Suma de lo cobrado por los 6 métodos de pago (Efectivo, Getnet, Mercado Pago, Edenred, Amipass, Transferencia) en el período elegido."
+            />
+            <MetricaInfo
+              label="Proveedores"
+              desc="Suma de lo pagado a proveedores, en efectivo y por transferencia, en el período elegido."
+            />
+            <MetricaInfo
+              label="Caja"
+              desc="Efectivo de ventas menos efectivo pagado a proveedores: lo que debería quedar físicamente en la caja al cierre del período."
+            />
+            <MetricaInfo
+              label="Neto del período"
+              desc="Ventas menos proveedores, considerando todos los métodos de pago (no solo efectivo)."
+            />
+            <div className="pt-3 border-t border-soft">
+              <p className="text-[13px] font-semibold text-ink mb-1">El porcentaje junto a cada métrica</p>
+              <p className="text-[12.5px] text-ink2 leading-relaxed">
+                Compara el período elegido con el mismo número de días inmediatamente anterior. Si no hay datos del período anterior se muestra <span className="font-semibold text-ink">nuevo</span>; si el cambio es menor a 0,5% se muestra <span className="font-semibold text-ink">≈ igual</span>; y si el signo cambia (por ejemplo, de caja negativa a positiva) se muestra la diferencia en pesos en vez de un porcentaje, porque ahí un % puede ser engañoso.
+              </p>
+            </div>
+          </div>
+        </BottomSheet>
+      )}
     </Layout>
   )
 }

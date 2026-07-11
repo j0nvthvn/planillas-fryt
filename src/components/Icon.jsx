@@ -31,6 +31,7 @@ const paths = {
   caretDown: 'M6 9l6 6 6-6',
   download: 'M12 3v12m0 0l-4-4m4 4l4-4M4 21h16',
   share: 'M12 16V4m0 0l-4 4m4-4l4 4M5 12v7a1 1 0 001 1h12a1 1 0 001-1v-7',
+  info: 'M12 2a10 10 0 100 20 10 10 0 000-20zM12 16v-4.5M12 8h.01',
 }
 
 export default function Icon({ name, className = 'w-5 h-5', stroke = 1.8 }) {
