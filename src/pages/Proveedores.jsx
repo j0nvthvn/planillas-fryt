@@ -11,6 +11,10 @@ import { useAuth } from '../hooks/useAuth'
 import { useErrorToast } from '../hooks/useErrorToast'
 import { ProveedorAvatar } from '../components/TurnoInput'
 
+function normalizar(s) {
+  return s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
+}
+
 export default function Proveedores() {
   const { esDueno } = useAuth()
   const navigate = useNavigate()
@@ -21,6 +25,11 @@ export default function Proveedores() {
   const [guardando, setGuardando] = useState(false)
   const [error, setError] = useState('')
   const [showEliminarConfirm, setShowEliminarConfirm] = useState(false)
+  const [query, setQuery] = useState('')
+
+  const filtrados = query.trim()
+    ? proveedores.filter((p) => normalizar(p.nombre).includes(normalizar(query.trim())))
+    : proveedores
 
   useErrorToast(error)
 
@@ -162,8 +171,35 @@ export default function Proveedores() {
           </div>
         )}
 
+        {proveedores.length > 0 && (
+          <div className="relative">
+            <Icon name="search" className="w-4 h-4 text-muted2 absolute left-3.5 top-1/2 -translate-y-1/2" stroke={2} />
+            <input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Buscar proveedor"
+              className="input pl-10 pr-9 py-2.5"
+            />
+            {query && (
+              <button
+                onClick={() => setQuery('')}
+                aria-label="Limpiar búsqueda"
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full grid place-items-center text-muted2 hover:text-ink2 hover:bg-canvas transition-colors"
+              >
+                <Icon name="close" className="w-3.5 h-3.5" stroke={2} />
+              </button>
+            )}
+          </div>
+        )}
+
+        {proveedores.length > 0 && filtrados.length === 0 && (
+          <div className="card text-center text-muted py-10">
+            Sin resultados para <span className="font-semibold text-ink2">"{query.trim()}"</span>
+          </div>
+        )}
+
         <div className="space-y-2.5">
-          {proveedores.map((p) => {
+          {filtrados.map((p) => {
             const s = stats[p.nombre] || { n: 0, total: 0 }
             return (
               <button
