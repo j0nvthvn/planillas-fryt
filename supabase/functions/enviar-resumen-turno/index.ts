@@ -86,6 +86,13 @@ Deno.serve(async (req) => {
     if (!res.ok) {
       const err = await res.text()
       console.error('Resend error:', err)
+      // Antes esto devolvía 200 igual, así que un fallo de Resend (por
+      // ejemplo, cuenta en modo sandbox sin dominio verificado) quedaba
+      // invisible en los logs de invocación — parecía "entregado" cuando
+      // en realidad Resend lo rechazó.
+      return new Response(JSON.stringify({ error: 'resend', detail: err }), {
+        status: 502, headers: { 'Content-Type': 'application/json' },
+      })
     }
 
     return new Response('ok', { status: 200 })

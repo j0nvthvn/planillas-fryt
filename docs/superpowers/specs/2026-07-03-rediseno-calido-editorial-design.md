@@ -1,4 +1,4 @@
-# Rediseño "Cálido Editorial" 1a — Planilla Fryt
+# Rediseño "Cálido Editorial" 1a — FrytControl
 
 **Fecha:** 2026-07-03
 **Estado:** Borrador pendiente de aprobación
@@ -6,7 +6,7 @@
 
 ## 1. Contexto y motivación
 
-El handoff de diseño en `design_handoff_rediseno_1a/` define un rediseño completo de Planilla Fryt (móvil-first) con la dirección "Cálido Editorial". Resuelve tres problemas concretos del producto actual:
+El handoff de diseño en `design_handoff_rediseno_1a/` define un rediseño completo de FrytControl (móvil-first) con la dirección "Cálido Editorial". Resuelve tres problemas concretos del producto actual:
 
 1. **Duplicación de información** entre "Resumen del día" y "Dashboard".
 2. **Navegación confusa** (5 tabs + "Más").

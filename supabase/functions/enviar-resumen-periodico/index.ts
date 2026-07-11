@@ -91,10 +91,21 @@ Deno.serve(async (req) => {
       return new Response('ok', { status: 200 })
     }
 
-    const totales = calcularTotales(jornadas ?? [])
-    const totalesAnt = calcularTotales(jornadasAnt ?? [])
+    // supabase-js infiere ventas_turno como arreglo a partir del string de
+    // select (no conoce el UNIQUE turno_id), pero en runtime PostgREST la
+    // embebe como objeto — JornadaRow ya refleja la forma real.
+    const totales = calcularTotales((jornadas ?? []) as unknown as JornadaRow[])
+    const totalesAnt = calcularTotales((jornadasAnt ?? []) as unknown as JornadaRow[])
 
-    const html = buildEmailPeriodico({ tipo, desdeStr, hastaStr, jornadas: jornadas ?? [], totales, totalesAnt })
+    // La narrativa es un extra: si falla (sin API key, rate limit, timeout,
+    // etc.) el correo se manda igual solo con los números — nunca debe
+    // bloquear el envío.
+    const resumenIA = await generarResumenIA({ tipo, totales, totalesAnt }).catch((err) => {
+      console.error('generarResumenIA falló:', err)
+      return null
+    })
+
+    const html = buildEmailPeriodico({ tipo, desdeStr, hastaStr, jornadas: (jornadas ?? []) as unknown as JornadaRow[], totales, totalesAnt, resumenIA })
     const asunto = tipo === 'diario'
       ? `Resumen diario · ${fechaLegible(hastaStr)}`
       : `Resumen semanal · ${fechaCorta(desdeStr)} – ${fechaCorta(hastaStr)}`
@@ -175,7 +186,11 @@ const METODOS = [
 
 type VentaRow = Record<string, unknown>
 type ProvRow = { nombre: string; monto: number; forma_pago: string }
-type TurnoRow = { id: string; tipo: string; ventas: VentaRow[]; proveedores: ProvRow[] }
+// ventas_turno tiene turno_id UNIQUE (una fila por turno) — PostgREST la
+// embebe como objeto, no como arreglo (a diferencia de proveedores_turno,
+// que sí es 1:muchos). Asumir arreglo acá tiraba "object is not iterable"
+// en cada ejecución, por eso este correo nunca llegaba a enviarse.
+type TurnoRow = { id: string; tipo: string; ventas: VentaRow | null; proveedores: ProvRow[] }
 type JornadaRow = { id: string; fecha?: string; turnos: TurnoRow[] }
 
 function calcularTotales(jornadas: JornadaRow[]) {
@@ -185,8 +200,8 @@ function calcularTotales(jornadas: JornadaRow[]) {
 
   for (const j of jornadas) {
     for (const t of j.turnos ?? []) {
-      for (const v of t.ventas ?? []) {
-        for (const m of METODOS) metodos[m.key] += Number(v[m.key]) || 0
+      if (t.ventas) {
+        for (const m of METODOS) metodos[m.key] += Number(t.ventas[m.key]) || 0
       }
       for (const p of t.proveedores ?? []) {
         if (p.forma_pago === 'efectivo') efProv += Number(p.monto)
@@ -204,6 +219,72 @@ function calcularTotales(jornadas: JornadaRow[]) {
   return { metodos, totalVentas, efProv, trProv, topProv }
 }
 
+// ── Resumen narrativo (IA) ────────────────────────────────
+//
+// Le pasamos a Claude exactamente los mismos números que ya calculó
+// calcularTotales() — nunca le damos acceso a la base de datos ni le
+// pedimos que calcule nada, solo que redacte 2-3 frases a partir de
+// cifras que ya están correctas. Así el peor caso posible es una
+// redacción sosa, nunca un número inventado.
+async function generarResumenIA(
+  { tipo, totales, totalesAnt }: { tipo: 'diario' | 'semanal'; totales: ReturnType<typeof calcularTotales>; totalesAnt: ReturnType<typeof calcularTotales> },
+): Promise<string | null> {
+  const apiKey = Deno.env.get('ANTHROPIC_API_KEY')
+  if (!apiKey) return null
+
+  const provTotal = totales.efProv + totales.trProv
+  const provTotalAnt = totalesAnt.efProv + totalesAnt.trProv
+  const hayAnterior = totalesAnt.totalVentas > 0 || provTotalAnt > 0
+
+  const hechos = [
+    `Ventas totales del período: ${clp(totales.totalVentas)}.`,
+    hayAnterior ? `Ventas del período anterior (mismo largo, inmediatamente antes): ${clp(totalesAnt.totalVentas)}.` : null,
+    `Pagos a proveedores del período: ${clp(provTotal)} (efectivo: ${clp(totales.efProv)}, transferencia: ${clp(totales.trProv)}).`,
+    hayAnterior ? `Pagos a proveedores del período anterior: ${clp(provTotalAnt)}.` : null,
+    totales.topProv.length > 0
+      ? `Proveedor con mayor gasto: ${totales.topProv[0].nombre} (${clp(totales.topProv[0].monto)}).`
+      : 'Sin pagos a proveedores en el período.',
+    ...METODOS.filter((m) => totales.metodos[m.key] > 0)
+      .map((m) => `${m.label}: ${clp(totales.metodos[m.key])}.`),
+  ].filter(Boolean).join('\n')
+
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), 8000)
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      signal: controller.signal,
+      headers: {
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 200,
+        system: 'Eres un asistente que redacta resúmenes breves para el dueño de un minimarket chileno, a partir de datos de ventas y proveedores. ' +
+          'Usa ÚNICAMENTE los números que se te entregan — nunca inventes cifras, nombres ni datos que no aparezcan en el mensaje. ' +
+          'Responde con un máximo de 3 frases cortas, en español de Chile, tono cercano y directo (como para leer en 5 segundos). ' +
+          'Sin saludos, sin emojis, sin markdown, sin repetir literalmente "el período". Destaca lo más relevante: la variación más grande (para arriba o para abajo) o el proveedor más caro. ' +
+          'Si no hay datos de un período anterior para comparar, no menciones comparación.',
+        messages: [{ role: 'user', content: `Tipo de resumen: ${tipo === 'diario' ? 'diario' : 'semanal'}.\n\n${hechos}` }],
+      }),
+    })
+    if (!res.ok) {
+      console.error('Anthropic API error:', res.status, await res.text())
+      return null
+    }
+    const data = await res.json()
+    const texto = data?.content?.[0]?.text?.trim()
+    return texto || null
+  } catch (err) {
+    console.error('generarResumenIA fetch falló:', err)
+    return null
+  } finally {
+    clearTimeout(timeout)
+  }
+}
+
 interface EmailPeriodicoParams {
   tipo: 'diario' | 'semanal'
   desdeStr: string
@@ -211,9 +292,14 @@ interface EmailPeriodicoParams {
   jornadas: JornadaRow[]
   totales: ReturnType<typeof calcularTotales>
   totalesAnt: ReturnType<typeof calcularTotales>
+  resumenIA: string | null
 }
 
-function buildEmailPeriodico({ tipo, desdeStr, hastaStr, jornadas, totales, totalesAnt }: EmailPeriodicoParams): string {
+function escapeHtml(s: string): string {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+}
+
+function buildEmailPeriodico({ tipo, desdeStr, hastaStr, jornadas, totales, totalesAnt, resumenIA }: EmailPeriodicoParams): string {
   const titulo = tipo === 'diario' ? 'Resumen del día' : 'Resumen semanal'
   const subtitulo = tipo === 'diario'
     ? fechaLegible(hastaStr)
@@ -236,8 +322,7 @@ function buildEmailPeriodico({ tipo, desdeStr, hastaStr, jornadas, totales, tota
   const jornadasRows = jornadas.map((j) => {
     const turnos = j.turnos ?? []
     const totalDia = turnos.reduce((s, t) =>
-      s + (t.ventas ?? []).reduce((sv, v) =>
-        sv + METODOS.reduce((sm, m) => sm + (Number(v[m.key]) || 0), 0), 0), 0)
+      s + (t.ventas ? METODOS.reduce((sm, m) => sm + (Number(t.ventas![m.key]) || 0), 0) : 0), 0)
     const tipos = turnos.map((t) => capitalizar(t.tipo)).join(' + ')
     return `
       <tr>
@@ -268,6 +353,13 @@ function buildEmailPeriodico({ tipo, desdeStr, hastaStr, jornadas, totales, tota
       <h1 style="margin:0;color:#fff;font-size:20px;font-weight:700;">${titulo}</h1>
       <p style="margin:6px 0 0;color:#e9d5b4;font-size:14px;text-transform:capitalize;">${subtitulo}</p>
     </div>
+
+    ${resumenIA ? `
+    <!-- Resumen narrativo (IA) -->
+    <div style="padding:18px 28px;background:#FBF6EC;border-bottom:1px solid #f0ebe3;">
+      <p style="margin:0;font-size:14px;line-height:1.55;color:#3f2c17;">${escapeHtml(resumenIA)}</p>
+    </div>
+    ` : ''}
 
     <!-- KPIs destacados -->
     <div style="display:flex;gap:0;background:#f9f5ed;border-bottom:1px solid #f0ebe3;">
