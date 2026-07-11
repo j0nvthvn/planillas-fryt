@@ -18,6 +18,7 @@ import ConfirmDialog from '../components/ConfirmDialog'
 import Badge from '../components/Badge'
 
 const FORM_COLORS = { efectivo: '#1E7A4F', transferencia: '#33518C' }
+const FORM_LABELS = { efectivo: 'Ef.', transferencia: 'Tr.' }
 
 export default function Resumen({ fecha: fechaProp, esDuenoOverride, onBack }) {
   const { esDueno } = useAuth()
@@ -157,7 +158,7 @@ export default function Resumen({ fecha: fechaProp, esDuenoOverride, onBack }) {
 
   return (
     <Layout>
-      <div className="max-w-screen-2xl mx-auto space-y-3.5">
+      <div className="max-w-2xl mx-auto space-y-3.5">
         {onBack ? (
           <button
             onClick={onBack}
@@ -299,9 +300,9 @@ export default function Resumen({ fecha: fechaProp, esDuenoOverride, onBack }) {
         {/* Balance del día */}
         {turnos.length > 0 && (
           <div className="card-hero">
-            <div className="flex items-center justify-between mb-1.5 gap-2">
+            <div className="flex items-center justify-between mb-1.5 gap-2 flex-wrap">
               <p className="eyebrow">Balance del día</p>
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-1.5 flex-wrap justify-end">
                 {turnos.some((t) => t.is_draft) && (
                   <Badge tone="warn" dot>Borrador</Badge>
                 )}
@@ -352,10 +353,10 @@ export default function Resumen({ fecha: fechaProp, esDuenoOverride, onBack }) {
                 <div key={i} className="flex items-center gap-2.5">
                   <span className="flex-1 text-[13px] text-ink truncate">{p.nombre}</span>
                   <span
-                    className="text-[10px] font-bold rounded-full px-2.5 py-0.5 capitalize"
+                    className="text-[10px] font-bold rounded-full px-2.5 py-0.5"
                     style={{ background: `${FORM_COLORS[p.forma_pago] || '#5C3317'}15`, color: FORM_COLORS[p.forma_pago] || '#5C3317' }}
                   >
-                    {p.forma_pago}
+                    {FORM_LABELS[p.forma_pago] || p.forma_pago}
                   </span>
                   <span className="text-[13px] font-bold text-ink tabular-nums min-w-[90px] text-right">
                     {clp(p.monto)}

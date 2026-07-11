@@ -215,6 +215,18 @@ html.dark {
     }
   }
 
+  /* Igual que .above-nav, pero además deja espacio para una barra de
+     acción fija tipo TurnoBottomBar cuando está presente (--sticky-bar-h,
+     seteada por ese componente vía JS). Evita que los toasts la tapen. */
+  .above-sticky-bar {
+    bottom: calc(56px + max(8px, env(safe-area-inset-bottom)) + var(--sticky-bar-h, 0px));
+  }
+  @media (min-width: 768px) {
+    .above-sticky-bar {
+      bottom: var(--sticky-bar-h, 0px);
+    }
+  }
+
   .app-shell {
     height: 100dvh;
     overflow: hidden;

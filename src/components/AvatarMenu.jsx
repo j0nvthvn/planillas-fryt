@@ -48,16 +48,24 @@ export default function AvatarMenu({ open, onClose, anchorRight = true }) {
     if (!mounted) return
     const prev = document.body.style.overflow
     document.body.style.overflow = 'hidden'
-    function onKey(e) { if (e.key === 'Escape') onCloseRef.current() }
+    // Con el diálogo de confirmación abierto, Escape debe cancelarlo a él,
+    // no cerrar además el menú de golpe (eso desmontaría el diálogo).
+    function onKey(e) {
+      if (e.key !== 'Escape') return
+      if (confirmLogout) setConfirmLogout(false)
+      else onCloseRef.current()
+    }
     window.addEventListener('keydown', onKey)
     return () => {
       document.body.style.overflow = prev
       window.removeEventListener('keydown', onKey)
     }
-  }, [mounted])
+  }, [mounted, confirmLogout])
 
   useEffect(() => {
-    if (!mounted || !isDesktop) return
+    // Igual que con Escape: mientras el diálogo de confirmación está
+    // abierto, un click ahí (fuera de desktopRef) no debe cerrar el menú.
+    if (!mounted || !isDesktop || confirmLogout) return
     function onClickOutside(e) {
       if (desktopRef.current && !desktopRef.current.contains(e.target)) {
         onCloseRef.current()
@@ -65,7 +73,7 @@ export default function AvatarMenu({ open, onClose, anchorRight = true }) {
     }
     document.addEventListener('mousedown', onClickOutside)
     return () => document.removeEventListener('mousedown', onClickOutside)
-  }, [mounted, isDesktop])
+  }, [mounted, isDesktop, confirmLogout])
 
   function go(to) {
     onClose()
@@ -120,7 +128,7 @@ export default function AvatarMenu({ open, onClose, anchorRight = true }) {
           <button
             role="menuitem"
             type="button"
-            onClick={() => { onClose(); setConfirmLogout(true) }}
+            onClick={() => setConfirmLogout(true)}
             className="flex w-full items-center gap-3 px-4 py-2.5 text-sm font-semibold text-neg"
           >
             <Icon name="logout" className="w-[18px] h-[18px]" />
@@ -163,7 +171,7 @@ export default function AvatarMenu({ open, onClose, anchorRight = true }) {
             <button
               role="menuitem"
               type="button"
-              onClick={() => { onClose(); setConfirmLogout(true) }}
+              onClick={() => setConfirmLogout(true)}
               className="flex w-full items-center gap-3 px-2 py-3 rounded-2xl text-[15px] font-semibold text-neg hover:bg-neg-tint"
             >
               <Icon name="logout" className="w-5 h-5" />

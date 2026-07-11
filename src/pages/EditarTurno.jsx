@@ -128,17 +128,6 @@ export default function EditarTurno() {
   useErrorToast(error)
   useConflictoRemoto(cambioRemotoPendiente, recargarDesdeRemoto)
 
-  useEffect(() => {
-    if (!turnoId) return
-    const id = toast.show({
-      message: turnoEsDraft
-        ? 'Estás editando un borrador existente'
-        : 'Este turno ya fue cerrado — guardar quedará registrado como una corrección',
-      duration: null,
-    })
-    return () => toast.hide(id)
-  }, [turnoId, turnoEsDraft, toast])
-
   async function guardar(forzar = false) {
     if (cambioRemotoPendiente) {
       return
@@ -255,6 +244,19 @@ export default function EditarTurno() {
             />
           )}
         />
+
+        {modoEditar && (
+          <div className={`rounded-2xl border px-4 py-2.5 flex items-center gap-2.5 ${
+            turnoEsDraft ? 'bg-info-tint border-info/30 text-info' : 'bg-warn-tint border-warn/30 text-warn'
+          }`}>
+            <Icon name={turnoEsDraft ? 'pencil' : 'warning'} className="w-4 h-4 shrink-0" stroke={1.8} />
+            <p className="text-[12.5px] font-semibold">
+              {turnoEsDraft
+                ? 'Estás editando un borrador existente'
+                : 'Este turno ya fue cerrado — guardar quedará registrado como una corrección'}
+            </p>
+          </div>
+        )}
 
         <div className="grid lg:grid-cols-2 gap-4 items-start">
           <ProveedoresSection

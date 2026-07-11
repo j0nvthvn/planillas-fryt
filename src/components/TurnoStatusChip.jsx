@@ -13,7 +13,7 @@ export default function TurnoStatusChip({ tipo, presente, usuario, subtotal, isD
 
   if (!presente) {
     return (
-      <div className="flex-1 rounded-2xl border border-hairline bg-canvas px-3 py-2.5 flex items-center gap-2.5 opacity-60">
+      <div className="min-w-0 flex-1 rounded-2xl border border-hairline bg-canvas px-3 py-2.5 flex items-center gap-2.5 opacity-60">
         <Icon name={icon} className="w-4 h-4 text-muted2" stroke={1.6} />
         <div className="min-w-0 flex-1">
           <p className="text-[13px] font-semibold text-muted">{label}</p>
@@ -30,19 +30,19 @@ export default function TurnoStatusChip({ tipo, presente, usuario, subtotal, isD
       type={onClick ? 'button' : undefined}
       onClick={onClick}
       aria-label={onClick ? `Ver resumen de ${label}${isDraft ? ' (borrador)' : ''}` : undefined}
-      className={`relative flex-1 text-left rounded-2xl border border-pos-border bg-pos-tint px-3 py-2.5 flex items-center gap-2.5 ${
+      className={`relative min-w-0 flex-1 text-left rounded-2xl border border-pos-border bg-pos-tint px-3 py-2.5 flex items-center gap-2.5 ${
         onClick ? 'hover:border-pos hover:shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-pos focus-visible:ring-offset-2 focus-visible:ring-offset-canvas transition-all group' : ''
       }`}
     >
       <Icon name={icon} className="w-4 h-4 text-pos" stroke={1.8} />
       <div className="min-w-0 flex-1">
         <p className="text-[13px] font-semibold text-pos">{label}</p>
-        <p className="text-[11px] text-pos/80 truncate leading-tight">
-          {usuario}
-          {subtotal != null && (
-            <> · <span className="tabular-nums font-semibold">${subtotal.toLocaleString('es-CL')}</span></>
-          )}
-        </p>
+        <p className="text-[11px] text-pos/80 truncate leading-tight">{usuario}</p>
+        {subtotal != null && (
+          <p className="text-[13px] font-bold text-pos tabular-nums leading-tight mt-0.5">
+            ${subtotal.toLocaleString('es-CL')}
+          </p>
+        )}
       </div>
       {onClick && (
         <Icon name="chevR" className="w-3.5 h-3.5 text-pos/50 group-hover:text-pos group-hover:translate-x-0.5 transition-all" />

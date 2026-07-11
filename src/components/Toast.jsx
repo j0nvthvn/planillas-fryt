@@ -43,7 +43,7 @@ export function ToastProvider({ children }) {
     <ToastContext.Provider value={value}>
       {children}
       <style>{ANIM_CSS}</style>
-      <div className="above-nav fixed inset-x-0 z-50 px-4 pointer-events-none">
+      <div className="above-sticky-bar fixed inset-x-0 z-50 px-4 pointer-events-none">
         <div className="max-w-md mx-auto flex flex-col gap-2">
           {toasts.map((t) => (
             <ToastView key={t.id} toast={t} onHide={() => hide(t.id)} />

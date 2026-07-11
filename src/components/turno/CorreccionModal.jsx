@@ -3,6 +3,7 @@ import { METODOS_VENTA } from '../TurnoInput'
 import Icon from '../Icon'
 
 const FORM_COLORS = { efectivo: '#1E7A4F', transferencia: '#33518C' }
+const FORM_LABELS = { efectivo: 'Ef.', transferencia: 'Tr.' }
 
 function fechaHora(iso) {
   if (!iso) return ''
@@ -33,7 +34,7 @@ function ListaProveedores({ proveedores, titulo }) {
   const total = lista.reduce((s, p) => s + (+p.monto || 0), 0)
   return (
     <div>
-      <p className="text-[11px] font-bold uppercase tracking-widest text-muted2 mb-1.5">{titulo}</p>
+      <p className="text-[11px] font-bold uppercase tracking-widest text-muted2 mb-1.5 min-h-[33px]">{titulo}</p>
       {lista.length === 0 ? (
         <p className="text-[12px] text-muted2 italic">Sin proveedores</p>
       ) : (
@@ -42,10 +43,10 @@ function ListaProveedores({ proveedores, titulo }) {
             <div key={i} className="flex items-center gap-2 text-[12.5px]">
               <span className="flex-1 text-ink2 truncate">{p.nombre}</span>
               <span
-                className="text-[9px] font-bold rounded-full px-1.5 py-0.5 capitalize"
+                className="text-[9px] font-bold rounded-full px-1.5 py-0.5"
                 style={{ background: `${FORM_COLORS[p.forma_pago] || '#5C3317'}15`, color: FORM_COLORS[p.forma_pago] || '#5C3317' }}
               >
-                {p.forma_pago}
+                {FORM_LABELS[p.forma_pago] || p.forma_pago}
               </span>
               <span className="text-ink font-semibold tabular-nums">{clp(p.monto)}</span>
             </div>

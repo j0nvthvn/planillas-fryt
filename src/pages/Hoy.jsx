@@ -92,116 +92,118 @@ export default function Hoy() {
 
   return (
     <Layout>
-      <PageHeader
-        eyebrow="FrytControl"
-        title="Hoy"
-        date={fechaLegible(hoy())}
-        action={esDueno && (
-          <IconButton
-            icon="history"
-            iconClassName="w-[18px] h-[18px]"
-            variant="secondary"
-            label="Historial"
-            onClick={() => navigate('/historial')}
+      <div className="max-w-2xl mx-auto">
+        <PageHeader
+          eyebrow="FrytControl"
+          title="Hoy"
+          date={fechaLegible(hoy())}
+          action={esDueno && (
+            <IconButton
+              icon="history"
+              iconClassName="w-[18px] h-[18px]"
+              variant="secondary"
+              label="Historial"
+              onClick={() => navigate('/historial')}
+            />
+          )}
+        />
+
+        <InstallBanner />
+
+        {/* Alerta: turno abandonado (borrador sin actividad hace horas) */}
+        {turnosAbandonados.length > 0 && (
+          <div className="mb-3.5 rounded-2xl bg-warn-tint border border-warn/30 px-4 py-3 flex items-start gap-3">
+            <span className="w-8 h-8 rounded-full bg-warn/15 grid place-items-center shrink-0 mt-0.5">
+              <Icon name="warning" className="w-4 h-4 text-warn" stroke={2} />
+            </span>
+            <div className="flex-1 min-w-0">
+              <p className="text-[13.5px] font-semibold text-warn capitalize">
+                {turnosAbandonados.length === 1
+                  ? `Turno de ${turnosAbandonados[0].tipo} sin cerrar`
+                  : 'Turnos sin cerrar'}
+              </p>
+              <p className="text-[12px] text-warn/80 mt-0.5">
+                {turnosAbandonados.map((t) => t.tipo).join(' y ')} lleva{turnosAbandonados.length === 1 ? '' : 'n'} más de {UMBRAL_HORAS} horas como borrador sin actividad. Revisa si falta cerrarlo.
+              </p>
+              <button
+                onClick={() => navigate('/turno')}
+                className="mt-2 text-[12.5px] font-bold text-warn hover:underline underline-offset-2"
+              >
+                Ir a cerrar turno →
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Card hero: Neto del día */}
+        <div className="card-hero mb-3.5">
+          <div className="flex items-baseline justify-between mb-1">
+            <p className="eyebrow">Neto del día</p>
+            <p className="text-[11px] text-muted">ventas − proveedores</p>
+          </div>
+          <Amount
+            variant="hero"
+            color={totales.neto >= 0 ? 'pos' : 'neg'}
+            value={totales.neto}
+            className="mt-1"
           />
-        )}
-      />
+          <p className="text-[12px] text-muted mt-2">
+            ${totales.ventasTotal.toLocaleString('es-CL')} ventas − ${totales.provTotal.toLocaleString('es-CL')} proveedores
+          </p>
+        </div>
 
-      <InstallBanner />
+        {/* Chips mañana/tarde */}
+        <div className="flex gap-2.5 mb-3.5">
+          <TurnoStatusChip
+            tipo="mañana"
+            usuario={turnoManana?.usuario?.nombre}
+            subtotal={turnoManana ? totalesVentas(turnoManana.ventas).total : 0}
+            presente={!!turnoManana}
+            isDraft={!!turnoManana?.is_draft}
+            onClick={() => navigate('/resumen')}
+          />
+          <TurnoStatusChip
+            tipo="tarde"
+            usuario={turnoTarde?.usuario?.nombre}
+            subtotal={turnoTarde ? totalesVentas(turnoTarde.ventas).total : 0}
+            presente={!!turnoTarde}
+            isDraft={!!turnoTarde?.is_draft}
+            onClick={() => navigate('/resumen')}
+          />
+        </div>
 
-      {/* Alerta: turno abandonado (borrador sin actividad hace horas) */}
-      {turnosAbandonados.length > 0 && (
-        <div className="mb-3.5 rounded-2xl bg-warn-tint border border-warn/30 px-4 py-3 flex items-start gap-3">
-          <span className="w-8 h-8 rounded-full bg-warn/15 grid place-items-center shrink-0 mt-0.5">
-            <Icon name="warning" className="w-4 h-4 text-warn" stroke={2} />
-          </span>
-          <div className="flex-1 min-w-0">
-            <p className="text-[13.5px] font-semibold text-warn capitalize">
-              {turnosAbandonados.length === 1
-                ? `Turno de ${turnosAbandonados[0].tipo} sin cerrar`
-                : 'Turnos sin cerrar'}
-            </p>
-            <p className="text-[12px] text-warn/80 mt-0.5">
-              {turnosAbandonados.map((t) => t.tipo).join(' y ')} lleva{turnosAbandonados.length === 1 ? '' : 'n'} más de {UMBRAL_HORAS} horas como borrador sin actividad. Revisa si falta cerrarlo.
-            </p>
-            <button
-              onClick={() => navigate('/turno')}
-              className="mt-2 text-[12.5px] font-bold text-warn hover:underline underline-offset-2"
-            >
-              Ir a cerrar turno →
-            </button>
+        {/* Card: Efectivo en caja */}
+        <div className="card mb-3.5">
+          <div className="flex items-baseline justify-between mb-3">
+            <p className="font-semibold text-ink text-[15px]">Efectivo en caja</p>
+            <Amount variant="card" color="brand" value={totales.efCaja} />
           </div>
+          {totales.topMetodos.length === 0 ? (
+            <p className="text-sm text-muted text-center py-4">Sin ventas registradas</p>
+          ) : (
+            <div className="space-y-2.5">
+              {totales.topMetodos.map((m) => (
+                <div key={m.key} className="flex items-center gap-2.5">
+                  <span className="w-2 h-2 rounded-full shrink-0" style={{ background: m.color }} />
+                  <span className="flex-1 text-[13px] text-ink2">{m.label}</span>
+                  <span className="text-[13px] font-bold text-ink tabular-nums">
+                    ${m.monto.toLocaleString('es-CL')}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
-      )}
 
-      {/* Card hero: Neto del día */}
-      <div className="card-hero mb-3.5">
-        <div className="flex items-baseline justify-between mb-1">
-          <p className="eyebrow">Neto del día</p>
-          <p className="text-[11px] text-muted">ventas − proveedores</p>
-        </div>
-        <Amount
-          variant="hero"
-          color={totales.neto >= 0 ? 'pos' : 'neg'}
-          value={totales.neto}
-          className="mt-1"
-        />
-        <p className="text-[12px] text-muted mt-2">
-          ${totales.ventasTotal.toLocaleString('es-CL')} ventas − ${totales.provTotal.toLocaleString('es-CL')} proveedores
-        </p>
+        {/* CTA Ingresar turno */}
+        <button
+          onClick={() => navigate('/turno')}
+          className="btn-primary w-full py-3.5 text-base gap-2"
+        >
+          <Icon name="plus" className="w-5 h-5" stroke={2.2} />
+          Ingresar turno
+        </button>
       </div>
-
-      {/* Chips mañana/tarde */}
-      <div className="flex gap-2.5 mb-3.5">
-        <TurnoStatusChip
-          tipo="mañana"
-          usuario={turnoManana?.usuario?.nombre}
-          subtotal={turnoManana ? totalesVentas(turnoManana.ventas).total : 0}
-          presente={!!turnoManana}
-          isDraft={!!turnoManana?.is_draft}
-          onClick={() => navigate('/resumen')}
-        />
-        <TurnoStatusChip
-          tipo="tarde"
-          usuario={turnoTarde?.usuario?.nombre}
-          subtotal={turnoTarde ? totalesVentas(turnoTarde.ventas).total : 0}
-          presente={!!turnoTarde}
-          isDraft={!!turnoTarde?.is_draft}
-          onClick={() => navigate('/resumen')}
-        />
-      </div>
-
-      {/* Card: Efectivo en caja */}
-      <div className="card mb-3.5">
-        <div className="flex items-baseline justify-between mb-3">
-          <p className="font-semibold text-ink text-[15px]">Efectivo en caja</p>
-          <Amount variant="card" color="brand" value={totales.efCaja} />
-        </div>
-        {totales.topMetodos.length === 0 ? (
-          <p className="text-sm text-muted text-center py-4">Sin ventas registradas</p>
-        ) : (
-          <div className="space-y-2.5">
-            {totales.topMetodos.map((m) => (
-              <div key={m.key} className="flex items-center gap-2.5">
-                <span className="w-2 h-2 rounded-full shrink-0" style={{ background: m.color }} />
-                <span className="flex-1 text-[13px] text-ink2">{m.label}</span>
-                <span className="text-[13px] font-bold text-ink tabular-nums">
-                  ${m.monto.toLocaleString('es-CL')}
-                </span>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* CTA Ingresar turno */}
-      <button
-        onClick={() => navigate('/turno')}
-        className="btn-primary w-full py-3.5 text-base gap-2"
-      >
-        <Icon name="plus" className="w-5 h-5" stroke={2.2} />
-        Ingresar turno
-      </button>
     </Layout>
   )
 }

@@ -5,6 +5,7 @@ import {
 } from '../TurnoInput'
 
 const FORM_COLORS = { efectivo: '#1E7A4F', transferencia: '#33518C' }
+const FORM_LABELS = { efectivo: 'Ef.', transferencia: 'Tr.' }
 
 function ProveedorRow({ p, onEdit }) {
   return (
@@ -12,10 +13,10 @@ function ProveedorRow({ p, onEdit }) {
       <ProveedorAvatar nombre={p.nombre} imagen_url={p.imagen_url} size="sm" />
       <span className="flex-1 min-w-0 text-[14px] font-semibold text-ink truncate">{p.nombre}</span>
       <span
-        className="text-[10px] font-bold rounded-full px-2.5 py-0.5 capitalize"
+        className="text-[10px] font-bold rounded-full px-2.5 py-0.5"
         style={{ background: `${FORM_COLORS[p.forma_pago] || '#5C3317'}15`, color: FORM_COLORS[p.forma_pago] || '#5C3317' }}
       >
-        {p.forma_pago}
+        {FORM_LABELS[p.forma_pago] || p.forma_pago}
       </span>
       <span className="text-[14px] font-semibold text-ink tabular-nums min-w-[90px] text-right">{clp(p.monto)}</span>
       <Icon name="pencil" className="w-3.5 h-3.5 text-muted2" stroke={1.8} />
@@ -25,7 +26,7 @@ function ProveedorRow({ p, onEdit }) {
 
 export function ProveedoresSection({ provs, onAdd, onEdit, accent, accentTint }) {
   return (
-    <section>
+    <section className="min-w-0">
       <div className="flex items-baseline justify-between px-1 mb-2.5">
         <p className="eyebrow">Proveedores</p>
         {provs.length > 0 && (
@@ -70,7 +71,7 @@ function AmountTotal({ value }) {
 export function VentasSection({ ventas, onEdit }) {
   const total = METODOS_VENTA.reduce((s, m) => s + (ventas[m.key] || 0), 0)
   return (
-    <section>
+    <section className="min-w-0">
       <div className="flex items-baseline justify-between px-1 mb-2.5">
         <p className="eyebrow">Ventas · toca para editar</p>
         <AmountTotal value={total} />

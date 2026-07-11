@@ -1,4 +1,4 @@
-import { useEffect, useState, startTransition } from 'react'
+import { useEffect, useRef, useState, startTransition } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   BarChart, Bar, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
@@ -9,7 +9,7 @@ import Layout from '../components/Layout'
 import PageHeader from '../components/PageHeader'
 import Spinner from '../components/Spinner'
 import Amount from '../components/Amount'
-import { clp, toNum } from '../utils/format'
+import { clp, toNum, hoy } from '../utils/format'
 import { totalesVentas, totalesProveedores } from '../utils/totales'
 import { METODOS_VENTA, ACCENT, GREEN } from '../components/TurnoInput'
 import { descargarCSV } from '../utils/csv'
@@ -67,6 +67,40 @@ function fechaEje(isoDate) {
   return `${dias[d.getDay()]} ${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`
 }
 
+function fechaCortaMes(isoDate) {
+  const d = new Date(isoDate + 'T12:00:00')
+  return d.toLocaleDateString('es-CL', { day: 'numeric', month: 'short' })
+}
+
+/** Botón que dispara el date picker nativo del sistema (mismo patrón que
+ * el selector de fecha de Resumen.jsx), pero mostrando el valor elegido
+ * como texto en vez de solo un ícono — acá van dos lado a lado (desde/
+ * hasta) y el usuario necesita ver de un vistazo qué rango quedó armado. */
+function DateField({ value, onChange, min, max }) {
+  const ref = useRef(null)
+  return (
+    <div className="relative">
+      <button
+        type="button"
+        onClick={() => ref.current?.showPicker?.()}
+        className="flex items-center gap-1.5 rounded-xl border border-hairline bg-card px-2.5 py-2 text-[12.5px] font-semibold text-ink hover:border-brand/40 transition-colors"
+      >
+        <Icon name="calendar" className="w-3.5 h-3.5 text-muted2" stroke={1.8} />
+        {fechaCortaMes(value)}
+      </button>
+      <input
+        ref={ref}
+        type="date"
+        value={value}
+        min={min}
+        max={max}
+        onChange={(e) => { if (e.target.value) onChange(e.target.value) }}
+        className="absolute inset-0 opacity-0 pointer-events-none"
+      />
+    </div>
+  )
+}
+
 const KPI_COLORS = {
   ventas:    { fg: 'var(--brand)',  bg: 'var(--brand-tint)',  border: 'rgb(var(--brand-rgb) / 0.2)' },
   proveed:   { fg: 'var(--neg)',    bg: 'var(--neg-tint)',    border: 'rgb(var(--neg-rgb) / 0.25)' },
@@ -91,6 +125,11 @@ const CHART_COLORS = {
 export default function Analisis() {
   const navigate = useNavigate()
   const [periodo, setPeriodo] = useState('7')
+  const [rangoCustom, setRangoCustom] = useState(() => {
+    const desde = new Date()
+    desde.setDate(desde.getDate() - 6)
+    return { desde: desde.toISOString().split('T')[0], hasta: hoy() }
+  })
   const [datos, setDatos] = useState(null)
   const [cargando, setCargando] = useState(true)
   const [isDark, setIsDark] = useState(() => document.documentElement.classList.contains('dark'))
@@ -104,23 +143,32 @@ export default function Analisis() {
     return () => observer.disconnect()
   }, [])
 
-  useEffect(() => { cargarDatos() }, [periodo])
+  // Rango de fechas efectivo según el modo elegido: presets fijos (7/30
+  // días hacia atrás desde hoy) o el rango que el usuario armó a mano.
+  function rangoActivo() {
+    if (periodo === 'custom') return rangoCustom
+    const hoyD = new Date()
+    const desde = new Date(hoyD)
+    desde.setDate(hoyD.getDate() - (periodo === '7' ? 6 : 29))
+    return { desde: desde.toISOString().split('T')[0], hasta: hoy() }
+  }
+
+  useEffect(() => { cargarDatos() }, [periodo, rangoCustom.desde, rangoCustom.hasta])
 
   async function cargarDatos() {
     setCargando(true)
-    const hoy = new Date()
-    const desde = new Date(hoy)
-    const dias = periodo === '7' ? 6 : 29
-    desde.setDate(hoy.getDate() - dias)
-    const desdeStr = desde.toISOString().split('T')[0]
+    const { desde: desdeStr, hasta: hastaStr } = rangoActivo()
+    const desdeD = new Date(desdeStr + 'T00:00:00')
+    const hastaD = new Date(hastaStr + 'T00:00:00')
+    const diasRango = Math.round((hastaD - desdeD) / 86_400_000)
 
     // Ventana inmediatamente anterior, del mismo largo, para poder mostrar
     // "vs período anterior" junto al neto y los KPIs (p. ej. últimos 7 días
     // vs los 7 días previos a esos).
-    const anteriorHasta = new Date(desde)
-    anteriorHasta.setDate(desde.getDate() - 1)
+    const anteriorHasta = new Date(desdeD)
+    anteriorHasta.setDate(desdeD.getDate() - 1)
     const anteriorDesde = new Date(anteriorHasta)
-    anteriorDesde.setDate(anteriorHasta.getDate() - dias)
+    anteriorDesde.setDate(anteriorHasta.getDate() - diasRango)
     const anteriorHastaStr = anteriorHasta.toISOString().split('T')[0]
     const anteriorDesdeStr = anteriorDesde.toISOString().split('T')[0]
 
@@ -137,6 +185,7 @@ export default function Analisis() {
         `)
         .is('turnos.deleted_at', null)
         .gte('fecha', desdeStr)
+        .lte('fecha', hastaStr)
         .order('fecha'),
       supabase
         .from('jornadas')
@@ -152,7 +201,7 @@ export default function Analisis() {
     ])
 
     startTransition(() => {
-      const procesado = procesarDatos(jornadas || [], desdeStr)
+      const procesado = procesarDatos(jornadas || [], desdeStr, hastaStr)
       procesado.anterior = totalesPeriodo(jornadasAnterior || [])
       setDatos(procesado)
       setCargando(false)
@@ -183,7 +232,7 @@ export default function Analisis() {
     }
   }
 
-  function procesarDatos(jornadas, desdeStr) {
+  function procesarDatos(jornadas, desdeStr, hastaStr) {
     const ventasPorDia = []
     const saldos = []
     const contadorProveedores = {}
@@ -229,13 +278,11 @@ export default function Analisis() {
       .sort((a, b) => b[1] - a[1]).slice(0, 5)
       .map(([nombre, monto]) => ({ nombre, monto }))
 
-    const hoy = new Date().toISOString().split('T')[0]
-
     return {
       ventasPorDia, saldos, topProveedores,
       totalesGlobales, totalEfectivoProveedores, totalTransferenciaProveedores,
       hayVentas: ventasPorDia.some((d) => d.Total > 0),
-      desdeStr, fechaHoy: hoy,
+      desdeStr, hastaStr,
     }
   }
 
@@ -261,6 +308,7 @@ export default function Analisis() {
         `)
         .is('turnos.deleted_at', null)
         .gte('fecha', datos.desdeStr)
+        .lte('fecha', datos.hastaStr)
         .order('fecha')
       if (error) throw error
 
@@ -305,7 +353,7 @@ export default function Analisis() {
 
       filas.push(['', '', '', 'TOTAL', ...totales, '', '', '', ''])
 
-      const nombreArchivo = `frytcontrol-turnos-${datos.desdeStr}-a-${datos.fechaHoy}.csv`
+      const nombreArchivo = `frytcontrol-turnos-${datos.desdeStr}-a-${datos.hastaStr}.csv`
       descargarCSV(nombreArchivo, columnas, filas)
     } catch (err) {
       console.error(err)
@@ -318,6 +366,15 @@ export default function Analisis() {
   const proveedoresTotal = datos ? datos.totalEfectivoProveedores + datos.totalTransferenciaProveedores : 0
   const neto = ventasTotal - proveedoresTotal
   const efectivoEnCaja = datos ? datos.totalesGlobales.efectivo - datos.totalEfectivoProveedores : 0
+
+  // Cantidad de días del rango cargado — decide barras vs. área (barras se
+  // ven bien hasta ~10 días; con más se amontonan y el área lee mejor) y
+  // arma el subtítulo cuando el rango es personalizado.
+  const diasCargados = datos ? Math.round((new Date(datos.hastaStr) - new Date(datos.desdeStr)) / 86_400_000) + 1 : 0
+  const usarBarras = diasCargados > 0 && diasCargados <= 10
+  const subtitulo = periodo === 'custom'
+    ? `${fechaCortaMes(rangoCustom.desde)} – ${fechaCortaMes(rangoCustom.hasta)}`
+    : `Últimos ${periodo} días`
 
   const gridStroke = isDark ? '#3f3f46' : 'var(--soft)'
   const tickColor = isDark ? '#a1a1aa' : 'var(--muted)'
@@ -338,13 +395,29 @@ export default function Analisis() {
       <div className="max-w-screen-2xl mx-auto space-y-3.5">
         <PageHeader
           title="Análisis"
-          date={`Últimos ${periodo} días`}
+          date={subtitulo}
+          action={datos?.hayVentas && (
+            <button
+              type="button"
+              onClick={exportarCSV}
+              disabled={exportando}
+              aria-label="Exportar CSV"
+              title="Exportar CSV"
+              className="w-10 h-10 rounded-[13px] grid place-items-center shrink-0 transition-colors border border-hairline text-ink2 hover:bg-canvas hover:text-ink disabled:opacity-50"
+            >
+              {exportando ? (
+                <span className="w-4 h-4 rounded-full border-2 border-ink2 border-t-transparent animate-spin" />
+              ) : (
+                <Icon name="download" className="w-[18px] h-[18px]" stroke={1.8} />
+              )}
+            </button>
+          )}
         />
 
-        {/* Toggle 7 / 30 + exportar */}
-        <div className="flex items-center justify-between gap-2 flex-wrap">
+        {/* Toggle 7 / 30 / personalizado */}
+        <div className="flex items-center gap-2 flex-wrap">
           <div className="flex gap-1 p-1 bg-brand-tint rounded-[15px] w-fit">
-            {[{ v: '7', l: '7 días' }, { v: '30', l: '30 días' }].map((p) => (
+            {[{ v: '7', l: '7 días' }, { v: '30', l: '30 días' }, { v: 'custom', l: 'Personalizado' }].map((p) => (
               <button
                 key={p.v}
                 onClick={() => setPeriodo(p.v)}
@@ -358,19 +431,21 @@ export default function Analisis() {
               </button>
             ))}
           </div>
-          {datos?.hayVentas && (
-            <button
-              onClick={exportarCSV}
-              disabled={exportando}
-              className="flex items-center gap-2 rounded-xl py-2 px-3 text-[13px] font-semibold border border-hairline text-ink2 bg-card hover:border-brand/40 hover:text-brand transition-colors disabled:opacity-50"
-            >
-              {exportando ? (
-                <span className="w-3.5 h-3.5 rounded-full border-2 border-ink2 border-t-transparent animate-spin" />
-              ) : (
-                <Icon name="note" className="w-4 h-4" stroke={1.8} />
-              )}
-              Exportar CSV
-            </button>
+          {periodo === 'custom' && (
+            <div className="flex items-center gap-1.5">
+              <DateField
+                value={rangoCustom.desde}
+                max={rangoCustom.hasta}
+                onChange={(v) => setRangoCustom((r) => ({ ...r, desde: v }))}
+              />
+              <span className="text-muted2 text-xs">–</span>
+              <DateField
+                value={rangoCustom.hasta}
+                min={rangoCustom.desde}
+                max={hoy()}
+                onChange={(v) => setRangoCustom((r) => ({ ...r, hasta: v }))}
+              />
+            </div>
           )}
         </div>
 
@@ -425,7 +500,7 @@ export default function Analisis() {
                   <p className="text-xs text-muted mt-0.5">Total vendido cada día, desglosado por método</p>
                 </div>
                 <ResponsiveContainer width="100%" height={240}>
-                  {periodo === '7' ? (
+                  {usarBarras ? (
                     <BarChart data={datos.ventasPorDia} barSize={26} maxBarSize={36}
                       margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
                       <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} vertical={false} />
