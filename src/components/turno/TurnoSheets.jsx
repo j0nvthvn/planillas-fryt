@@ -68,7 +68,10 @@ export function TurnoSheets({ sheet, setSheet, isDesktop, sugerencias, usedNames
                 />
                 <div className="flex gap-3 pt-1">
                   <button onClick={() => setSheet(null)} className="flex-1 btn-secondary">Cancelar</button>
-                  <button onClick={commitVenta} disabled={parseNum(sheet.monto) === 0} className="flex-1 btn-primary">
+                  {/* Sin disabled con monto 0: confirmar $0 es la única forma de
+                      corregir una venta ingresada en el método equivocado
+                      (el keypad móvil siempre lo permitió). */}
+                  <button onClick={commitVenta} className="flex-1 btn-primary">
                     <Icon name="check" className="w-4 h-4" stroke={2.4} /> Listo
                   </button>
                 </div>

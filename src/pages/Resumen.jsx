@@ -5,7 +5,7 @@ import Layout from '../components/Layout'
 import PageHeader from '../components/PageHeader'
 import Spinner from '../components/Spinner'
 import Amount from '../components/Amount'
-import { clp, fechaLegible, hoy } from '../utils/format'
+import { clp, fechaLegible, hoy, fechaISO } from '../utils/format'
 import { totalesVentas, totalesProveedores } from '../utils/totales'
 import Icon from '../components/Icon'
 import TurnoStatusChip from '../components/TurnoStatusChip'
@@ -40,12 +40,12 @@ export default function Resumen({ fecha: fechaProp, esDuenoOverride, onBack }) {
   function irAnterior() {
     const d = new Date(fecha + 'T12:00:00')
     d.setDate(d.getDate() - 1)
-    setFecha(d.toISOString().split('T')[0])
+    setFecha(fechaISO(d))
   }
   function irSiguiente() {
     const d = new Date(fecha + 'T12:00:00')
     d.setDate(d.getDate() + 1)
-    setFecha(d.toISOString().split('T')[0])
+    setFecha(fechaISO(d))
   }
 
   const esFechaHoy = fecha >= hoy()
@@ -148,6 +148,12 @@ export default function Resumen({ fecha: fechaProp, esDuenoOverride, onBack }) {
     ...(turnoTarde?.proveedores || []).map((p) => ({ ...p, turno: 'Tarde' })),
   ]
 
+  // Día marcado como turno único pero con un turno de tarde que tiene datos:
+  // ese turno queda oculto (sin chip ni botón "Editar tarde"), pero sus montos
+  // SÍ suman en el balance. Sin este aviso, el dueño ve "solo mañana" y un
+  // total que no coincide con lo que tiene a la vista.
+  const tardeOcultoConDatos = esTurnoUnico && turnoTarde && (vt.total > 0 || pt.total > 0)
+
   const estadoLabel = jornadaEsUnica
     ? 'Turno único'
     : ambosPresentes
@@ -236,6 +242,22 @@ export default function Resumen({ fecha: fechaProp, esDuenoOverride, onBack }) {
           </div>
         )}
 
+        {/* Aviso: turno de tarde oculto por "turno único" pero con montos que suman */}
+        {tardeOcultoConDatos && (
+          <div className="rounded-2xl bg-warn-tint border border-warn/30 px-4 py-3 flex items-start gap-2.5">
+            <Icon name="warning" className="w-4 h-4 text-warn shrink-0 mt-0.5" stroke={2} />
+            <div className="text-[12.5px] text-warn">
+              <p className="font-semibold">Hay un turno de tarde oculto con datos</p>
+              <p className="mt-0.5 text-warn/80">
+                Este día está marcado como turno único, pero existe un turno de tarde con{' '}
+                {clp(vt.total)} en ventas{pt.total > 0 ? ` y ${clp(pt.total)} en proveedores` : ''} que
+                sí se incluye en el balance.
+                {jornadaEsUnica && puedeEditar ? ' Usa "Desmarcar turno único" para verlo y editarlo.' : ''}
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* Acciones de edición: editar / agregar / fusionar / desmarcar */}
         {puedeEditar && (
           <div className="flex flex-col sm:flex-row sm:flex-wrap gap-2">
@@ -255,7 +277,7 @@ export default function Resumen({ fecha: fechaProp, esDuenoOverride, onBack }) {
               <Icon name={turnoMañana ? 'edit' : 'plus'} className="w-4 h-4" stroke={1.8} />
               {turnoMañana ? 'Editar mañana' : 'Agregar mañana'}
             </button>
-            {!esTurnoUnico && (
+            {(!esTurnoUnico || tardeOcultoConDatos) && (
               <button
                 onClick={() => navigate(`/turno/editar?fecha=${fecha}&tipo=tarde`, { state: editState })}
                 className="flex items-center justify-center gap-2 rounded-xl py-2 px-3 text-[13px] font-semibold bg-brand-tint text-brand border border-brand/30 w-full sm:w-auto"

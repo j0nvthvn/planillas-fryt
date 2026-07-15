@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react'
+import { useEffect, useState, useMemo, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Layout from '../components/Layout'
 import PageHeader from '../components/PageHeader'
@@ -13,43 +13,56 @@ import { fechaLegible, hoy } from '../utils/format'
 import { totalesVentas, totalesProveedores } from '../utils/totales'
 import { METODOS_VENTA } from '../components/TurnoInput'
 import { useAuth } from '../hooks/useAuth'
+import { useConfig } from '../hooks/useConfig'
+import { useJornadaRealtime } from '../hooks/useJornadaRealtime'
 
 export default function Hoy() {
   const navigate = useNavigate()
   const { esDueno } = useAuth()
+  const { esDiaUnico } = useConfig()
   const [cargando, setCargando] = useState(true)
   const [turnos, setTurnos] = useState([])
+  const [jornadaId, setJornadaId] = useState(null)
 
-  useEffect(() => {
-    let activo = true
-    async function cargar() {
-      const { data: jornada } = await supabase
-        .from('jornadas')
-        .select('id')
-        .eq('fecha', hoy())
-        .maybeSingle()
-      if (!jornada || !activo) {
-        if (activo) { setTurnos([]); setCargando(false) }
-        return
-      }
-      const { data: turnosData } = await supabase
-        .from('turnos')
-        .select(`
-          id, tipo, is_draft, fondo_inicial, updated_at,
-          usuario:usuarios(nombre),
-          ventas:ventas_turno(efectivo, getnet, mercadopago, edenred, amipass, transferencia),
-          proveedores:proveedores_turno(monto, forma_pago)
-        `)
-        .eq('jornada_id', jornada.id)
-        .is('deleted_at', null)
-        .order('tipo')
-      if (!activo) return
-      setTurnos(turnosData || [])
+  const cargar = useCallback(async () => {
+    const { data: jornada } = await supabase
+      .from('jornadas')
+      .select('id')
+      .eq('fecha', hoy())
+      .maybeSingle()
+    setJornadaId(jornada?.id || null)
+    if (!jornada) {
+      setTurnos([])
       setCargando(false)
+      return
     }
-    cargar()
-    return () => { activo = false }
+    const { data: turnosData } = await supabase
+      .from('turnos')
+      .select(`
+        id, tipo, is_draft, fondo_inicial, updated_at,
+        usuario:usuarios(nombre),
+        ventas:ventas_turno(efectivo, getnet, mercadopago, edenred, amipass, transferencia),
+        proveedores:proveedores_turno(monto, forma_pago)
+      `)
+      .eq('jornada_id', jornada.id)
+      .is('deleted_at', null)
+      .order('tipo')
+    setTurnos(turnosData || [])
+    setCargando(false)
   }, [])
+
+  useEffect(() => { cargar() }, [cargar])
+
+  const turnoIds = useMemo(() => turnos.map((t) => t.id), [turnos])
+
+  // Mantiene "Hoy" al día si otro dispositivo registra o cierra un turno
+  // (las demás pantallas ya se refrescaban en vivo; esta quedaba estática).
+  useJornadaRealtime({
+    fecha: hoy(),
+    jornadaId,
+    turnoIds,
+    onChange: () => cargar(),
+  })
 
   const totales = useMemo(() => {
     let ventasTotal = 0
@@ -162,14 +175,18 @@ export default function Hoy() {
             isDraft={!!turnoManana?.is_draft}
             onClick={() => navigate('/resumen')}
           />
-          <TurnoStatusChip
-            tipo="tarde"
-            usuario={turnoTarde?.usuario?.nombre}
-            subtotal={turnoTarde ? totalesVentas(turnoTarde.ventas).total : 0}
-            presente={!!turnoTarde}
-            isDraft={!!turnoTarde?.is_draft}
-            onClick={() => navigate('/resumen')}
-          />
+          {/* En días de turno único no se muestra el chip de tarde (igual
+              que Resumen), salvo que exista un turno de tarde con registro. */}
+          {(!esDiaUnico(hoy()) || turnoTarde) && (
+            <TurnoStatusChip
+              tipo="tarde"
+              usuario={turnoTarde?.usuario?.nombre}
+              subtotal={turnoTarde ? totalesVentas(turnoTarde.ventas).total : 0}
+              presente={!!turnoTarde}
+              isDraft={!!turnoTarde?.is_draft}
+              onClick={() => navigate('/resumen')}
+            />
+          )}
         </div>
 
         {/* Card: Efectivo en caja */}
@@ -182,6 +199,9 @@ export default function Hoy() {
             <p className="text-sm text-muted text-center py-4">Sin ventas registradas</p>
           ) : (
             <div className="space-y-2.5">
+              {/* Este desglose es de VENTAS por método (incluye tarjetas),
+                  no del efectivo del encabezado — el eyebrow lo aclara. */}
+              <p className="eyebrow">Métodos más usados</p>
               {totales.topMetodos.map((m) => (
                 <div key={m.key} className="flex items-center gap-2.5">
                   <span className="w-2 h-2 rounded-full shrink-0" style={{ background: m.color }} />

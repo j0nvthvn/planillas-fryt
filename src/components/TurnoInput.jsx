@@ -14,12 +14,14 @@ export const GREEN = 'rgb(var(--pos-rgb))'
 export const NAVY = 'rgb(var(--info-rgb))'
 
 export const METODOS_VENTA = [
-  { key: 'efectivo',      label: 'Efectivo',      sub: 'Caja',              logo: '/metodos/efectivo.png',      color: '#1E7A4F', tint: '#E6F1EA' },
+  // efectivo y transferencia no tienen PNG en public/metodos/ (no son marcas
+  // externas): logo null va directo al ícono de respaldo sin un 404 previo.
+  { key: 'efectivo',      label: 'Efectivo',      sub: 'Caja',              logo: null,                         color: '#1E7A4F', tint: '#E6F1EA' },
   { key: 'getnet',        label: 'Getnet',         sub: 'Débito / Crédito',  logo: '/metodos/getnet.png',        color: '#33518C', tint: '#E8EDF6' },
   { key: 'mercadopago',   label: 'Mercado Pago',   sub: 'Débito / Crédito',  logo: '/metodos/mercadopago.png',   color: '#00B1EA', tint: '#E2F6FC' },
   { key: 'edenred',       label: 'Edenred',        sub: 'Sodexo / Ticket',   logo: '/metodos/edenred.png',       color: '#F59E0B', tint: '#FDF1DD' },
   { key: 'amipass',       label: 'Amipass',        sub: 'Tarjeta beneficio', logo: '/metodos/amipass.png',       color: '#A16207', tint: '#F3ECDD' },
-  { key: 'transferencia', label: 'Transferencia',  sub: 'Banco',             logo: '/metodos/transferencia.png', color: '#5C3317', tint: '#F5EAD4' },
+  { key: 'transferencia', label: 'Transferencia',  sub: 'Banco',             logo: null,                         color: '#5C3317', tint: '#F5EAD4' },
 ]
 
 /* ── Logo de método de pago ──────────────────────────────── */

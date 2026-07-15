@@ -103,6 +103,9 @@ export default function Turno() {
   const [detectKey, setDetectKey] = useState(0)
   const turnoIdRef = useRef(null)
   const fondoInicialRef = useRef(0)
+  // true si el usuario editó el fondo a mano en este turno (FondoCajaSheet);
+  // evita que la llegada tardía de la config lo pise con el default.
+  const fondoEditadoRef = useRef(false)
   const savingRef = useRef(false)
   const savingCountRef = useRef(0)
   const saveQueueRef = useRef(Promise.resolve())
@@ -226,6 +229,7 @@ export default function Turno() {
       setVentas(VENTAS_VACIAS)
       setCambioRemotoPendiente(false)
       setCambiosLocales(false)
+      fondoEditadoRef.current = false
       setFondoInicial(config.fondoCajaInicial ?? 0)
       setCargandoDatos(true)
     }
@@ -244,12 +248,17 @@ export default function Turno() {
         setTurnoVersion(null)
         setProvs([])
         setVentas(VENTAS_VACIAS)
+        // La config puede llegar después del primer render (este efecto
+        // re-corre por config.fondoCajaInicial): si el turno aún no existe
+        // y el usuario no editó el fondo a mano, aplicar el default —
+        // antes el turno nuevo se creaba con fondo $0 en esa carrera.
+        if (!fondoEditadoRef.current) setFondoInicial(config.fondoCajaInicial ?? 0)
         return
       }
       const imgMap = Object.fromEntries((frecuentes || []).map((f) => [f.nombre, f.imagen_url || '']))
       const { data: turno } = await supabase
         .from('turnos')
-        .select('id, updated_at, fondo_inicial, proveedores:proveedores_turno(nombre, monto, forma_pago), ventas:ventas_turno(efectivo, getnet, mercadopago, edenred, amipass, transferencia)')
+        .select('id, updated_at, fondo_inicial, proveedores:proveedores_turno(id, nombre, monto, forma_pago), ventas:ventas_turno(efectivo, getnet, mercadopago, edenred, amipass, transferencia)')
         .eq('jornada_id', jornada.id)
         .eq('tipo', tipo)
         .is('deleted_at', null)
@@ -262,6 +271,7 @@ export default function Turno() {
         setTurnoVersion(null)
         setProvs([])
         setVentas(VENTAS_VACIAS)
+        if (!fondoEditadoRef.current) setFondoInicial(config.fondoCajaInicial ?? 0)
         return
       }
       setTurnoIdExistente(turno.id)
@@ -416,6 +426,7 @@ export default function Turno() {
   }
 
   async function handleFondoGuardar(monto) {
+    fondoEditadoRef.current = true
     setFondoInicial(monto)
     setShowFondoSheet(false)
     if (turnoIdRef.current) {
@@ -558,7 +569,7 @@ export default function Turno() {
         description={turnoExistente
           ? 'El turno se moverá a la papelera. El dueño podrá restaurarlo si fue un error.'
           : 'Se borrarán todos los proveedores y ventas ingresados en este borrador. Esta acción no se puede deshacer.'}
-        confirmLabel="Limpiar"
+        confirmLabel={turnoExistente ? 'Eliminar' : 'Limpiar'}
         danger
         onCancel={() => setShowLimpiarConfirm(false)}
         onConfirm={() => { setShowLimpiarConfirm(false); limpiar() }}

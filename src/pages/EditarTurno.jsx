@@ -132,13 +132,12 @@ export default function EditarTurno() {
     if (cambioRemotoPendiente) {
       return
     }
-    const proveedoresValidos = provs.filter((p) => p.nombre.trim() && p.monto > 0)
-    if (proveedoresValidos.length === 0 && totalVentas === 0 && !forzar) {
-      setShowGuardarVacioConfirm(true)
-      return
-    }
+    // Sin ventas siempre se puede forzar vía el diálogo de confirmación —
+    // antes un turno con proveedores pero ventas en $0 quedaba atrapado
+    // (el diálogo solo aparecía si TAMBIÉN faltaban proveedores, y el
+    // error "Ingresa las ventas" no tenía forma de forzarse).
     if (totalVentas === 0 && !forzar) {
-      setError('Ingresa las ventas del turno antes de guardar.')
+      setShowGuardarVacioConfirm(true)
       return
     }
     setGuardando(true); setError('')
@@ -182,9 +181,19 @@ export default function EditarTurno() {
       navigate(from === 'historial' ? `/historial?fecha=${fecha}` : '/hoy')
     } catch (err) {
       console.error(err)
+      // Si el guardado falló a mitad de camino, nuestra propia escritura
+      // parcial pudo haber cambiado updated_at del turno. Refrescamos la
+      // versión local para que el reintento del usuario no choque con el
+      // chequeo de versión y muestre el mensaje engañoso de "este turno
+      // cambió en otro dispositivo" (era su propio intento fallido).
+      if (turnoId) {
+        try { setTurnoVersion(await versionTurno(turnoId)) } catch { /* sin conexión: se mantiene la versión anterior */ }
+      }
       setError(err?.code === '23505'
         ? `Ya existe el turno de ${tipo} para esa fecha.`
-        : 'Error al guardar. Inténtalo de nuevo.')
+        : err?.code === '42501'
+          ? 'No tienes permiso para guardar parte de estos cambios (revisa las políticas de acceso con el administrador).'
+          : 'Error al guardar. Inténtalo de nuevo.')
     } finally { setGuardando(false) }
   }
 
@@ -197,7 +206,9 @@ export default function EditarTurno() {
       setError('Error al eliminar el turno.')
       return
     }
-    navigate('/historial')
+    // Volver conservando el contexto: al resumen del día si se venía del
+    // historial (antes caía a la lista general y se perdía la fecha).
+    navigate(from === 'historial' ? `/historial?fecha=${fecha}` : '/hoy')
   }
 
   if (!fechaValida) {
@@ -292,8 +303,10 @@ export default function EditarTurno() {
 
       <ConfirmDialog
         open={showGuardarVacioConfirm}
-        title="¿Guardar turno vacío?"
-        description="No hay proveedores ni ventas ingresados."
+        title={provs.some((p) => p.nombre.trim() && p.monto > 0) ? '¿Guardar sin ventas?' : '¿Guardar turno vacío?'}
+        description={provs.some((p) => p.nombre.trim() && p.monto > 0)
+          ? 'Hay proveedores ingresados pero ninguna venta. El turno quedará con ventas en $0.'
+          : 'No hay proveedores ni ventas ingresados.'}
         confirmLabel="Guardar igual"
         onCancel={() => setShowGuardarVacioConfirm(false)}
         onConfirm={() => { setShowGuardarVacioConfirm(false); guardar(true) }}

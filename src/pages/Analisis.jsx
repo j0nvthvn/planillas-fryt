@@ -9,7 +9,7 @@ import Layout from '../components/Layout'
 import PageHeader from '../components/PageHeader'
 import Spinner from '../components/Spinner'
 import Amount from '../components/Amount'
-import { clp, toNum, hoy } from '../utils/format'
+import { clp, toNum, hoy, fechaISO } from '../utils/format'
 import { totalesVentas, totalesProveedores } from '../utils/totales'
 import { METODOS_VENTA, ACCENT, GREEN, BottomSheet } from '../components/TurnoInput'
 import { descargarCSV } from '../utils/csv'
@@ -137,7 +137,7 @@ export default function Analisis() {
   const [rangoCustom, setRangoCustom] = useState(() => {
     const desde = new Date()
     desde.setDate(desde.getDate() - 6)
-    return { desde: desde.toISOString().split('T')[0], hasta: hoy() }
+    return { desde: fechaISO(desde), hasta: hoy() }
   })
   const [datos, setDatos] = useState(null)
   const [cargando, setCargando] = useState(true)
@@ -160,7 +160,7 @@ export default function Analisis() {
     const hoyD = new Date()
     const desde = new Date(hoyD)
     desde.setDate(hoyD.getDate() - (periodo === '7' ? 6 : 29))
-    return { desde: desde.toISOString().split('T')[0], hasta: hoy() }
+    return { desde: fechaISO(desde), hasta: hoy() }
   }
 
   useEffect(() => { cargarDatos() }, [periodo, rangoCustom.desde, rangoCustom.hasta])
@@ -179,8 +179,8 @@ export default function Analisis() {
     anteriorHasta.setDate(desdeD.getDate() - 1)
     const anteriorDesde = new Date(anteriorHasta)
     anteriorDesde.setDate(anteriorHasta.getDate() - diasRango)
-    const anteriorHastaStr = anteriorHasta.toISOString().split('T')[0]
-    const anteriorDesdeStr = anteriorDesde.toISOString().split('T')[0]
+    const anteriorHastaStr = fechaISO(anteriorHasta)
+    const anteriorDesdeStr = fechaISO(anteriorDesde)
 
     const [{ data: jornadas }, { data: jornadasAnterior }] = await Promise.all([
       supabase
