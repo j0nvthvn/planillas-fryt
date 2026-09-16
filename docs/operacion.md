@@ -282,9 +282,9 @@ distintos del último cierre, turno cerrado sin ventas, correcciones sin
 cierre anterior, proveedores sin catálogo, día completo con una tarde
 con ventas) o `aviso` (borradores de días pasados, fechas futuras, día
 completo con una tarde vacía). El respaldo diario falla si hay
-cualquiera de las dos. Estado de prod al 2026-09-18: un error, el
-2026-06-17 marcado como día completo con una tarde sin ventas pero con
-2 proveedores ($207.405). Hay que revisarlo con la dueña.
+cualquiera de las dos. Prod quedó sin hallazgos el 2026-09-16 (se
+corrigió el 2026-06-17: día completo con 2 proveedores en una tarde sin
+ventas; los pagos pasaron a la mañana y la tarde a la papelera).
 
 ## Correos (Resend)
 
