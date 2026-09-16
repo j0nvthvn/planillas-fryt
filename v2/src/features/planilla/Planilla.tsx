@@ -11,6 +11,7 @@ import { useUsuario } from '@/hooks/useUsuario'
 import { useMetodos } from '@/features/catalogo/api'
 import { useResumenDia, useTurnosDia, useCierres, guardarTurno, eliminarTurno, etiquetaModo, type TurnoConLineas } from '@/features/turno/api'
 import { EstadoChip } from '@/features/hoy/Hoy'
+import { Ledger, LedgerHead, LedgerLine, LedgerTotal } from '@/components/Ledger'
 import { clp, clpSigno, fechaLegible, fechaDiaMes, sumarDias, hoy, horaCorta } from '@/lib/format'
 import { esMetodo, type MetodoKey } from '@/lib/totales'
 import { mensajeDeError } from '@/lib/errorLog'
@@ -142,33 +143,26 @@ function TarjetaTurno({ t, fecha, esDueno, metodos, onDiff, onAccion, puedeUnir,
             : <span className="text-[10px] font-bold uppercase text-pos bg-pos-tint rounded-full px-2 py-0.5">Cerrado</span>}
         </div>
       </div>
-      <div className="px-5 py-3 space-y-1.5">
-        {metodos.filter((m) => esMetodo(m.key) && (v[m.key] ?? 0) > 0).map((m) => (
-          <div key={m.key} className="flex items-center gap-2.5 text-[13.5px]">
-            <span className="w-2 h-2 rounded-full" style={{ background: m.color }} /><span className="flex-1 text-ink2">{m.label}</span>
-            <span className="font-semibold tabular-nums text-ink">{clp(v[m.key as MetodoKey])}</span>
-          </div>
-        ))}
-        <div className="flex items-center justify-between text-[14px] pt-1.5 border-t border-soft"><span className="font-bold text-ink">Ventas</span><span className="font-bold tabular-nums text-ink">{clp(turno.total_ventas)}</span></div>
-      </div>
-      {proveedores.length > 0 && (
-        <div className="px-5 py-3 border-t border-hairline space-y-1.5">
-          <p className="eyebrow">Proveedores</p>
-          {proveedores.map((p) => (
-            <div key={p.id} className="flex items-center gap-2 text-[13px]">
-              <span className={`w-2 h-2 rounded-full ${p.forma_pago === 'efectivo' ? 'bg-pos' : 'bg-info'}`} /><span className="flex-1 text-ink2 truncate">{p.nombre}</span>
-              <span className="font-semibold tabular-nums text-ink">{clp(p.monto)}</span>
-            </div>
+      {/* Cuaderno: la planilla de papel pasada a limpio */}
+      <div className="px-5 pt-1 pb-4">
+        <Ledger>
+          <LedgerHead label="Ventas" />
+          {metodos.filter((m) => esMetodo(m.key) && (v[m.key] ?? 0) > 0).map((m) => (
+            <LedgerLine key={m.key} label={m.label} value={v[m.key as MetodoKey]} />
           ))}
-          <div className="flex items-center justify-between text-[13px] pt-1.5 border-t border-soft"><span className="font-bold text-ink">Total</span><span className="font-bold tabular-nums text-ink">{clp(turno.total_proveedores)}</span></div>
-        </div>
-      )}
-      <div className="px-5 py-3 border-t border-hairline text-[12.5px] text-muted space-y-1">
-        <p className="flex justify-between"><span>Fondo inicial</span><b className="text-ink tabular-nums">{clp(turno.fondo_inicial)}</b></p>
-        <p className="flex justify-between"><span>Efectivo esperado</span><b className="text-brand tabular-nums">{clp(turno.efectivo_esperado)}</b></p>
-        {turno.efectivo_contado != null ? (
-          <p className="flex justify-between"><span>Contado</span><b className={`tabular-nums ${turno.diferencia_efectivo ? 'text-neg' : 'text-pos'}`}>{clp(turno.efectivo_contado)} ({turno.diferencia_efectivo ? clpSigno(Number(turno.diferencia_efectivo)) : 'cuadra'})</b></p>
-        ) : <p className="italic">Sin conteo de caja</p>}
+          {proveedores.length > 0 && <LedgerHead label="Proveedores" />}
+          {proveedores.map((p) => (
+            <LedgerLine key={p.id} label={p.nombre} hint={p.forma_pago === 'efectivo' ? 'ef.' : 'tr.'} dot={p.forma_pago === 'efectivo' ? 'pos' : 'info'} value={p.monto} />
+          ))}
+          <LedgerHead label="Caja" />
+          <LedgerLine label="Fondo inicial" value={turno.fondo_inicial} />
+          <LedgerLine label="Efectivo esperado" value={turno.efectivo_esperado} color="var(--brand)" />
+          {turno.efectivo_contado != null
+            ? <LedgerLine label="Contado" hint={turno.diferencia_efectivo ? clpSigno(Number(turno.diferencia_efectivo)) : 'cuadra'} value={turno.efectivo_contado} color={turno.diferencia_efectivo ? 'var(--neg)' : 'var(--pos)'} />
+            : <LedgerLine label="Contado" hint="sin conteo" value={null} muted />}
+          <LedgerTotal label="Neto" value={Number(turno.neto ?? 0)} color={Number(turno.neto ?? 0) >= 0 ? 'var(--pos)' : 'var(--neg)'} />
+          <LedgerTotal label={`Ventas ${clp(turno.total_ventas)} − proveedores ${clp(turno.total_proveedores)}`} value={Number(turno.total_ventas ?? 0)} size="sm" />
+        </Ledger>
       </div>
       {esDueno && (
         <div className="px-3 py-2 border-t border-hairline flex flex-wrap gap-1">
