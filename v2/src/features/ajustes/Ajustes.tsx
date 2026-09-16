@@ -5,6 +5,7 @@ import PageHeader from '@/components/PageHeader'
 import Spinner from '@/components/Spinner'
 import Icon, { type IconName } from '@/components/Icon'
 import { ConfirmDialog } from '@/components/ConfirmDialog'
+import { MontoInput, HoraInput } from '@/components/MontoInput'
 import { useToast } from '@/components/Toast'
 import { useTema, type Tema } from '@/lib/theme'
 import { cerrarSesion } from '@/lib/auth'
@@ -86,8 +87,8 @@ function General() {
     <div className="space-y-4">
       <div className="card p-0 divide-y divide-hairline overflow-hidden">
         <Fila label="Nombre del local"><input className="input w-40 text-right" value={f.nombreLocal} onChange={(e) => set({ nombreLocal: e.target.value })} aria-label="Nombre del local" /></Fila>
-        <Fila label="Fondo de caja por defecto" hint="Con lo que parte cada turno"><input className="input w-40 text-right" type="number" inputMode="numeric" min={0} value={f.fondoCajaInicial} onChange={(e) => set({ fondoCajaInicial: Number(e.target.value) || 0 })} aria-label="Fondo de caja" /></Fila>
-        <Fila label="Corte de la mañana" hint="Hora en que termina el turno mañana"><input className="input w-24 text-right" type="number" min={0} max={23} value={f.horaCorteManana} onChange={(e) => set({ horaCorteManana: Number(e.target.value) || 0 })} aria-label="Hora de corte" /></Fila>
+        <Fila label="Fondo de caja por defecto" hint="Con lo que parte cada turno"><MontoInput className="w-40 text-right" value={f.fondoCajaInicial} onChange={(n) => set({ fondoCajaInicial: n })} ariaLabel="Fondo de caja" /></Fila>
+        <Fila label="Corte de la mañana" hint="Hora en que termina el turno mañana"><HoraInput className="w-32 text-right" value={f.horaCorteManana} onChange={(h) => set({ horaCorteManana: h })} ariaLabel="Hora de corte" /></Fila>
         <div className="px-4 py-3">
           <p className="text-[15px] font-medium text-ink">Días de un solo turno</p>
           <p className="text-[12px] text-muted mb-2">Esos días se registran siempre como día completo</p>
