@@ -19,6 +19,7 @@ import {
   useMetodos, actualizarMetodo, type Config,
 } from '@/features/catalogo/api'
 import { usePapelera, restaurarTurno, purgarTurno, etiquetaModo } from '@/features/turno/api'
+import { leerMetricas } from '@/features/turno/metricas'
 
 type Seccion = 'general' | 'trabajadores' | 'metodos' | 'papelera' | 'usuarios' | 'errores'
 const SECCIONES: { v: Seccion; label: string; icon: IconName }[] = [
@@ -93,6 +94,7 @@ function General() {
         </div>
       </div>
       {form && <button type="button" className="btn-primary w-full" disabled={guardar.isPending} onClick={() => guardar.mutate(form, { onSuccess: () => { setForm(null); toast.ok('Ajustes guardados') }, onError: (e) => toast.error(mensajeDeError(e)) })}>{guardar.isPending ? 'Guardando…' : 'Guardar cambios'}</button>}
+      <TiempoDeCierre />
       <div className="card p-0 overflow-hidden">
         <Fila label="Apariencia">
           <div className="flex gap-1 p-1 rounded-xl bg-soft" role="radiogroup">
@@ -102,6 +104,21 @@ function General() {
           </div>
         </Fila>
       </div>
+    </div>
+  )
+}
+
+/** Criterio del piloto: el cierre en la v2 debe tomar menos que en la app actual. */
+function TiempoDeCierre() {
+  const q = useQuery({ queryKey: ['metricas-cierre'], queryFn: leerMetricas, staleTime: 0, gcTime: 0 })
+  const lista = q.data ?? []
+  if (lista.length === 0) return null
+  const prom = Math.round(lista.reduce((s, m) => s + m.segundos, 0) / lista.length)
+  return (
+    <div className="card p-0 overflow-hidden">
+      <Fila label="Tiempo de cierre en este dispositivo" hint={`${lista.length} cierre${lista.length === 1 ? '' : 's'} medidos · promedio ${Math.floor(prom / 60)} min ${prom % 60} s`}>
+        <span className="text-[12px] text-muted tabular-nums text-right">{lista.slice(0, 3).map((m) => `${fechaDiaMes(m.fecha)} ${Math.floor(m.segundos / 60)}:${String(m.segundos % 60).padStart(2, '0')}`).join(' · ')}</span>
+      </Fila>
     </div>
   )
 }

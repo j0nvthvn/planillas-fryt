@@ -81,3 +81,29 @@ order by j.fecha desc;
 -- Tras revisar la lista con la dueña, marcar las fechas confirmadas:
 -- update public.jornadas set es_turno_unico = true
 -- where fecha in ('2026-09-07', '2026-09-04', '2026-09-02', '2026-09-01', '2026-08-26' /* … */);
+
+-- ============================================================
+-- PILOTO (Fase 3, semana A): fórmula de la app actual vs. vistas de la v2.
+-- Solo lectura. Debe dar 0 en todas las columnas diff_*.
+-- ============================================================
+with raw as (
+  select j.id as jornada_id, j.fecha,
+         sum(coalesce(v.efectivo,0)+coalesce(v.getnet,0)+coalesce(v.mercadopago,0)+coalesce(v.edenred,0)+coalesce(v.amipass,0)+coalesce(v.transferencia,0)) as ventas,
+         coalesce(sum(p.total),0) as prov,
+         sum(coalesce(t.fondo_inicial,0)+coalesce(v.efectivo,0)-coalesce(p.ef,0)) as caja
+  from public.jornadas j
+  join public.turnos t on t.jornada_id = j.id and t.deleted_at is null
+  left join public.ventas_turno v on v.turno_id = t.id
+  left join lateral (select sum(monto) as total, sum(monto) filter (where forma_pago='efectivo') as ef from public.proveedores_turno where turno_id = t.id) p on true
+  where j.fecha >= current_date - 60
+  group by j.id, j.fecha
+)
+select count(*) as dias,
+       count(*) filter (where raw.ventas <> r.total_ventas) as diff_ventas,
+       count(*) filter (where raw.prov <> r.total_proveedores) as diff_prov,
+       count(*) filter (where raw.ventas - raw.prov <> r.neto) as diff_neto,
+       count(*) filter (where raw.caja <> r.efectivo_esperado) as diff_caja
+from raw join public.v_resumen_dia r on r.jornada_id = raw.jornada_id;
+
+-- Errores registrados por la v2 durante el piloto:
+-- select created_at, mensaje, contexto, ruta from public.logs_error where contexto like 'v2:%' order by created_at desc;

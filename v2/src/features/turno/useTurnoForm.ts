@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'r
 import { useQuery } from '@tanstack/react-query'
 import { cargarTurnosDia, guardarTurno, ErrorGuardado, type Modo, type TurnoConLineas, type VTurno } from './api'
 import { leerBorradorLocal, guardarBorradorLocal, borrarBorradorLocal, type BorradorLocal } from './borradorLocal'
+import { marcarInicio, registrarCierre } from './metricas'
 import { qk } from '@/lib/query'
 import { totalesTurno, VENTAS_VACIAS, type MetodoKey, type ProveedorLinea, type Ventas } from '@/lib/totales'
 import { toNum } from '@/lib/format'
@@ -212,15 +213,20 @@ export function useTurnoForm({ fecha, modo, fondoPorDefecto, online }: Opciones)
     // El reducer es puro: se calcula el siguiente estado para persistirlo ya.
     const siguiente = reducer(stateRef.current, a)
     stateRef.current = siguiente
+    if (tieneContenido(siguiente)) marcarInicio(`${fecha}:${modo}`)
     persistirLocal(siguiente)
     programarAutosave()
-  }, [persistirLocal, programarAutosave])
+  }, [persistirLocal, programarAutosave, fecha, modo])
 
   const cerrar = useCallback(async () => {
     if (timer.current) clearTimeout(timer.current)
     setGuardando(true)
-    try { return await sincronizar(true) } finally { setGuardando(false) }
-  }, [sincronizar])
+    try {
+      const r = await sincronizar(true)
+      if (r === 'ok') void registrarCierre(`${fecha}:${modo}`, fecha, modo)
+      return r
+    } finally { setGuardando(false) }
+  }, [sincronizar, fecha, modo])
 
   /** Ante un conflicto: tomar lo del servidor (descarta lo local). */
   const adoptarServidor = useCallback(async () => {
