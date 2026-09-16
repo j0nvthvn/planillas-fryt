@@ -77,7 +77,9 @@ advisors solo con lo esperado. El saneo eliminó del catálogo "Pf" y
 
 `supabase_migrations.schema_migrations` quedó con las versiones de los
 archivos del repo; `supabase migration list` solo muestra pendiente
-`20260915000200_correos_seguros` (pospuesta hasta tener Resend). El
+`20260915000200_correos_seguros` (pospuesta hasta tener Resend).
+`20260917000000_metodos_acumulado_diario` (columna en `metodos_pago`, solo
+la usa la v2) se aplicó en staging y prod el 2026-09-17. El
 trigger `notificaciones` y los crons `Diario`/`semanal` viejos siguen en
 prod hasta aplicarla.
 
