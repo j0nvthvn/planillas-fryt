@@ -53,7 +53,7 @@ export function BottomSheet({ title, children, onClose, extra, footer }: Props) 
       onCancel={(e) => { e.preventDefault(); onClose() }}
       // Clic en el fondo oscuro: el destino del evento es el propio <dialog>.
       onClick={(e) => { if (e.target === ref.current) onClose() }}
-      className="fixed inset-x-0 bottom-0 top-auto z-50 m-0 w-full max-w-none p-0 border-0 bg-canvas text-ink rounded-t-[30px] px-5 pt-3 max-h-[92dvh] overflow-hidden flex flex-col gap-3 safe-bottom backdrop:bg-black/35 dark:backdrop:bg-black/60 md:inset-x-auto md:left-1/2 md:bottom-auto md:top-[8vh] md:w-[480px] md:rounded-3xl md:max-h-[84vh]"
+      className="fixed inset-x-0 bottom-0 top-auto z-50 m-0 w-full max-w-none border-0 bg-canvas text-ink rounded-t-[30px] px-5 pt-3 pb-[max(20px,env(safe-area-inset-bottom))] max-h-[92dvh] overflow-hidden flex flex-col gap-3 backdrop:bg-black/35 dark:backdrop:bg-black/60 md:inset-x-auto md:left-1/2 md:bottom-auto md:top-[8vh] md:w-[480px] md:rounded-3xl md:max-h-[84vh]"
       style={{
         animation: dragY === 0 ? 'sheetUp .26s cubic-bezier(.2,.8,.2,1)' : 'none',
         transform: isDesktop ? 'translateX(-50%)' : `translateY(${dragY}px)`,

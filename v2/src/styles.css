@@ -207,7 +207,6 @@
 }
 
 @layer components {
-  .safe-bottom { padding-bottom: max(12px, env(safe-area-inset-bottom)); }
   .pb-nav { padding-bottom: calc(60px + max(8px, env(safe-area-inset-bottom)) + 16px); }
   .above-nav { bottom: calc(60px + max(8px, env(safe-area-inset-bottom))); }
   @media (min-width: 768px) { .above-nav { bottom: 0; } }

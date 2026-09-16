@@ -80,6 +80,12 @@ contra staging. Lo que se veía mal y cómo quedó:
 - **Hojas**: `BottomSheet` acepta `footer`; solo el cuerpo se desplaza, así el
   teclado, "Registrar conteo" y los botones de la revisión quedan siempre a la
   vista. Las teclas bajan a 46 px en pantallas de menos de 700 px de alto.
+- **Margen inferior de las hojas**: `BottomSheet` tenía `p-0` junto con la
+  clase `safe-bottom` de `@layer components`, y en Tailwind v4 la utilidad gana,
+  así que el padding inferior quedaba en 0 (el contenido tocaba el borde y no
+  respetaba la barra de inicio de iOS). Ahora usa
+  `pb-[max(20px,env(safe-area-inset-bottom))]`. Regla: no mezclar clases de
+  `@layer components` con utilidades que toquen la misma propiedad.
 - **Cerrar turno**: sin la fecha repetida (en el celular de la dueña), el
   selector de modo en una línea, "Sí"/"No" del conteo de 44 px.
 - **Historial**: agrupado por mes con encabezado pegajoso; una sola etiqueta de
