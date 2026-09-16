@@ -27,7 +27,9 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm lint
       - run: pnpm typecheck
-      # Los tests contra staging se saltan solos sin SMOKE_PASSWORD, que no
-      # está acá: se corren a mano (ver v2/README.md).
-      - run: pnpm test
+      # `--mode staging` para que exista VITE_SUPABASE_URL (.env.staging está
+      # versionado): sin eso, cualquier test que importe el cliente falla al
+      # cargarlo. Los tests que tocan la base se saltan solos sin
+      # SMOKE_PASSWORD, que no está acá (se corren a mano, ver v2/README.md).
+      - run: pnpm test --mode staging
       - run: pnpm build

@@ -7,13 +7,8 @@ import { useIsDesktop } from '@/hooks/useIsDesktop'
 import { useCatalogo, type Proveedor } from '@/features/catalogo/api'
 import type { LineaForm } from './useTurnoForm'
 import { nuevaKey } from './useTurnoForm'
-import { proveedorParecido } from './parecido'
+import { normalizar, proveedorParecido } from './parecido'
 import type { FormaPago } from '@/lib/totales'
-
-/** Igual que norm_nombre() en la base: sin tildes, símbolos ni mayúsculas. */
-export function normalizar(s: string): string {
-  return s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]/g, '')
-}
 
 interface Props {
   linea: LineaForm | null
@@ -43,7 +38,7 @@ export function ProveedorSheet({ linea, usados, onSave, onDelete, onClose }: Pro
   // Antes de crear uno nuevo: ¿no será el mismo escrito distinto? (así
   // aparecieron "Río Maipo" y "Rio Maipo" en producción).
   const parecido = useMemo(
-    () => (exacto || elegido ? null : proveedorParecido(q, (catalogo.data ?? []).filter((p) => p.activo), normalizar)),
+    () => (exacto || elegido ? null : proveedorParecido(q, (catalogo.data ?? []).filter((p) => p.activo))),
     [catalogo.data, q, exacto, elegido],
   )
   const nombreFinal = (elegido?.nombre ?? exacto?.nombre ?? query).trim()

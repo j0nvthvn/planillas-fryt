@@ -7,7 +7,7 @@ import { ProveedorAvatar } from '@/components/ProveedorAvatar'
 import { BottomSheet } from '@/components/BottomSheet'
 import { useToast } from '@/components/Toast'
 import { useCatalogo, crearProveedor } from '@/features/catalogo/api'
-import { normalizar } from '@/features/turno/ProveedorSheet'
+import { normalizar } from '@/features/turno/parecido'
 import { mensajeDeError } from '@/lib/errorLog'
 
 export default function Proveedores() {

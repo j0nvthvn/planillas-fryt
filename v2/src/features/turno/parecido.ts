@@ -1,8 +1,13 @@
 /**
- * Detección de nombres de proveedor casi iguales. Escribir uno a mano crea
+ * Nombres de proveedor: normalización y detección de casi iguales. Escribir uno a mano crea
  * uno nuevo, y así aparecieron los duplicados de producción ("Río Maipo" y
  * "Rio Maipo", "PF" y "Pf"): antes de crear uno, se pregunta.
  */
+
+/** Igual que norm_nombre() en la base: sin tildes, símbolos ni mayúsculas. */
+export function normalizar(s: string): string {
+  return s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]/g, '')
+}
 
 /** Distancia de edición (Levenshtein) entre dos nombres ya normalizados. */
 export function distancia(a: string, b: string): number {
@@ -39,7 +44,6 @@ function tolerancia(largo: number): number {
 export function proveedorParecido<T extends { nombre: string }>(
   normalizado: string,
   lista: readonly T[],
-  normalizar: (s: string) => string,
 ): T | null {
   if (normalizado.length < 3) return null
   const max = tolerancia(normalizado.length)

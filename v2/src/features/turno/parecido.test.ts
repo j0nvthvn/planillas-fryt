@@ -1,9 +1,8 @@
 import { describe, expect, it } from 'vitest'
-import { distancia, proveedorParecido } from './parecido'
-import { normalizar } from './ProveedorSheet'
+import { distancia, normalizar, proveedorParecido } from './parecido'
 
 const lista = [{ nombre: 'Río Maipo' }, { nombre: 'Nestlé Lácteos' }, { nombre: 'PF' }, { nombre: 'Comercial Gaune' }]
-const buscar = (texto: string) => proveedorParecido(normalizar(texto), lista, normalizar)
+const buscar = (texto: string) => proveedorParecido(normalizar(texto), lista)
 
 describe('distancia', () => {
   it('cuenta las ediciones', () => {
