@@ -41,7 +41,7 @@ export default defineConfig({
         // y siempre se piden a Supabase.
         globPatterns: ['**/*.{js,css,html,svg,png,jpg,woff2}'],
         navigateFallback: '/index.html',
-        navigateFallbackDenylist: [/^\/rest\//, /^\/auth\//, /^\/storage\//],
+        navigateFallbackDenylist: [/^\/rest\//, /^\/auth\//, /^\/storage\//, /^\/privacidad\.html$/],
         runtimeCaching: [
           {
             urlPattern: /\/storage\/v1\/object\/public\/logos-proveedores\//i,
