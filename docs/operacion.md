@@ -149,6 +149,141 @@ si no se quiere usar `pg_dump`:
    `scripts/copiar-logos.mjs`; luego `update proveedores_frecuentes set
    imagen_url = replace(imagen_url, '<url prod>', '<url destino>')`.
 
+## Respaldos y restauración
+
+El plan gratis de Supabase no hace copias. Las hace
+`.github/workflows/respaldo.yml`:
+
+| Qué | Cuándo | Resultado |
+|---|---|---|
+| Respaldo | diario, 03:00 Chile | `frytcontrol-AAAA-MM-DD.tar.age` en Drive, carpeta `frytcontrol-respaldos` |
+| Control de integridad | tras cada respaldo | falla el job si `verificar_integridad()` devuelve filas |
+| Simulacro | domingos | restaura la última copia en una base local del runner y compara |
+
+Cada `.tar.age` (cifrado con [age](https://age-encryption.org)) contiene
+`respaldo.dump` (`pg_dump -Fc` de `public`, `auth` y `storage`),
+`manifiesto.json` (filas por tabla y sumas de dinero) y `logos/`.
+Retención: 30 días, más la copia del día 1 de cada mes por ~13 meses.
+Si un job falla, GitHub manda un correo a quien tenga el repo.
+
+Ambos se pueden lanzar a mano: Actions → respaldo → Run workflow, o
+`gh workflow run respaldo.yml -f tarea=respaldo` (o `simulacro`).
+
+### Puesta en marcha (una vez)
+
+1. Contraseña de la base: Dashboard de prod → Settings → Database →
+   *Reset database password*. Las apps no la usan (usan las API keys),
+   así que cambiarla no afecta nada. Guardarla en el gestor de claves.
+2. Cadena de conexión: Dashboard → Connect → *Session pooler* (IPv4; los
+   runners de GitHub no tienen IPv6):
+   `postgresql://postgres.kfmwhtbvgqurnpotypii:<clave>@aws-0-us-east-2.pooler.supabase.com:5432/postgres`
+   (copiar la que muestra el dashboard).
+3. Claves de cifrado: `age-keygen -o frytcontrol-respaldo.key`. La línea
+   `# public key: age1…` es la pública. **El archivo es la única forma de
+   abrir las copias**: guardarlo en el gestor de claves y en un segundo
+   lugar fuera de este computador.
+4. Drive: `rclone config` → *n* → nombre `drive` → tipo `drive` → sin
+   client id propio → scope `drive.file` → autorizar en el navegador con
+   la cuenta de Google que guardará las copias. Luego
+   `rclone mkdir drive:frytcontrol-respaldos`.
+5. Secretos del repo:
+
+```sh
+gh secret set SUPABASE_DB_URL                                 # pega la cadena del paso 2
+gh secret set AGE_RECIPIENT --body 'age1…'
+gh secret set AGE_IDENTITY < frytcontrol-respaldo.key          # solo lo usa el simulacro
+gh secret set RCLONE_CONFIG < ~/.config/rclone/rclone.conf
+```
+
+6. `gh workflow run respaldo.yml -f tarea=respaldo`, y cuando termine
+   `gh workflow run respaldo.yml -f tarea=simulacro`.
+
+Si no se quiere la clave privada en GitHub, no crear `AGE_IDENTITY`: el
+simulacro fallará cada domingo, así que en ese caso quitar su `cron` y
+hacerlo a mano una vez al mes (abajo).
+
+### Abrir una copia y probarla en local
+
+```sh
+rclone copy drive:frytcontrol-respaldos/frytcontrol-2026-09-20.tar.age .
+mkdir respaldo && age -d -i frytcontrol-respaldo.key frytcontrol-2026-09-20.tar.age | tar -C respaldo -xf -
+pnpm exec supabase start -x studio,imgproxy,inbucket,mailpit,logflare,vector,edge-runtime,realtime,storage-api,supavisor,pg_prove
+./scripts/respaldo/restaurar-prueba.sh respaldo    # borra la base local
+```
+
+`restaurar-prueba.sh` aplica las migraciones del repo, carga los datos de
+`public` y `auth.users`/`auth.identities`, compara con el manifiesto y
+corre `verificar_integridad()`. Con eso también se comprueba que el
+esquema del repo sigue reproduciendo prod.
+
+### Restauración real
+
+- **Recuperar unas filas** (algo borrado o pisado): restaurar la copia
+  en local como arriba, buscar las filas y reinsertarlas en prod con
+  SQL. Para cambios posteriores a la última copia, usar `auditoria`
+  (siguiente sección).
+- **Perder el proyecto completo:** proyecto nuevo → aplicar
+  `supabase/migrations` → `pg_restore --data-only --disable-triggers`
+  como en `restaurar-prueba.sh` (con la cadena del proyecto nuevo y
+  su rol `postgres`; si `--disable-triggers` falla por permisos, cargar
+  por tablas en orden de FKs como en "Copiar datos de prod a otro
+  proyecto") → subir `logos/` con `scripts/copiar-logos.mjs` → cambiar
+  URL y anon key en Vercel (las dos apps) y en `v2/.env.production`. Las
+  contraseñas de `auth.users` viajan en el dump, así que las cuentas
+  siguen funcionando.
+
+## Auditoría
+
+`public.auditoria` guarda cada cambio real (y cada borrado) en
+`jornadas`, `turnos`, `ventas_turno`, `proveedores_turno`,
+`turno_cierres` (solo borrados), `proveedores_frecuentes`,
+`trabajadores`, `metodos_pago` y `configuracion`: fila `antes`,
+`despues`, `usuario_id` y `en`. Las reescrituras sin cambios del
+autoguardado de la app actual no se registran. Solo la dueña puede
+leerla; nadie puede escribir en ella directamente.
+
+`turno_cierres` no se puede modificar y solo se borra en cascada con su
+turno. Para un arreglo manual excepcional (como `postgres`):
+`set local frytcontrol.permitir_cambiar_cierres = 'on';` dentro de la
+transacción.
+
+```sql
+-- Qué se borró en los últimos 7 días
+select en, tabla, registro, usuario_id from auditoria
+where operacion = 'DELETE' and en > now() - interval '7 days' order by en;
+
+-- Historia de las ventas de un turno
+select en, antes->>'efectivo' as antes, despues->>'efectivo' as despues
+from auditoria where tabla = 'ventas_turno' and coalesce(despues, antes)->>'turno_id' = '<turno_id>'
+order by en;
+
+-- Reconstruir un turno borrado definitivamente (revisar antes de correr)
+insert into turnos select * from jsonb_populate_record(null::turnos,
+  (select antes from auditoria where tabla = 'turnos' and operacion = 'DELETE' and registro = '<turno_id>'));
+insert into ventas_turno select * from jsonb_populate_record(null::ventas_turno,
+  (select antes from auditoria where tabla = 'ventas_turno' and operacion = 'DELETE' and antes->>'turno_id' = '<turno_id>'));
+insert into proveedores_turno select (jsonb_populate_record(null::proveedores_turno, antes)).*
+  from auditoria where tabla = 'proveedores_turno' and operacion = 'DELETE' and antes->>'turno_id' = '<turno_id>';
+insert into turno_cierres select (jsonb_populate_record(null::turno_cierres, antes)).*
+  from auditoria where tabla = 'turno_cierres' and operacion = 'DELETE' and antes->>'turno_id' = '<turno_id>'
+  order by (antes->>'cerrado_en')::timestamptz, antes->>'cierre_anterior_id' nulls first;
+```
+
+Probado en local: el turno vuelve idéntico en `v_turnos` salvo
+`turnos.updated_at`, que queda con la hora de la reconstrucción (lo
+tocan los triggers al reinsertar ventas y proveedores). En prod, el
+trigger `notificaciones` puede mandar un correo al reinsertar el turno.
+
+`verificar_integridad()` (dueña o `service_role`) devuelve una fila por
+regla que falla, con `severidad` `error` (datos inconsistentes: totales
+distintos del último cierre, turno cerrado sin ventas, correcciones sin
+cierre anterior, proveedores sin catálogo, día completo con una tarde
+con ventas) o `aviso` (borradores de días pasados, fechas futuras, día
+completo con una tarde vacía). El respaldo diario falla si hay
+cualquiera de las dos. Estado de prod al 2026-09-18: un error, el
+2026-06-17 marcado como día completo con una tarde sin ventas pero con
+2 proveedores ($207.405). Hay que revisarlo con la dueña.
+
 ## Correos (Resend)
 
 1. Verificar un dominio en <https://resend.com/domains> (DNS: SPF + DKIM).
@@ -194,7 +329,7 @@ Las llaves **no** están en el repo ni en las definiciones de la base.
   Database → Advisors, sin advertencias nuevas. Las esperadas (mismas que
   en prod): "SECURITY DEFINER ejecutable por authenticated" en
   `cerrar_turno`, `corregir_turno`, `fusionar_proveedores`, `es_dueno`,
-  `get_my_rol` — son las RPC que la app llama a propósito y validan el
+  `get_my_rol`, `verificar_integridad` — son las RPC que se llaman a propósito y validan el
   rol por dentro.
 
 ## Checklist de humo de la app actual

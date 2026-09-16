@@ -1,0 +1,139 @@
+# Respaldo diario de la base de producción, cifrado, a Google Drive, más
+# el control de integridad; y un simulacro de restauración semanal.
+# Si algo falla, GitHub avisa por correo. Detalle en docs/operacion.md →
+# "Respaldos y restauración".
+#
+# Secretos (Settings → Secrets and variables → Actions):
+#   SUPABASE_DB_URL  cadena del session pooler de prod (con la contraseña)
+#   AGE_RECIPIENT    clave pública age (age1…)
+#   AGE_IDENTITY     clave privada age (solo para el simulacro)
+#   RCLONE_CONFIG    contenido de rclone.conf con un remoto llamado "drive"
+#
+# El repo es público: nada sin cifrar sale del runner.
+name: respaldo
+
+on:
+  schedule:
+    - cron: '0 6 * * *'    # 03:00 en Chile (horario de verano; 02:00 en invierno)
+    - cron: '30 7 * * 0'   # domingos: simulacro de restauración
+  workflow_dispatch:
+    inputs:
+      tarea:
+        description: Qué correr
+        type: choice
+        options: [respaldo, simulacro]
+        default: respaldo
+
+concurrency:
+  group: respaldo
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  SUPABASE_URL: https://kfmwhtbvgqurnpotypii.supabase.co
+  CARPETA_DRIVE: drive:frytcontrol-respaldos
+
+jobs:
+  respaldo:
+    if: github.event.schedule == '0 6 * * *' || inputs.tarea == 'respaldo'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Herramientas
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq age rclone jq
+
+      - name: rclone
+        run: |
+          mkdir -p ~/.config/rclone
+          printf '%s\n' "$RCLONE_CONFIG" > ~/.config/rclone/rclone.conf
+        env:
+          RCLONE_CONFIG: ${{ secrets.RCLONE_CONFIG }}
+
+      - name: Volcar
+        run: ./scripts/respaldo/volcar.sh respaldo
+
+      - name: Cifrar y subir
+        run: |
+          nombre="frytcontrol-$(TZ=America/Santiago date +%F).tar.age"
+          tar -C respaldo -cf - . | age -r "$AGE_RECIPIENT" -o "$nombre"
+          rm -rf respaldo
+          rclone copy "$nombre" "$CARPETA_DRIVE"
+          echo "Subido \`$nombre\` ($(du -h "$nombre" | cut -f1))" >> "$GITHUB_STEP_SUMMARY"
+        env:
+          AGE_RECIPIENT: ${{ secrets.AGE_RECIPIENT }}
+
+      # 30 días de copias diarias + la del día 1 de cada mes por ~13 meses.
+      - name: Retención
+        run: |
+          rclone delete "$CARPETA_DRIVE" --min-age 30d --exclude '*-01.tar.age'
+          rclone delete "$CARPETA_DRIVE" --min-age 400d --include '*-01.tar.age'
+
+      - name: Integridad
+        run: |
+          psql() { docker run --rm -i -e PGURL="$SUPABASE_DB_URL" postgres:17 sh -c 'psql "$PGURL" -v ON_ERROR_STOP=1 -qtA -F " | " "$@"' sh "$@"; }
+          if [ "$(psql -c "select to_regprocedure('public.verificar_integridad()') is not null")" != "t" ]; then
+            echo "::warning::verificar_integridad() no existe todavía en prod"
+            exit 0
+          fi
+          hallazgos=$(psql -c "select * from public.verificar_integridad()")
+          if [ -n "$hallazgos" ]; then
+            { echo '### Hallazgos de integridad'; echo '```'; echo "$hallazgos"; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+            echo "$hallazgos"
+            echo "::error::verificar_integridad() reportó hallazgos (el respaldo sí se subió)"
+            exit 1
+          fi
+          echo "sin hallazgos"
+
+  simulacro:
+    if: github.event.schedule == '30 7 * * 0' || inputs.tarea == 'simulacro'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      - name: Herramientas
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq age rclone jq
+
+      - name: Descargar y descifrar la última copia
+        run: |
+          mkdir -p ~/.config/rclone
+          printf '%s\n' "$RCLONE_CONFIG" > ~/.config/rclone/rclone.conf
+          ultimo=$(rclone lsf "$CARPETA_DRIVE" --files-only --include '*.tar.age' | sort | tail -1)
+          [ -n "$ultimo" ] || { echo "::error::no hay copias en Drive"; exit 1; }
+          echo "Simulacro con \`$ultimo\`" >> "$GITHUB_STEP_SUMMARY"
+          rclone copy "$CARPETA_DRIVE/$ultimo" .
+          printf '%s\n' "$AGE_IDENTITY" > identidad.txt
+          mkdir respaldo
+          age -d -i identidad.txt "$ultimo" | tar -C respaldo -xf -
+          rm identidad.txt "$ultimo"
+          # Una copia de más de 2 días significa que el respaldo diario dejó de correr.
+          fecha=$(jq -r .ultima_jornada respaldo/manifiesto.json)
+          echo "última jornada en la copia: $fecha"
+          archivo_fecha=${ultimo#frytcontrol-}; archivo_fecha=${archivo_fecha%.tar.age}
+          if [ $(( ($(date +%s) - $(date -d "$archivo_fecha" +%s)) / 86400 )) -gt 2 ]; then
+            echo "::error::la copia más reciente es del $archivo_fecha"
+            exit 1
+          fi
+        env:
+          RCLONE_CONFIG: ${{ secrets.RCLONE_CONFIG }}
+          AGE_IDENTITY: ${{ secrets.AGE_IDENTITY }}
+
+      - name: Base local
+        run: pnpm exec supabase start -x studio,imgproxy,inbucket,mailpit,logflare,vector,edge-runtime,realtime,storage-api,supavisor,pg_prove
+
+      - name: Restaurar y comparar
+        run: ./scripts/respaldo/restaurar-prueba.sh respaldo

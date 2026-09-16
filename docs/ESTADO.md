@@ -2,7 +2,7 @@
 
 Documento para quien continúe el trabajo, sea persona o modelo. Resume qué
 es el sistema, qué se hizo, en qué punto está cada fase y qué falta, con las
-reglas que no se deben romper. Última actualización: **2026-09-17**.
+reglas que no se deben romper. Última actualización: **2026-09-18**.
 
 Documentos complementarios:
 - `docs/plan-v2.md`: el plan completo por fases (con encabezado de estado).
@@ -36,7 +36,7 @@ sin notar nada. Cualquier cambio a la app actual se avisa antes al usuario.
 
 | Recurso | Identificador | Notas |
 |---|---|---|
-| Supabase prod | `kfmwhtbvgqurnpotypii` (us-east-2), org `ccfgqstvcbxhllxvuivx` | Base real. Postgres 17. Plan gratis (sin backups automáticos). |
+| Supabase prod | `kfmwhtbvgqurnpotypii` (us-east-2), org `ccfgqstvcbxhllxvuivx` | Base real. Postgres 17. Plan gratis (Supabase no hace copias; las hace `.github/workflows/respaldo.yml`, ver `docs/operacion.md` → "Respaldos y restauración"). |
 | Supabase staging | `psdhhwcxjcobwxjiemrr` (sa-east-1), misma org | Copia de prod del 2026-09-16 con los mismos ids, esquema completo. Se pausa tras 7 días sin uso; basta reactivarlo. |
 | Vercel team | `team_K2vm0PJ0CZxXz4pp3MD3ndxe` (hobby) | |
 | Vercel `planillas-fryt` | `prj_j5ZCp5g9YamCQKQy8Bthbzzjt6BZ` | App actual. Rama `main`, Root Directory raíz. |
@@ -86,6 +86,12 @@ Credenciales y dónde están (nunca en el repo, salvo anon keys):
 - Estado de prod al 2026-09-17: 0 errores `v2:` en `logs_error`, 1 borrador (el del día), ningún borrador de días pasados. 33 de 134 cierres son correcciones (25 %) y no hay un solo conteo de caja en toda la historia: de ahí las dos mejoras de flujo de la Fase 2.
 - Jonathan cerró desde la v2 cinco borradores antiguos en prod el 2026-09-16 (esperado: eran los turnos olvidados).
 - **Siguiente:** semana B (registro parcial desde el móvil del local con la cuenta trabajador o la de la dueña; antes: crear trabajadores en Ajustes) y semana C (v2 principal). Criterios de salida en `docs/piloto-v2.md`.
+
+### Integridad y respaldos: **código listo, falta activarlo** (2026-09-18)
+- Migración `20260918000000_integridad.sql`: tabla `auditoria` (cambios reales y borrados de las tablas de negocio), `turno_cierres` inmutable (solo se borra en cascada con su turno, y queda en `auditoria`), sin `TRUNCATE` para los roles de la API, CHECKs de `fondo_inicial` y `efectivo_contado`, y `verificar_integridad()`. pgTAP 90/90 y humo de la app actual en verde en local. **Pendiente: aplicarla en prod**.
+- `.github/workflows/respaldo.yml` + `scripts/respaldo/`: `pg_dump` diario cifrado con age a Google Drive, control de integridad y simulacro de restauración semanal (probado en local, y detecta un manifiesto alterado). **Pendiente: la puesta en marcha manual** (contraseña de la base, clave age, rclone, secretos), ver `docs/operacion.md`.
+- Aplicada en **staging** el 2026-09-18 (versión registrada con el nombre del archivo). Falta prod.
+- Hallazgo en prod (error de `verificar_integridad()`): el 2026-06-17 está marcado como día completo y tiene un turno de tarde sin ventas pero con 2 proveedores ($207.405), sin cierres. Revisarlo con la dueña: o se desmarca el día completo o esos proveedores pasan a la mañana.
 
 ### Fase 4 — Cambio definitivo y migración a sa-east-1: **no iniciada**
 1. Proyecto Supabase nuevo en sa-east-1 (o reutilizar staging si se decide) con las migraciones del repo, edge functions y secretos.
