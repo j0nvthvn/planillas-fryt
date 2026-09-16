@@ -78,6 +78,19 @@ describe.skipIf(!password || /kfmwhtbvgqurnpotypii/.test(url))('data layer v2 co
     expect(papelera.error).toBeNull()
   })
 
+  it('dividir/unir solo cambia la marca del día: sin corrección ni cambios de montos', async () => {
+    const antes = (await cargarTurnosDia(fecha))[0]!.turno
+    const r = await guardarTurno({ fecha, modo: 'mañana', cerrar: false, base_updated_at: antes.updated_at })
+    expect(r.conflicto).toBe(false)
+    if (r.conflicto) return
+    expect(r.turno.modo).toBe('mañana')
+    expect(r.turno.cantidad_cierres).toBe(antes.cantidad_cierres)
+    expect(r.turno.corregido).toBe(false)
+    expect(Number(r.turno.total_ventas)).toBe(Number(antes.total_ventas))
+    const back = await guardarTurno({ fecha, modo: 'completo', cerrar: false })
+    expect(!back.conflicto && back.turno.modo).toBe('completo')
+  })
+
   it('la dueña corrige un turno cerrado y queda auditado', async () => {
     const dia = await cargarTurnosDia(fecha)
     const t = dia[0]!.turno

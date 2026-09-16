@@ -5,13 +5,13 @@ import { useUsuario } from '@/hooks/useUsuario'
 import { useResumenDia, useTurnosDia, useBorradores, etiquetaModo, type Modo } from '@/features/turno/api'
 import { useConfig, useMetodos } from '@/features/catalogo/api'
 import { fechaLegible, fechaDiaMes, hoy, clp, clpSigno, diaSemana, sumarDias, horaCorta } from '@/lib/format'
-import { cerrarSesion } from '@/lib/auth'
+import { AvatarMenu } from '@/components/AvatarMenu'
 
 export default function Hoy() {
   const fecha = hoy()
   const ayer = sumarDias(fecha, -1)
   const navigate = useNavigate()
-  const { esDueno, usuario } = useUsuario()
+  const { esDueno } = useUsuario()
   const { config } = useConfig()
   const resumen = useResumenDia(fecha)
   const resumenAyer = useResumenDia(ayer)
@@ -51,10 +51,7 @@ export default function Hoy() {
           <p className="eyebrow text-brand">Hoy</p>
           <p className="text-[15px] font-medium text-ink capitalize leading-tight">{fechaLegible(fecha)}</p>
         </div>
-        <button type="button" onClick={() => void cerrarSesion()} className="w-[42px] h-[42px] rounded-full bg-brand text-white font-bold grid place-items-center shrink-0"
-          aria-label={`Cerrar sesión de ${usuario?.nombre ?? ''}`} title="Cerrar sesión">
-          {(usuario?.nombre?.[0] ?? '?').toUpperCase()}
-        </button>
+        <AvatarMenu />
       </header>
 
       {borradoresViejos.length > 0 && (

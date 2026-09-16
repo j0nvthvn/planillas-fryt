@@ -37,21 +37,17 @@ export default function Planilla() {
     if (!accion) return
     setOcupado(true)
     try {
-      const { turno, proveedores } = accion.turno
-      const ventas = { efectivo: turno.efectivo ?? 0, getnet: turno.getnet ?? 0, mercadopago: turno.mercadopago ?? 0, edenred: turno.edenred ?? 0, amipass: turno.amipass ?? 0, transferencia: turno.transferencia ?? 0 }
+      const { turno } = accion.turno
       if (accion.t === 'eliminar') {
         await eliminarTurno(turno.id, fecha)
         toast.show({ message: 'Turno enviado a la papelera', actionLabel: 'Ver papelera', onAction: () => void navigate({ to: '/ajustes', search: { seccion: 'papelera' } }) })
       } else {
-        // Dividir: el día completo pasa a ser solo "mañana" (misma data). Unir: la mañana pasa a día completo.
+        // Dividir: el día completo pasa a ser solo "mañana". Unir: la mañana pasa
+        // a día completo. Solo cambia la marca del día (jornadas.es_turno_unico):
+        // sin ventas ni proveedores en la llamada, guardar_turno no toca montos
+        // ni registra una corrección (igual que "Fusionar" en la app actual).
         const modo = accion.t === 'dividir' ? 'mañana' : 'completo'
-        const res = await guardarTurno({
-          fecha, modo, ventas,
-          proveedores: proveedores.map((p) => ({ id: p.id, proveedor_id: p.proveedor_id, nombre: p.nombre, monto: p.monto, forma_pago: p.forma_pago === 'transferencia' ? 'transferencia' : 'efectivo' })),
-          cerrar: !turno.is_draft,
-          efectivo_contado: turno.efectivo_contado ?? null,
-          base_updated_at: turno.updated_at,
-        })
+        const res = await guardarTurno({ fecha, modo, cerrar: false, base_updated_at: turno.updated_at })
         if (res.conflicto) { toast.error('El turno cambió en otro dispositivo. Recarga e inténtalo de nuevo.'); return }
         toast.ok(accion.t === 'dividir' ? 'Día dividido. Ahora puedes cerrar la tarde.' : 'Registrado como día completo')
         if (accion.t === 'dividir') void navigate({ to: '/turno', search: { fecha, modo: 'tarde' } })

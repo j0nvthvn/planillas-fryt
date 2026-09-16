@@ -49,16 +49,24 @@ export function CorreccionModal({ cierres, metodos, titulo, onClose }: { cierres
   const vo = ventas(original.ventas_snapshot)
   const va = ventas(actual.ventas_snapshot)
   const filas = METODO_KEYS.map((k) => ({ key: k, label: metodos.find((m) => m.key === k)?.label ?? k, antes: +(vo[k] ?? 0), despues: +(va[k] ?? 0) })).filter((f) => f.antes !== f.despues)
+  // La caja también forma parte de la fotografía del cierre.
+  const caja = [
+    { key: 'esperado', label: 'Efectivo esperado', antes: original.efectivo_esperado, despues: actual.efectivo_esperado },
+    { key: 'contado', label: 'Efectivo contado', antes: original.efectivo_contado, despues: actual.efectivo_contado },
+  ].filter((f) => (f.antes ?? null) !== (f.despues ?? null)).map((f) => ({ ...f, antes: f.antes ?? 0, despues: f.despues ?? 0 }))
+  const provsIguales = JSON.stringify(original.proveedores_snapshot) === JSON.stringify(actual.proveedores_snapshot)
   const correcciones = orden.length - 1
+  const sinCambios = filas.length === 0 && caja.length === 0 && provsIguales
 
   return (
     <BottomSheet title={titulo} onClose={onClose}>
       <p className="text-[12px] text-muted -mt-1">{correcciones} corrección{correcciones === 1 ? '' : 'es'} desde el cierre original</p>
       <div className="text-[12px] text-muted bg-canvas rounded-xl px-3 py-2">Original · {fechaHora(original.cerrado_en)} · {original.cerrado_por_usuario?.nombre ?? '—'}</div>
-      {filas.length ? (
+      {sinCambios && <p className="text-[13px] text-ink2 bg-soft rounded-xl px-3 py-2">Se volvió a guardar el turno sin cambios en ventas, proveedores ni caja.</p>}
+      {(filas.length > 0 || caja.length > 0) ? (
         <div className="space-y-2">
-          <p className="eyebrow">Ventas: qué cambió</p>
-          {filas.map((f) => {
+          <p className="eyebrow">Qué cambió</p>
+          {[...filas, ...caja].map((f) => {
             const delta = f.despues - f.antes
             return (
               <div key={f.key} className="flex items-center gap-2.5 text-[13px]">
@@ -71,7 +79,7 @@ export function CorreccionModal({ cierres, metodos, titulo, onClose }: { cierres
             )
           })}
         </div>
-      ) : <p className="text-[12px] text-muted2 italic">Las ventas no cambiaron.</p>}
+      ) : !sinCambios && <p className="text-[12px] text-muted2 italic">Las ventas y la caja no cambiaron.</p>}
       <div className="grid grid-cols-2 gap-4">
         <ListaProveedores items={lista(original.proveedores_snapshot)} titulo="Proveedores (original)" />
         <ListaProveedores items={lista(actual.proveedores_snapshot)} titulo="Proveedores (actual)" />

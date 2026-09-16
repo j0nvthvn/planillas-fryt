@@ -74,6 +74,12 @@ export default function CerrarTurno() {
   const usadosIds = state.proveedores.map((p) => p.proveedor_id).filter((x): x is string => !!x)
 
   async function onCerrar() {
+    // Turno ya cerrado sin cambios: no se registra una corrección vacía.
+    if (state.cerrado && !state.sucio) {
+      toast.show({ message: 'No hay cambios que guardar' })
+      void navigate({ to: '/dia', search: { fecha } })
+      return
+    }
     if (!tieneContenido(state) && !confirmarVacio) { setConfirmarVacio(true); return }
     setConfirmarVacio(false)
     const r = await form.cerrar()

@@ -93,7 +93,7 @@ export default function Analisis() {
                   <CartesianGrid strokeDasharray="3 3" stroke="var(--hairline)" vertical={false} />
                   <XAxis dataKey="label" tick={{ fontSize: 10, fill: 'var(--muted)' }} interval="preserveStartEnd" />
                   <YAxis tickFormatter={clpCorto} tick={{ fontSize: 10, fill: 'var(--muted)' }} width={48} />
-                  <Tooltip formatter={(v) => clp(Number(v))} labelFormatter={(l) => String(l)} contentStyle={{ background: 'var(--card)', border: '1px solid var(--hairline)', borderRadius: 12, fontSize: 12 }} />
+                  <Tooltip cursor={{ fill: 'var(--soft)', radius: 6 }} content={<TooltipDia />} />
                   <Bar dataKey="neto" radius={[6, 6, 0, 0]}>
                     {dias.map((d) => <Cell key={d.fecha} fill={d.neto >= 0 ? 'var(--pos)' : 'var(--neg)'} />)}
                   </Bar>
@@ -129,6 +129,22 @@ export default function Analisis() {
           </div>
         </>
       )}
+    </div>
+  )
+}
+
+/** Tooltip del gráfico con los tokens del tema (el de recharts venía en gris sobre gris). */
+function TooltipDia({ active, payload }: { active?: boolean; payload?: { payload?: Record<string, unknown> }[] }) {
+  const d = payload?.[0]?.payload as (VResumenDia & { neto: number; total_ventas: number }) | undefined
+  if (!active || !d) return null
+  const neto = Number(d.neto)
+  return (
+    <div className="rounded-xl bg-card border border-hairline shadow-hero px-3 py-2 text-[12.5px] min-w-[170px]">
+      <p className="font-semibold text-ink capitalize mb-1">{fechaDiaMes(d.fecha)}</p>
+      <p className="flex justify-between gap-4 text-ink2"><span>Ventas</span><b className="tabular-nums text-ink">{clp(d.total_ventas)}</b></p>
+      <p className="flex justify-between gap-4 text-ink2"><span>Proveedores</span><b className="tabular-nums text-ink">{clp(d.total_proveedores)}</b></p>
+      <p className={`flex justify-between gap-4 pt-1 mt-1 border-t border-hairline font-bold ${neto >= 0 ? 'text-pos' : 'text-neg'}`}><span>Neto</span><span className="tabular-nums">{clp(neto)}</span></p>
+      {d.estado !== 'completo' && <p className="text-[11px] text-warn mt-1">{d.estado === 'borrador' ? 'Con borrador' : d.estado === 'parcial' ? 'Falta la tarde' : ''}</p>}
     </div>
   )
 }

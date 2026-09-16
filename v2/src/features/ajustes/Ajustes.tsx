@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { useNavigate, useSearch } from '@tanstack/react-router'
+import { Link, useNavigate, useSearch } from '@tanstack/react-router'
 import PageHeader from '@/components/PageHeader'
 import Spinner from '@/components/Spinner'
 import Icon, { type IconName } from '@/components/Icon'
@@ -45,6 +45,13 @@ export default function Ajustes() {
           </button>
         ))}
       </div>
+      {seccion === 'general' && (
+        <Link to="/proveedores" className="card mb-4 flex items-center gap-3 hover:border-brand/40">
+          <span className="w-10 h-10 rounded-xl bg-brand-tint text-brand grid place-items-center"><Icon name="suppliers" className="w-5 h-5" /></span>
+          <span className="flex-1"><span className="block text-[15px] font-semibold text-ink">Proveedores</span><span className="block text-[12px] text-muted">Catálogo: renombrar, fusionar duplicados, logos</span></span>
+          <Icon name="chevR" className="w-4 h-4 text-muted2" />
+        </Link>
+      )}
       {seccion === 'general' && <General />}
       {seccion === 'trabajadores' && <Trabajadores />}
       {seccion === 'metodos' && <Metodos />}
