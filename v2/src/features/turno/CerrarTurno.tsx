@@ -71,6 +71,7 @@ export default function CerrarTurno() {
   }, [state.cargado])
 
   const soloLectura = state.cerrado && !esDueno
+  const turnoManana = form.dia.find((t) => t.turno.tipo === 'mañana')?.turno as unknown as Record<string, number | null> | undefined
   const usadosIds = state.proveedores.map((p) => p.proveedor_id).filter((x): x is string => !!x)
 
   async function onCerrar() {
@@ -181,7 +182,9 @@ export default function CerrarTurno() {
                 <MetodoLogo metodo={m} active={monto > 0} />
                 <span className="flex-1 min-w-0">
                   <span className="block text-[15px] font-medium text-ink">{m.label}</span>
-                  {m.sub && <span className="block text-[12px] text-muted">{m.sub}</span>}
+                  {m.acumulado_diario && modo === 'tarde' ? (
+                    <span className="block text-[12px] text-muted tabular-nums">Mañana {clp(turnoManana?.[key] ?? 0)} · total del día {clp(Number(turnoManana?.[key] ?? 0) + monto)}</span>
+                  ) : m.sub && <span className="block text-[12px] text-muted">{m.sub}</span>}
                 </span>
                 <span className={`text-[16px] font-bold tabular-nums ${monto ? 'text-ink' : 'text-muted2'}`}>{clp(monto)}</span>
                 <Icon name="chevR" className="w-4 h-4 text-muted2" />
@@ -289,8 +292,13 @@ export default function CerrarTurno() {
         const idx = activos.findIndex((x) => x.key === sheet.key)
         const m = activos[idx]
         const prox = activos[idx + 1]
+        // Máquina con total del día y estamos cerrando la tarde: se escribe el
+        // total y la hoja deriva la parte de la tarde (total − mañana).
+        const mananaMonto = modo === 'tarde' ? Number(turnoManana?.[sheet.key] ?? 0) : null
+        const acumulado = m?.acumulado_diario && mananaMonto != null ? { manana: mananaMonto } : undefined
         return (
-          <MontoSheet title={m?.label ?? sheet.key} sub={m?.sub ?? undefined} valor={state.ventas[sheet.key]} color={m?.color}
+          <MontoSheet title={m?.label ?? sheet.key} sub={acumulado ? 'La máquina muestra el total del día' : m?.sub ?? undefined} valor={state.ventas[sheet.key]} color={m?.color}
+            acumulado={acumulado}
             paso={{ actual: idx + 1, total: activos.length }} siguiente={prox?.label ?? null}
             onAccept={(monto, seguir) => {
               cambiar({ type: 'venta', key: sheet.key, monto })

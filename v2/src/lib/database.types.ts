@@ -91,6 +91,7 @@ export type Database = {
       metodos_pago: {
         Row: {
           activo: boolean
+          acumulado_diario: boolean
           color: string
           key: string
           label: string
@@ -100,6 +101,7 @@ export type Database = {
         }
         Insert: {
           activo?: boolean
+          acumulado_diario?: boolean
           color: string
           key: string
           label: string
@@ -109,6 +111,7 @@ export type Database = {
         }
         Update: {
           activo?: boolean
+          acumulado_diario?: boolean
           color?: string
           key?: string
           label?: string

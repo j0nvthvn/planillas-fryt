@@ -36,7 +36,7 @@ type Accion =
   | { type: 'trabajador'; id: string | null }
   | { type: 'fondo'; monto: number }
   | { type: 'caja'; conto: boolean; monto: number | null }
-  | { type: 'sincronizado'; turno: VTurno }
+  | { type: 'sincronizado'; turno: VTurno; sucio: boolean }
 
 const inicial: FormState = {
   cargado: false, turnoId: null, cerrado: false, baseUpdatedAt: null, trabajadorId: null, fondoInicial: 0,
@@ -59,9 +59,11 @@ function reducer(s: FormState, a: Accion): FormState {
       ...s,
       turnoId: a.turno.id,
       baseUpdatedAt: a.turno.updated_at,
-      // Las filas nuevas ya tienen id en la base: se toman del servidor solo si
-      // el usuario no siguió escribiendo (sucio) para no pisar sus cambios.
-      sucio: false,
+      // Si el usuario siguió escribiendo mientras viajaba la petición, sigue
+      // habiendo cambios pendientes (a.sucio = true) y el próximo autoguardado
+      // los manda; antes se marcaba limpio y esos cambios quedaban solo en el
+      // dispositivo hasta el cierre (Hoy mostraba datos viejos).
+      sucio: a.sucio,
     }
   }
 }
@@ -133,6 +135,8 @@ export function useTurnoForm({ fecha, modo, fondoPorDefecto, online }: Opciones)
   const stateRef = useRef(state)
   stateRef.current = state
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  /** Contador de cambios: detecta escrituras ocurridas durante una sincronización. */
+  const cambios = useRef(0)
   const tipo = modo === 'tarde' ? 'tarde' : 'mañana'
 
   const dia = useQuery({ queryKey: qk.turnosDia(fecha), queryFn: () => cargarTurnosDia(fecha) })
@@ -172,6 +176,7 @@ export function useTurnoForm({ fecha, modo, fondoPorDefecto, online }: Opciones)
 
   const sincronizar = useCallback(async (cerrar: boolean): Promise<'ok' | 'conflicto' | 'error'> => {
     const s = stateRef.current
+    const version = cambios.current
     try {
       const r = await guardarTurno({
         fecha, modo,
@@ -184,7 +189,10 @@ export function useTurnoForm({ fecha, modo, fondoPorDefecto, online }: Opciones)
         base_updated_at: s.baseUpdatedAt,
       })
       if (r.conflicto) { setConflicto({ actual: r.actual }); return 'conflicto' }
-      dispatch({ type: 'sincronizado', turno: r.turno })
+      const pendientes = cambios.current !== version
+      dispatch({ type: 'sincronizado', turno: r.turno, sucio: pendientes })
+      stateRef.current = { ...stateRef.current, turnoId: r.turno.id, baseUpdatedAt: r.turno.updated_at, sucio: pendientes }
+      if (pendientes && !cerrar) programarAutosaveRef.current()
       setErrorAutosave(null)
       if (cerrar) void borrarBorradorLocal(fecha, modo)
       return 'ok'
@@ -200,10 +208,33 @@ export function useTurnoForm({ fecha, modo, fondoPorDefecto, online }: Opciones)
       const s = stateRef.current
       if (!s.sucio || s.cerrado || !online || !tieneContenido(s) || guardando) return
       void sincronizar(false)
-    }, 3000)
+    }, 1500)
   }, [online, sincronizar, guardando])
+  const programarAutosaveRef = useRef(programarAutosave)
+  programarAutosaveRef.current = programarAutosave
+  const sincronizarRef = useRef(sincronizar)
+  sincronizarRef.current = sincronizar
 
-  useEffect(() => () => { if (timer.current) clearTimeout(timer.current) }, [])
+  // Al salir de la pantalla (o al irse a segundo plano) no se espera el
+  // debounce: lo pendiente se manda ya, para que Hoy lo muestre al llegar.
+  const flush = useCallback(() => {
+    const s = stateRef.current
+    if (s.sucio && !s.cerrado && navigator.onLine && tieneContenido(s)) {
+      if (timer.current) clearTimeout(timer.current)
+      void sincronizarRef.current(false)
+    }
+  }, [])
+  useEffect(() => {
+    const onHide = () => { if (document.visibilityState === 'hidden') flush() }
+    document.addEventListener('visibilitychange', onHide)
+    window.addEventListener('pagehide', flush)
+    return () => {
+      document.removeEventListener('visibilitychange', onHide)
+      window.removeEventListener('pagehide', flush)
+      flush()
+      if (timer.current) clearTimeout(timer.current)
+    }
+  }, [flush])
 
   // Al volver la conexión, reintenta lo pendiente.
   useEffect(() => { if (online && stateRef.current.sucio) programarAutosave() }, [online, programarAutosave])
@@ -213,6 +244,7 @@ export function useTurnoForm({ fecha, modo, fondoPorDefecto, online }: Opciones)
     // El reducer es puro: se calcula el siguiente estado para persistirlo ya.
     const siguiente = reducer(stateRef.current, a)
     stateRef.current = siguiente
+    cambios.current += 1
     if (tieneContenido(siguiente)) marcarInicio(`${fecha}:${modo}`)
     persistirLocal(siguiente)
     programarAutosave()

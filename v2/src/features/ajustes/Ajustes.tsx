@@ -167,13 +167,14 @@ function Metodos() {
   const run = (fn: () => Promise<void>) => fn().catch((e) => toast.error(mensajeDeError(e)))
   return (
     <div className="space-y-3">
-      <p className="text-[13px] text-muted px-1">Los métodos inactivos no aparecen al cerrar el turno. Agregar uno nuevo requiere una migración.</p>
+      <p className="text-[13px] text-muted px-1">Los métodos inactivos no aparecen al cerrar el turno. "Total del día" es para máquinas que no cierran por turno: al cerrar la tarde se escribe el total y la app resta la mañana.</p>
       <div className="card p-0 divide-y divide-hairline overflow-hidden">
         {(lista.data ?? []).map((m, i, arr) => (
-          <Fila key={m.key} label={m.label} hint={m.sub ?? undefined}>
+          <Fila key={m.key} label={m.label} hint={[m.sub, m.acumulado_diario ? 'la máquina muestra el total del día' : null].filter(Boolean).join(' · ') || undefined}>
             <div className="flex items-center gap-1">
               <button type="button" className="btn-ghost min-h-[38px] px-2" disabled={i === 0} aria-label="Subir" onClick={() => { const prev = arr[i - 1]; if (prev) void run(async () => { await actualizarMetodo(m.key, { orden: prev.orden }); await actualizarMetodo(prev.key, { orden: m.orden }) }) }}><Icon name="caretUp" className="w-4 h-4" /></button>
               <button type="button" className="btn-ghost min-h-[38px] px-2" disabled={i === arr.length - 1} aria-label="Bajar" onClick={() => { const next = arr[i + 1]; if (next) void run(async () => { await actualizarMetodo(m.key, { orden: next.orden }); await actualizarMetodo(next.key, { orden: m.orden }) }) }}><Icon name="caretDown" className="w-4 h-4" /></button>
+              <button type="button" className={`btn-ghost text-[13px] min-h-[38px] px-3 ${m.acumulado_diario ? 'text-brand' : 'text-muted'}`} aria-pressed={m.acumulado_diario} title="La máquina muestra el total del día" onClick={() => void run(() => actualizarMetodo(m.key, { acumulado_diario: !m.acumulado_diario }))}>Total del día</button>
               <button type="button" className={`btn-ghost text-[13px] min-h-[38px] px-3 ${m.activo ? '' : 'text-neg'}`} onClick={() => void run(() => actualizarMetodo(m.key, { activo: !m.activo }))}>{m.activo ? 'Activo' : 'Inactivo'}</button>
             </div>
           </Fila>

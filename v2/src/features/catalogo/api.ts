@@ -22,7 +22,7 @@ export function useMetodos(soloActivos = true) {
   })
 }
 
-export async function actualizarMetodo(key: string, cambios: Partial<Pick<MetodoPago, 'label' | 'sub' | 'orden' | 'activo' | 'color'>>) {
+export async function actualizarMetodo(key: string, cambios: Partial<Pick<MetodoPago, 'label' | 'sub' | 'orden' | 'activo' | 'color' | 'acumulado_diario'>>) {
   const { error } = await supabase.from('metodos_pago').update(cambios).eq('key', key)
   if (error) throw error
   await queryClient.invalidateQueries({ queryKey: qk.metodos })
