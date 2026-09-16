@@ -17,7 +17,9 @@ export async function logError(mensaje: string, { contexto, ruta, detalle }: Ext
     await supabase.from('logs_error').insert({
       usuario_id: data.user?.id ?? null,
       mensaje: String(mensaje).slice(0, 2000),
-      contexto: contexto ?? null,
+      // Prefijo "v2:" para distinguir en logs_error lo que viene de esta app
+      // durante el piloto (criterio de salida: 0 errores nuevos de la v2).
+      contexto: `v2:${contexto ?? 'app'}`,
       ruta: ruta ?? (typeof window !== 'undefined' ? window.location.pathname : null),
       detalle: detalle === undefined ? null : JSON.parse(JSON.stringify(detalle, jsonSafe)),
     })

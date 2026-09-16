@@ -4,7 +4,8 @@
 > - Fase 0: **aplicada en prod** (baseline, grants, hardening) el 2026-09-16. Correos (`correos_seguros` + edge functions) pospuestos por decisión del usuario hasta tener dominio en Resend. Frontend: los arreglos están commiteados pero **no pusheados/desplegados**. Pendiente: limpieza de datos con la dueña (`docs/limpieza-datos-2026-09.sql`), activar *leaked password protection*.
 > - Fase 1: migraciones 1.1–1.4 probadas en local (62 pgTAP), en staging `psdhhwcxjcobwxjiemrr` (sa-east-1, copia real de prod, humo 60/60) y **aplicadas en prod** el 2026-09-16: 0 diferencias entre `turno_totales` y los cierres. Ver `docs/operacion.md` (estado de producción).
 > - Fase 2 (app v2): código en `v2/` (stack 2.1, pantallas 2.4, tokens 2.5). Typecheck, tests unitarios y build en verde. Desplegada en https://frytcontrol-v2.vercel.app (proyecto `frytcontrol-v2`, rama `v2`, apunta a staging). Diseño (2.5) decidido el 2026-09-16: identidad café, móvil primero, camino "A" (cifra al frente) + teclado encadenado entre métodos + planilla del día en formato cuaderno; exploraciones en https://claude.ai/artifact/VibHvxrnP7PXgWvAVUifqa. Pendiente: prueba manual en el celular, Playwright.
-> - Fases 3–5: no iniciadas.
+> - Fase 3 (piloto): preparada el 2026-09-16 (`docs/piloto-v2.md`): el deploy de producción de `frytcontrol-v2` apunta a prod y las previews a staging, decidido por `VERCEL_ENV` en `v2/vercel.json`; errores de la v2 marcados `v2:` en `logs_error`; tiempo de cierre medido en el dispositivo. Semana A automática: 0 diferencias en 59 días. Requiere que la rama de producción del proyecto contenga `v2/` (Production Branch = `v2` o push de `main`).
+> - Fases 4–5: no iniciadas.
 
 ## Contexto
 
