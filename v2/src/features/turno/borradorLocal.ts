@@ -1,6 +1,7 @@
 import { get, set, del, keys } from 'idb-keyval'
 import type { Modo } from './api'
 import type { MetodoKey, ProveedorLinea } from '@/lib/totales'
+import type { Conteo } from './conteo'
 
 /**
  * Borrador en el dispositivo: cada cambio del formulario se guarda acá al
@@ -17,6 +18,10 @@ export interface BorradorLocal {
   proveedores: ProveedorLinea[]
   efectivoContado: number | null
   contoCaja: boolean
+  /** Desglose por denominaciones del conteo de caja (solo en el dispositivo:
+   *  al servidor viaja únicamente el total). Los borradores anteriores a
+   *  esta versión no lo traen. */
+  desgloseConteo?: Conteo | null
   guardadoEn: number
   /** updated_at del turno en el servidor sobre el que se editó (para el conflicto). */
   baseUpdatedAt: string | null

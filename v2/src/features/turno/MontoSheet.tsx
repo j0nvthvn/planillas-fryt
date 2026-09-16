@@ -40,6 +40,9 @@ export function MontoSheet({ title, sub, valor, color, label = 'Listo', ayuda, p
   const aTexto = (v: number | null) => numeroADigitos(acumulado && modoTotal && v != null ? totalDesdeTarde(v, acumulado.manana) : v)
   const [digits, setDigits] = useState(() => aTexto(valor))
   // Al encadenar cambia el ítem sin desmontar la hoja: se recarga el monto.
+  // Tiene que ser un efecto: `acumulado` es un objeto nuevo en cada render y
+  // ajustarlo durante el render entraría en bucle.
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { setModoTotal(!!acumulado); setDigits(numeroADigitos(acumulado && valor != null ? totalDesdeTarde(valor, acumulado.manana) : valor)) }, [valor, title, acumulado])
   const escrito = digitosANumero(digits)
   const derivado = acumulado && modoTotal ? derivarTarde(escrito, acumulado.manana) : null
@@ -47,23 +50,25 @@ export function MontoSheet({ title, sub, valor, color, label = 'Listo', ayuda, p
   const invalido = !!derivado?.invalido
   const aceptar = (seguir: boolean) => { if (!invalido) onAccept(montoFinal, seguir) }
   const encadenado = !!siguiente
-  const etiqueta = encadenado ? `Siguiente: ${siguiente}` : label
+  // Con el monto vacío aceptar guarda un 0: que el botón lo diga, en vez de
+  // dejar la duda de si un método en cero se puede saltar.
+  const etiqueta = encadenado ? (escrito === 0 ? 'Omitir y seguir' : `Siguiente: ${siguiente}`) : label
   const bloqueAcumulado = acumulado && (
     <div className="rounded-2xl bg-soft px-4 py-3 flex flex-col gap-2">
       <div className="flex gap-1 p-1 rounded-xl bg-card" role="radiogroup" aria-label="Cómo ingresar el monto">
         <button type="button" role="radio" aria-checked={modoTotal} onClick={() => { if (!modoTotal) { setModoTotal(true); setDigits(numeroADigitos(totalDesdeTarde(escrito, acumulado.manana))) } }}
-          className={`flex-1 min-h-[38px] rounded-lg text-[13px] font-semibold ${modoTotal ? 'bg-brand text-white' : 'text-ink2'}`}>Total del día (máquina)</button>
+          className={`flex-1 min-h-[38px] rounded-lg text-sm font-semibold ${modoTotal ? 'bg-brand text-on-solid' : 'text-ink2'}`}>Total del día (máquina)</button>
         <button type="button" role="radio" aria-checked={!modoTotal} onClick={() => { if (modoTotal) { setModoTotal(false); setDigits(numeroADigitos(derivarTarde(escrito, acumulado.manana).tarde)) } }}
-          className={`flex-1 min-h-[38px] rounded-lg text-[13px] font-semibold ${!modoTotal ? 'bg-brand text-white' : 'text-ink2'}`}>Solo la tarde</button>
+          className={`flex-1 min-h-[38px] rounded-lg text-sm font-semibold ${!modoTotal ? 'bg-brand text-on-solid' : 'text-ink2'}`}>Solo la tarde</button>
       </div>
       {modoTotal ? (
-        <p className={`text-[13px] tabular-nums ${invalido ? 'text-neg font-semibold' : 'text-ink2'}`}>
+        <p className={`text-sm tabular-nums ${invalido ? 'text-neg font-semibold' : 'text-ink2'}`}>
           {invalido
             ? `El total no puede ser menor que la mañana (${clp(acumulado.manana)}).`
             : <>Mañana <b className="text-ink">{clp(acumulado.manana)}</b> → se guarda para la tarde <b className="text-ink">{clp(montoFinal)}</b></>}
         </p>
       ) : (
-        <p className="text-[13px] text-ink2 tabular-nums">Mañana {clp(acumulado.manana)} · total del día quedaría en <b className="text-ink">{clp(totalDesdeTarde(escrito, acumulado.manana))}</b></p>
+        <p className="text-sm text-ink2 tabular-nums">Mañana {clp(acumulado.manana)} · total del día quedaría en <b className="text-ink">{clp(totalDesdeTarde(escrito, acumulado.manana))}</b></p>
       )}
     </div>
   )
@@ -72,7 +77,7 @@ export function MontoSheet({ title, sub, valor, color, label = 'Listo', ayuda, p
     <BottomSheet
       title={title}
       onClose={onClose}
-      extra={paso ? <span className="self-center text-[12px] font-semibold text-muted tabular-nums mr-1">{paso.actual} de {paso.total}</span> : undefined}
+      extra={paso ? <span className="self-center text-xs font-semibold text-muted tabular-nums mr-1">{paso.actual} de {paso.total}</span> : undefined}
     >
       {desktop ? (
         <DesktopAmountInput digits={digits} onChange={setDigits} onEnter={() => aceptar(encadenado)} color={color} label={sub} />
@@ -90,7 +95,7 @@ export function MontoSheet({ title, sub, valor, color, label = 'Listo', ayuda, p
         <>
           <Keypad onKey={(k) => setDigits((d) => applyKey(d, k))} onAccept={() => aceptar(encadenado)} disabled={invalido} label={etiqueta} />
           {encadenado && (
-            <button type="button" onClick={() => aceptar(false)} className="self-center -mt-1 min-h-[40px] px-4 text-[13.5px] font-semibold text-ink2 flex items-center gap-1.5">
+            <button type="button" onClick={() => aceptar(false)} className="self-center -mt-1 min-h-[40px] px-4 text-sm font-semibold text-ink2 flex items-center gap-1.5">
               <Icon name="check" className="w-4 h-4" />Guardar y volver
             </button>
           )}

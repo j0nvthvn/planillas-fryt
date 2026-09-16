@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import { cargarTurnosDia, guardarTurno, ErrorGuardado, type Modo, type TurnoConLineas, type VTurno } from './api'
 import { leerBorradorLocal, guardarBorradorLocal, borrarBorradorLocal, type BorradorLocal } from './borradorLocal'
 import { marcarInicio, registrarCierre } from './metricas'
+import type { Conteo } from './conteo'
 import { qk } from '@/lib/query'
 import { totalesTurno, VENTAS_VACIAS, type MetodoKey, type ProveedorLinea, type Ventas } from '@/lib/totales'
 import { toNum } from '@/lib/format'
@@ -24,6 +25,8 @@ export interface FormState {
   proveedores: LineaForm[]
   contoCaja: boolean
   efectivoContado: number | null
+  /** Desglose por denominaciones, solo local (ver borradorLocal). */
+  desgloseConteo: Conteo | null
   /** Hubo cambios desde la última sincronización con el servidor. */
   sucio: boolean
 }
@@ -35,12 +38,12 @@ type Accion =
   | { type: 'quitarProveedor'; key: string }
   | { type: 'trabajador'; id: string | null }
   | { type: 'fondo'; monto: number }
-  | { type: 'caja'; conto: boolean; monto: number | null }
+  | { type: 'caja'; conto: boolean; monto: number | null; desglose?: Conteo | null }
   | { type: 'sincronizado'; turno: VTurno; sucio: boolean }
 
 const inicial: FormState = {
   cargado: false, turnoId: null, cerrado: false, baseUpdatedAt: null, trabajadorId: null, fondoInicial: 0,
-  ventas: { ...VENTAS_VACIAS }, proveedores: [], contoCaja: false, efectivoContado: null, sucio: false,
+  ventas: { ...VENTAS_VACIAS }, proveedores: [], contoCaja: false, efectivoContado: null, desgloseConteo: null, sucio: false,
 }
 
 function reducer(s: FormState, a: Accion): FormState {
@@ -54,7 +57,7 @@ function reducer(s: FormState, a: Accion): FormState {
     case 'quitarProveedor': return { ...s, sucio: true, proveedores: s.proveedores.filter((p) => p.key !== a.key) }
     case 'trabajador': return { ...s, trabajadorId: a.id, sucio: true }
     case 'fondo': return { ...s, fondoInicial: a.monto, sucio: true }
-    case 'caja': return { ...s, contoCaja: a.conto, efectivoContado: a.conto ? a.monto : null, sucio: true }
+    case 'caja': return { ...s, contoCaja: a.conto, efectivoContado: a.conto ? a.monto : null, desgloseConteo: a.conto ? (a.desglose ?? null) : null, sucio: true }
     case 'sincronizado': return {
       ...s,
       turnoId: a.turno.id,
@@ -89,6 +92,7 @@ function desdeServidor(t: TurnoConLineas): Partial<FormState> {
     })),
     contoCaja: v.efectivo_contado != null,
     efectivoContado: v.efectivo_contado,
+    desgloseConteo: null,
   }
 }
 
@@ -103,6 +107,7 @@ function desdeLocal(b: BorradorLocal, servidor: TurnoConLineas | undefined): Par
     proveedores: b.proveedores.map((p) => ({ ...p, key: p.id ?? nuevaKey() })),
     contoCaja: b.contoCaja,
     efectivoContado: b.efectivoContado,
+    desgloseConteo: b.desgloseConteo ?? null,
     sucio: true,
   }
 }
@@ -152,7 +157,7 @@ export function useTurnoForm({ fecha, modo, fondoPorDefecto, online }: Opciones)
     if (cargadoPara.current.startsWith(`${fecha}|${modo}|`) && stateRef.current.sucio) { cargadoPara.current = firma; return }
     cargadoPara.current = firma
     let vivo = true
-    ;(async () => {
+    void (async () => {
       const servidor = (dia.data ?? []).find((t) => t.turno.tipo === tipo)
       const local = await leerBorradorLocal(fecha, modo)
       if (!vivo) return
@@ -170,6 +175,7 @@ export function useTurnoForm({ fecha, modo, fondoPorDefecto, online }: Opciones)
     void guardarBorradorLocal({
       fecha, modo, trabajadorId: s.trabajadorId, fondoInicial: s.fondoInicial, ventas: s.ventas,
       proveedores: s.proveedores.map(({ key: _k, ...p }) => p), efectivoContado: s.efectivoContado, contoCaja: s.contoCaja,
+      desgloseConteo: s.desgloseConteo,
       guardadoEn: Date.now(), baseUpdatedAt: s.baseUpdatedAt,
     })
   }, [fecha, modo])

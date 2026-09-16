@@ -3,7 +3,6 @@ import { Link, useNavigate, useSearch } from '@tanstack/react-router'
 import PageHeader from '@/components/PageHeader'
 import Icon from '@/components/Icon'
 import Spinner from '@/components/Spinner'
-import { ConfirmDialog } from '@/components/ConfirmDialog'
 import { BottomSheet } from '@/components/BottomSheet'
 import { MetodoLogo } from '@/components/MetodoLogo'
 import { useToast } from '@/components/Toast'
@@ -11,10 +10,12 @@ import { useOnline } from '@/hooks/useOnline'
 import { useUsuario } from '@/hooks/useUsuario'
 import { useConfig, useMetodos, useTrabajadores } from '@/features/catalogo/api'
 import { MODOS, etiquetaModo, type Modo } from './api'
-import { modoPorDefecto, modosDisponibles, etiquetaCerrar } from './modo'
-import { useTurnoForm, tieneContenido, type LineaForm } from './useTurnoForm'
+import { modoPorDefecto, modosDisponibles, etiquetaCerrar, tituloCierre } from './modo'
+import { useTurnoForm, type LineaForm } from './useTurnoForm'
 import { ProveedorSheet } from './ProveedorSheet'
 import { MontoSheet } from './MontoSheet'
+import { ConteoSheet } from './ConteoSheet'
+import { RevisionSheet } from './RevisionSheet'
 import { clp, clpSigno, fechaLegible, hoy, diaSemana, sumarDias, fechaDiaMes } from '@/lib/format'
 import { esMetodo, type MetodoKey } from '@/lib/totales'
 
@@ -53,10 +54,11 @@ export default function CerrarTurno() {
     | { t: 'venta'; key: MetodoKey }
     | { t: 'fondo' }
     | { t: 'conteo' }
+    | { t: 'conteoTotal' }
     | { t: 'fecha' }
     | null
   >(null)
-  const [confirmarVacio, setConfirmarVacio] = useState(false)
+  const [revisar, setRevisar] = useState(false)
 
   // Altura de la barra fija → los toasts se muestran encima.
   const barRef = useRef<HTMLDivElement>(null)
@@ -74,16 +76,21 @@ export default function CerrarTurno() {
   const turnoManana = form.dia.find((t) => t.turno.tipo === 'mañana')?.turno as unknown as Record<string, number | null> | undefined
   const usadosIds = state.proveedores.map((p) => p.proveedor_id).filter((x): x is string => !!x)
 
-  async function onCerrar() {
+  /** El botón de la barra ya no cierra: abre la revisión. */
+  function pedirCierre() {
     // Turno ya cerrado sin cambios: no se registra una corrección vacía.
     if (state.cerrado && !state.sucio) {
       toast.show({ message: 'No hay cambios que guardar' })
       void navigate({ to: '/dia', search: { fecha } })
       return
     }
-    if (!tieneContenido(state) && !confirmarVacio) { setConfirmarVacio(true); return }
-    setConfirmarVacio(false)
+    setSheet(null)
+    setRevisar(true)
+  }
+
+  async function onCerrar() {
     const r = await form.cerrar()
+    setRevisar(false)
     if (r === 'ok') {
       toast.ok(state.cerrado ? 'Corrección guardada' : modo === 'completo' ? 'Día cerrado' : `Turno ${modo} cerrado`)
       void navigate({ to: '/hoy' })
@@ -97,8 +104,8 @@ export default function CerrarTurno() {
   return (
     <div className="max-w-2xl mx-auto pb-28">
       <PageHeader
-        eyebrow={fecha === hoy() ? 'Hoy' : 'Otro día'}
-        title={state.cerrado ? 'Corregir turno' : 'Cerrar turno'}
+        eyebrow={fecha === hoy() ? 'Hoy' : fechaDiaMes(fecha)}
+        title={tituloCierre(modo, state.cerrado)}
         action={esDueno && (
           <button type="button" onClick={() => setSheet({ t: 'fecha' })} className="btn-secondary px-3 min-h-[42px]" aria-label="Cambiar fecha">
             <Icon name="calendar" className="w-[18px] h-[18px]" />{fechaDiaMes(fecha)}
@@ -109,17 +116,17 @@ export default function CerrarTurno() {
       </PageHeader>
 
       {soloLectura && (
-        <div role="alert" className="mb-4 rounded-2xl bg-info-tint border border-info/30 px-4 py-3 text-[13px] text-info">
+        <div role="alert" className="mb-4 rounded-2xl bg-info-tint border border-info/30 px-4 py-3 text-sm text-info">
           Este turno ya está cerrado. Solo la dueña puede corregirlo. <Link to="/hoy" className="font-bold underline">Volver a Hoy</Link>
         </div>
       )}
       {state.cerrado && esDueno && (
-        <div className="mb-4 rounded-2xl bg-info-tint border border-info/30 px-4 py-3 text-[13px] text-info">
+        <div className="mb-4 rounded-2xl bg-info-tint border border-info/30 px-4 py-3 text-sm text-info">
           Turno cerrado: al guardar se registra una <b>corrección</b> con la fotografía anterior y la nueva.
         </div>
       )}
       {form.errorAutosave && online && (
-        <div role="alert" className="mb-4 rounded-2xl bg-neg-tint border border-neg/30 px-4 py-3 text-[13px] text-neg">
+        <div role="alert" className="mb-4 rounded-2xl bg-neg-tint border border-neg/30 px-4 py-3 text-sm text-neg">
           {form.errorAutosave}
         </div>
       )}
@@ -134,13 +141,13 @@ export default function CerrarTurno() {
               <button key={m.value} type="button" disabled={!habilitado || soloLectura}
                 onClick={() => void navigate({ to: '/turno', search: { fecha, modo: m.value } })}
                 aria-pressed={on}
-                className={`flex items-center justify-center gap-1.5 min-h-[44px] rounded-xl text-[13px] font-semibold transition ${on ? 'bg-card text-brand shadow-card' : 'text-ink2 disabled:opacity-35'}`}>
+                className={`flex items-center justify-center gap-1.5 min-h-[44px] rounded-xl text-sm font-semibold transition ${on ? 'bg-card text-brand shadow-card' : 'text-ink2 disabled:opacity-35'}`}>
                 <Icon name={m.icon} className="w-4 h-4" />{m.label}
               </button>
             )
           })}
         </div>
-        {diaUnicoConfig && modo === 'completo' && <p className="text-[12px] text-muted mt-1.5 px-1">Los {['domingos', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábados'][diaSemana(fecha)]} se registran como un solo turno.</p>}
+        {diaUnicoConfig && modo === 'completo' && <p className="text-xs text-muted mt-1.5 px-1">Los {['domingos', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábados'][diaSemana(fecha)]} se registran como un solo turno.</p>}
       </section>
 
       {/* Quién estaba */}
@@ -153,14 +160,14 @@ export default function CerrarTurno() {
               return (
                 <button key={t.id} type="button" role="radio" aria-checked={on} disabled={soloLectura}
                   onClick={() => cambiar({ type: 'trabajador', id: on ? null : t.id })}
-                  className={`shrink-0 min-h-[40px] rounded-full px-4 text-sm font-semibold border ${on ? 'bg-brand text-white border-brand' : 'bg-card text-ink2 border-hairline'}`}>
+                  className={`shrink-0 min-h-[40px] rounded-full px-4 text-sm font-semibold border ${on ? 'bg-brand text-on-solid border-brand' : 'bg-card text-ink2 border-hairline'}`}>
                   {t.nombre}
                 </button>
               )
             })}
           </div>
         ) : (
-          <p className="text-[12.5px] text-muted px-1">
+          <p className="text-xs text-muted px-1">
             Sin lista de trabajadores.{esDueno && <> Agrégalos en <Link to="/ajustes" search={{ seccion: 'trabajadores' }} className="underline font-semibold">Ajustes</Link>.</>}
           </p>
         )}
@@ -181,12 +188,12 @@ export default function CerrarTurno() {
                 className="w-full flex items-center gap-3 px-4 py-3 text-left min-h-[60px] hover:bg-soft/60 disabled:opacity-70">
                 <MetodoLogo metodo={m} active={monto > 0} />
                 <span className="flex-1 min-w-0">
-                  <span className="block text-[15px] font-medium text-ink">{m.label}</span>
+                  <span className="block text-base font-medium text-ink">{m.label}</span>
                   {m.acumulado_diario && modo === 'tarde' ? (
-                    <span className="block text-[12px] text-muted tabular-nums">Mañana {clp(turnoManana?.[key] ?? 0)} · total del día {clp(Number(turnoManana?.[key] ?? 0) + monto)}</span>
-                  ) : m.sub && <span className="block text-[12px] text-muted">{m.sub}</span>}
+                    <span className="block text-xs text-muted tabular-nums">Mañana {clp(turnoManana?.[key] ?? 0)} · total del día {clp(Number(turnoManana?.[key] ?? 0) + monto)}</span>
+                  ) : m.sub && <span className="block text-xs text-muted">{m.sub}</span>}
                 </span>
-                <span className={`text-[16px] font-bold tabular-nums ${monto ? 'text-ink' : 'text-muted2'}`}>{clp(monto)}</span>
+                <span className={`text-lg font-bold tabular-nums ${monto ? 'text-ink' : 'text-muted2'}`}>{clp(monto)}</span>
                 <Icon name="chevR" className="w-4 h-4 text-muted2" />
               </button>
             )
@@ -207,10 +214,10 @@ export default function CerrarTurno() {
                 className="w-full flex items-center gap-3 px-4 py-3 text-left min-h-[56px] hover:bg-soft/60">
                 <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${p.forma_pago === 'efectivo' ? 'bg-pos' : 'bg-info'}`} aria-hidden="true" />
                 <span className="flex-1 min-w-0">
-                  <span className="block text-[15px] font-medium text-ink truncate">{p.nombre}</span>
-                  <span className="block text-[12px] text-muted">{p.forma_pago === 'efectivo' ? 'Efectivo' : 'Transferencia'}</span>
+                  <span className="block text-base font-medium text-ink truncate">{p.nombre}</span>
+                  <span className="block text-xs text-muted">{p.forma_pago === 'efectivo' ? 'Efectivo' : 'Transferencia'}</span>
                 </span>
-                <span className="text-[16px] font-bold tabular-nums text-ink">{clp(p.monto)}</span>
+                <span className="text-lg font-bold tabular-nums text-ink">{clp(p.monto)}</span>
                 <Icon name="chevR" className="w-4 h-4 text-muted2" />
               </button>
             ))}
@@ -229,27 +236,27 @@ export default function CerrarTurno() {
         <h2 className="eyebrow mb-2 px-1">Caja</h2>
         <div className="card p-0 divide-y divide-hairline overflow-hidden">
           <button type="button" disabled={soloLectura} onClick={() => setSheet({ t: 'fondo' })} className="w-full flex items-center justify-between px-4 py-3 min-h-[56px] text-left">
-            <span><span className="block text-[15px] font-medium text-ink">Fondo inicial</span><span className="block text-[12px] text-muted">Con lo que partió la caja</span></span>
-            <span className="text-[16px] font-bold tabular-nums text-ink">{clp(state.fondoInicial)}</span>
+            <span><span className="block text-base font-medium text-ink">Fondo inicial</span><span className="block text-xs text-muted">Con lo que partió la caja</span></span>
+            <span className="text-lg font-bold tabular-nums text-ink">{clp(state.fondoInicial)}</span>
           </button>
           <div className="flex items-center justify-between px-4 py-3 min-h-[56px]">
-            <span><span className="block text-[15px] font-medium text-ink">Efectivo esperado</span><span className="block text-[12px] text-muted">fondo + efectivo − proveedores en efectivo</span></span>
-            <span className="text-[16px] font-bold tabular-nums text-brand">{clp(totales.efectivo_esperado)}</span>
+            <span><span className="block text-base font-medium text-ink">Efectivo esperado</span><span className="block text-xs text-muted">fondo + efectivo − proveedores en efectivo</span></span>
+            <span className="text-lg font-bold tabular-nums text-brand">{clp(totales.efectivo_esperado)}</span>
           </div>
           <div className="px-4 py-3">
             <div className="flex items-center justify-between gap-3">
-              <span className="text-[15px] font-medium text-ink">¿Contaste la caja?</span>
+              <span className="text-base font-medium text-ink">¿Contaste la caja?</span>
               <div className="flex gap-1 p-1 rounded-xl bg-soft" role="radiogroup" aria-label="Conteo de caja">
                 <button type="button" role="radio" aria-checked={!state.contoCaja} disabled={soloLectura} onClick={() => cambiar({ type: 'caja', conto: false, monto: null })}
-                  className={`min-h-[36px] px-3 rounded-lg text-[13px] font-semibold ${!state.contoCaja ? 'bg-card text-ink shadow-card' : 'text-ink2'}`}>No</button>
+                  className={`min-h-[36px] px-3 rounded-lg text-sm font-semibold ${!state.contoCaja ? 'bg-card text-ink shadow-card' : 'text-ink2'}`}>No</button>
                 <button type="button" role="radio" aria-checked={state.contoCaja} disabled={soloLectura} onClick={() => setSheet({ t: 'conteo' })}
-                  className={`min-h-[36px] px-3 rounded-lg text-[13px] font-semibold ${state.contoCaja ? 'bg-card text-ink shadow-card' : 'text-ink2'}`}>Sí</button>
+                  className={`min-h-[36px] px-3 rounded-lg text-sm font-semibold ${state.contoCaja ? 'bg-card text-ink shadow-card' : 'text-ink2'}`}>Sí</button>
               </div>
             </div>
             {state.contoCaja && state.efectivoContado != null && (
               <button type="button" disabled={soloLectura} onClick={() => setSheet({ t: 'conteo' })} className="mt-3 w-full flex items-center justify-between text-left">
-                <span className="text-[13px] text-muted">Contado: <b className="text-ink tabular-nums">{clp(state.efectivoContado)}</b></span>
-                <span className={`text-[13px] font-bold tabular-nums ${form.diferenciaCaja === 0 ? 'text-pos' : 'text-neg'}`}>
+                <span className="text-sm text-muted">Contado: <b className="text-ink tabular-nums">{clp(state.efectivoContado)}</b></span>
+                <span className={`text-sm font-bold tabular-nums ${form.diferenciaCaja === 0 ? 'text-pos' : 'text-neg'}`}>
                   {form.diferenciaCaja === 0 ? 'Cuadra' : `Diferencia ${clpSigno(form.diferenciaCaja ?? 0)}`}
                 </span>
               </button>
@@ -263,13 +270,13 @@ export default function CerrarTurno() {
         <div ref={barRef} className="fixed inset-x-0 above-nav z-30 bg-card/95 backdrop-blur border-t border-hairline px-4 py-3 md:left-[220px]">
           <div className="max-w-2xl mx-auto flex items-center gap-3">
             <div className="flex-1 min-w-0">
-              <p className="text-[11px] text-muted uppercase tracking-wide font-bold">Neto {modo === 'completo' ? 'del día' : 'del turno'}</p>
-              <p className={`amount text-[30px] leading-none ${totales.neto >= 0 ? 'text-ink' : 'text-neg'}`}>{clp(totales.neto)}</p>
-              <p className="text-[11px] text-muted mt-0.5">
+              <p className="text-xs text-muted uppercase tracking-wide font-bold">Neto {modo === 'completo' ? 'del día' : 'del turno'}</p>
+              <p className={`amount text-amount-sm leading-none ${totales.neto >= 0 ? 'text-ink' : 'text-neg'}`}>{clp(totales.neto)}</p>
+              <p className="text-xs text-muted mt-0.5">
                 {state.sucio ? (online ? 'Guardando borrador…' : 'Guardado en este dispositivo') : state.turnoId ? 'Borrador guardado' : ''}
               </p>
             </div>
-            <button type="button" onClick={() => void onCerrar()} disabled={form.guardando} className="btn-primary px-5 py-3 text-base min-w-[150px]">
+            <button type="button" onClick={pedirCierre} disabled={form.guardando} className="btn-primary px-5 py-3 text-base min-w-[150px]">
               {form.guardando ? 'Guardando…' : etiquetaCerrar(modo, state.cerrado)}
             </button>
           </div>
@@ -313,9 +320,18 @@ export default function CerrarTurno() {
           onAccept={(monto) => { cambiar({ type: 'fondo', monto }); setSheet(null) }} onClose={() => setSheet(null)} />
       )}
       {sheet?.t === 'conteo' && (
+        <ConteoSheet
+          inicial={state.desgloseConteo ?? {}}
+          esperado={totales.efectivo_esperado}
+          onAccept={(total, desglose) => { cambiar({ type: 'caja', conto: true, monto: total, desglose }); setSheet(null) }}
+          onTotalManual={() => setSheet({ t: 'conteoTotal' })}
+          onClose={() => setSheet(null)}
+        />
+      )}
+      {sheet?.t === 'conteoTotal' && (
         <MontoSheet title="Efectivo contado" sub="Lo que hay en el cajón" valor={state.efectivoContado} label="Registrar conteo"
-          ayuda={<p className="text-[12.5px] text-muted px-1">Esperado: <b className="text-ink tabular-nums">{clp(totales.efectivo_esperado)}</b></p>}
-          onAccept={(monto) => { cambiar({ type: 'caja', conto: true, monto }); setSheet(null) }} onClose={() => setSheet(null)} />
+          ayuda={<p className="text-xs text-muted px-1">Esperado: <b className="text-ink tabular-nums">{clp(totales.efectivo_esperado)}</b></p>}
+          onAccept={(monto) => { cambiar({ type: 'caja', conto: true, monto, desglose: null }); setSheet(null) }} onClose={() => setSheet(null)} />
       )}
       {sheet?.t === 'fecha' && (
         <BottomSheet title="Cambiar fecha" onClose={() => setSheet(null)}>
@@ -329,9 +345,29 @@ export default function CerrarTurno() {
         </BottomSheet>
       )}
 
-      {confirmarVacio && (
-        <ConfirmDialog title="¿Cerrar sin ventas?" message="No registraste ventas ni proveedores. ¿Quieres cerrar igual?"
-          confirmLabel="Cerrar igual" onCancel={() => setConfirmarVacio(false)} onConfirm={() => void onCerrar()} />
+      {revisar && (
+        <RevisionSheet
+          modo={modo}
+          yaCerrado={state.cerrado}
+          metodos={(metodos.data ?? []).filter((m) => esMetodo(m.key))}
+          ventas={state.ventas}
+          proveedores={state.proveedores}
+          trabajador={trabajadores.data?.find((x) => x.id === state.trabajadorId)?.nombre ?? null}
+          datos={{
+            trabajadorId: state.trabajadorId,
+            hayTrabajadores: (trabajadores.data?.length ?? 0) > 0,
+            contoCaja: state.contoCaja,
+            diferenciaCaja: form.diferenciaCaja,
+            totalVentas: totales.total_ventas,
+            totalProveedores: totales.total_proveedores,
+          }}
+          totales={totales}
+          fondoInicial={state.fondoInicial}
+          efectivoContado={state.efectivoContado}
+          guardando={form.guardando}
+          onConfirmar={() => void onCerrar()}
+          onClose={() => setRevisar(false)}
+        />
       )}
 
       {form.conflicto && (
