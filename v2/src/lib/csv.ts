@@ -1,24 +1,30 @@
+import { fechaCorta } from './format'
+import type { Tabla, Valor, TipoColumna } from '@/features/exportar/tablas'
+
 /**
- * Descarga un CSV. Separador ";" y BOM UTF-8: así lo espera Excel en
- * español (Chile usa "," como decimal); sin esto junta las columnas o
- * rompe los acentos.
+ * CSV para Excel en español: separador ";" y BOM UTF-8 (Chile usa "," como
+ * decimal; sin esto Excel junta las columnas o rompe los acentos).
  */
-export function descargarCSV(nombreArchivo: string, columnas: string[], filas: (string | number | null | undefined)[][]): void {
+export function csvTexto(tabla: Tabla): string {
   const sep = ';'
-  const esc = (v: string | number | null | undefined) => {
-    if (v === null || v === undefined) return ''
-    const s = String(v)
-    return /[;"\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s
+  const celda = (v: Valor, tipo: TipoColumna) => {
+    if (v === null || v === '') return ''
+    if (typeof v === 'number') return Number.isInteger(v) ? String(v) : String(v).replace('.', ',')
+    // Un texto que empieza con = + - @ Excel lo ejecuta como fórmula (los
+    // nombres de proveedores son texto libre): se antepone un apóstrofo.
+    const s = tipo === 'fecha' && /^\d{4}-\d{2}-\d{2}$/.test(v) ? fechaCorta(v) : /^[=+\-@\t\r]/.test(v) ? `'${v}` : v
+    return /[;"\r\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s
   }
-  const lineas = [columnas.map(esc).join(sep), ...filas.map((fila) => fila.map(esc).join(sep))]
-  const csv = '﻿' + lineas.join('\r\n')
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = nombreArchivo
-  document.body.appendChild(a)
-  a.click()
-  document.body.removeChild(a)
-  URL.revokeObjectURL(url)
+  const tipos = tabla.columnas.map((c) => c.tipo)
+  const linea = (fila: Valor[]) => fila.map((v, i) => celda(v, tipos[i] ?? 'texto')).join(sep)
+  const lineas = [
+    tabla.columnas.map((c) => celda(c.titulo, 'texto')).join(sep),
+    ...tabla.filas.map(linea),
+    ...(tabla.total ? [linea(tabla.total)] : []),
+  ]
+  return '﻿' + lineas.join('\r\n')
+}
+
+export function archivoCSV(nombre: string, tabla: Tabla): File {
+  return new File([csvTexto(tabla)], nombre, { type: 'text/csv;charset=utf-8' })
 }

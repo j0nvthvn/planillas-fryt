@@ -14,6 +14,7 @@ const Analisis = lazy(() => import('./features/analisis/Analisis'))
 const Proveedores = lazy(() => import('./features/proveedores/Proveedores'))
 const ProveedorDetalle = lazy(() => import('./features/proveedores/ProveedorDetalle'))
 const Ajustes = lazy(() => import('./features/ajustes/Ajustes'))
+const Reporte = lazy(() => import('./features/exportar/Reporte'))
 
 const fechaSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/)
 const modoSchema = z.enum(['completo', 'mañana', 'tarde'])
@@ -113,8 +114,33 @@ const ajustesRoute = createRoute({
   component: Ajustes,
 })
 
+/**
+ * Reporte imprimible: fuera del Layout (sin navegación ni contenedor con
+ * scroll, que cortaría la impresión), pero con la misma sesión y solo para
+ * la dueña.
+ */
+const reporteRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/analisis/reporte',
+  validateSearch: z.object({ desde: fechaSchema, hasta: fechaSchema }),
+  beforeLoad: async ({ location }) => {
+    const session = await esperarSesion()
+    if (!session) throw redirect({ to: '/login', search: { volver: location.pathname } })
+    const usuario = await cargarUsuario(session.user.id).catch(() => null)
+    if (usuario?.rol !== 'dueño') throw redirect({ to: '/hoy' })
+  },
+  component: () => (
+    <RequiereSesion>
+      <Suspense fallback={<EsqueletoPagina />}>
+        <Reporte />
+      </Suspense>
+    </RequiereSesion>
+  ),
+})
+
 const routeTree = rootRoute.addChildren([
   loginRoute,
+  reporteRoute,
   appRoute.addChildren([indexRoute, hoyRoute, turnoRoute, diaRoute, historialRoute, analisisRoute, proveedoresRoute, proveedorRoute, ajustesRoute]),
 ])
 

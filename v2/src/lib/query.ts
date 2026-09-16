@@ -51,6 +51,7 @@ export const qk = {
   borradores: ['borradores'] as const,
   historial: (filtro: string) => ['historial', filtro] as const,
   resumenPeriodo: (desde: string, hasta: string) => ['resumen-periodo', desde, hasta] as const,
+  exportacion: (desde: string, hasta: string) => ['exportacion', desde, hasta] as const,
   proveedorHistorial: (id: string) => ['proveedor-historial', id] as const,
   papelera: ['papelera'] as const,
   usuarios: ['usuarios'] as const,
@@ -63,6 +64,7 @@ export function invalidarDia(fecha: string) {
   void queryClient.invalidateQueries({ queryKey: qk.turnosDia(fecha) })
   void queryClient.invalidateQueries({ queryKey: ['historial'] })
   void queryClient.invalidateQueries({ queryKey: ['resumen-periodo'] })
+  void queryClient.invalidateQueries({ queryKey: ['exportacion'] })
   void queryClient.invalidateQueries({ queryKey: qk.borradores })
   void queryClient.invalidateQueries({ queryKey: qk.catalogo })
 }

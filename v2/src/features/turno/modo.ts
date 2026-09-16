@@ -1,5 +1,12 @@
 import type { Modo } from './api'
 
+export function etiquetaModo(modo: string | null | undefined): string {
+  if (modo === 'completo') return 'Día completo'
+  if (modo === 'mañana') return 'Mañana'
+  if (modo === 'tarde') return 'Tarde'
+  return modo ?? ''
+}
+
 export interface EstadoDia {
   /** Turnos activos del día (sin eliminados). */
   turnos: { tipo: 'mañana' | 'tarde'; modo: Modo; is_draft: boolean }[]

@@ -44,36 +44,42 @@
   color-scheme: light;
 }
 
-html.dark {
-  --brand:       #D4A77A;
-  --brand-hover: #E5BB8E;
-  --brand-tint:  #4A341E;
-  --canvas:      #1A1612;
-  --card:        #241F1A;
-  --hairline:    #332B22;
-  --soft:        #2A241E;
-  --ink:         #F1E7D5;
-  --ink2:        #B3A48F;
-  --muted:       #A89882;
-  --muted2:      #9D8D76;
-  --pos:         #5DB890;
-  --pos-tint:    #1A3C2A;
-  --pos-border:  #2E6048;
-  --neg:         #E0726F;
-  --neg-tint:    #462020;
-  --warn:        #E0B87A;
-  --warn-tint:   #46341E;
-  --info:        #7393D2;
-  --info-tint:   #263050;
-  --image-bg:    #322D26;
-  --cash:        #5DB890;
-  --wire:        #7393D2;
-  --metodo-mezcla: 55%;
-  --on-solid:    #1A1612;
-  --shadow-card: 0 6px 20px -14px rgba(0, 0, 0, .40);
-  --shadow-hero: 0 8px 24px -14px rgba(0, 0, 0, .50);
-  color-scheme: dark;
+/* Impreso (reporte / PDF) siempre en claro: el oscuro gasta tinta y no se lee en papel. */
+@media not print {
+  html.dark {
+    --brand:       #D4A77A;
+    --brand-hover: #E5BB8E;
+    --brand-tint:  #4A341E;
+    --canvas:      #1A1612;
+    --card:        #241F1A;
+    --hairline:    #332B22;
+    --soft:        #2A241E;
+    --ink:         #F1E7D5;
+    --ink2:        #B3A48F;
+    --muted:       #A89882;
+    --muted2:      #9D8D76;
+    --pos:         #5DB890;
+    --pos-tint:    #1A3C2A;
+    --pos-border:  #2E6048;
+    --neg:         #E0726F;
+    --neg-tint:    #462020;
+    --warn:        #E0B87A;
+    --warn-tint:   #46341E;
+    --info:        #7393D2;
+    --info-tint:   #263050;
+    --image-bg:    #322D26;
+    --cash:        #5DB890;
+    --wire:        #7393D2;
+    --metodo-mezcla: 55%;
+    --on-solid:    #1A1612;
+    --shadow-card: 0 6px 20px -14px rgba(0, 0, 0, .40);
+    --shadow-hero: 0 8px 24px -14px rgba(0, 0, 0, .50);
+    color-scheme: dark;
+  }
 }
+
+@page { size: A4; margin: 12mm; }
+@media print { body { background-color: #fff; } }
 
 @theme inline {
   --font-sans: "Hanken Grotesk", system-ui, sans-serif;

@@ -95,7 +95,36 @@ contra staging. Lo que se veía mal y cómo quedó:
 - **Color de los métodos en oscuro**: `colorMetodo()` (`lib/theme.ts`) lo mezcla
   con blanco según `--metodo-mezcla` (100 % en claro, 55 % en oscuro).
 
+### Exportación (Análisis → Exportar)
+
+El CSV anterior tenía una fila por día y menos datos que el de la app actual.
+Tenía además errores: "Efectivo esperado" por día contaba dos veces el fondo en
+los días divididos, los estados salían en crudo (`sin_registro`) y un método
+desactivado que tuvo ventas no tenía columna, así que la fila no cuadraba.
+Ahora el botón **Exportar** abre una hoja con cuatro opciones:
+
+- **Excel completo** (`features/exportar/xlsx.ts`, `write-excel-file` cargada
+  solo al exportar): hojas Resumen, Días, Turnos, Cuadre de caja, Compras y Por
+  proveedor, con fechas reales, montos numéricos con formato de pesos,
+  encabezado fijo y fila TOTAL.
+- **CSV por turno**: lo mismo que la app actual (trabajador, quién registró,
+  estado, fondo, esperado, contado, diferencia y fila TOTAL).
+- **CSV de compras a proveedores**: una fila por compra.
+- **Reporte para imprimir o PDF** (`/analisis/reporte`, fuera del Layout): KPIs,
+  ventas por método, días, compras por proveedor y cuadre de caja. Se imprime
+  siempre en tema claro y en A4.
+
+Todas las exportaciones usan las mismas tablas puras (`features/exportar/tablas.ts`,
+con tests). Los montos vienen de la base; solo se suma la fila TOTAL, y el e2e
+(`e2e/exportar.spec.ts`) comprueba que cuadra con el KPI. En el celular el
+archivo se comparte (WhatsApp, correo, Drive) con `navigator.share` y, si no
+se puede, se descarga (`lib/archivo.ts`). El CSV neutraliza los textos que
+empiezan con `= + - @`.
+
 ## Pendiente
 
 - Revisar en un celular real (Safari de iOS, con su barra inferior) la altura
   de las hojas y el encabezado pegajoso del Historial.
+- Probar **Exportar → compartir** en el celular de la dueña: si el navegador no
+  permite compartir `.xlsx`, se descarga (Chrome para Android tiene una lista
+  cerrada de tipos de archivo que se pueden compartir).

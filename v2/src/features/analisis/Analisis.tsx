@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Link, useNavigate, useSearch } from '@tanstack/react-router'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts'
@@ -10,19 +10,12 @@ import { ProveedorAvatar } from '@/components/ProveedorAvatar'
 import { useMetodos } from '@/features/catalogo/api'
 import { supabase } from '@/lib/supabase'
 import { qk } from '@/lib/query'
-import { clp, clpCorto, fechaISO, hoy, ajustarRango, sumarDias, fechaDiaMes, fechaCorta } from '@/lib/format'
-import { descargarCSV } from '@/lib/csv'
+import { clp, clpCorto, fechaISO, hoy, ajustarRango, sumarDias, fechaDiaMes } from '@/lib/format'
+import { ExportarSheet } from '@/features/exportar/ExportarSheet'
+import type { Resumen } from '@/features/exportar/tablas'
 import type { VResumenDia } from '@/features/turno/api'
 import { colorMetodo } from '@/lib/theme'
 
-interface Totales { total_ventas: number; total_proveedores: number; neto: number; efectivo_neto: number; dias_con_registro: number; dias_con_borrador?: number; [k: string]: number | undefined }
-interface Resumen {
-  desde: string; hasta: string
-  dias: VResumenDia[]
-  totales: Totales
-  anterior: Totales
-  top_proveedores: { proveedor_id: string | null; nombre: string; imagen_url: string | null; monto: number; compras: number }[]
-}
 
 function rango(preset: '7' | '30' | 'mes'): { desde: string; hasta: string } {
   const h = hoy()
@@ -47,17 +40,11 @@ export default function Analisis() {
   const dias = useMemo(() => (r?.dias ?? []).map((d) => ({ ...d, label: fechaDiaMes(d.fecha).replace('.', ''), neto: Number(d.neto), total_ventas: Number(d.total_ventas) })), [r])
   const presetActivo = (['7', '30', 'mes'] as const).find((p) => { const x = rango(p); return x.desde === desde && x.hasta === hasta })
 
-  function exportar() {
-    if (!r) return
-    const ms = metodos.data ?? []
-    descargarCSV(`frytcontrol_${desde}_${hasta}.csv`,
-      ['Fecha', 'Estado', ...ms.map((m) => m.label), 'Total ventas', 'Prov. efectivo', 'Prov. transferencia', 'Total proveedores', 'Neto', 'Efectivo esperado'],
-      r.dias.map((d) => [fechaCorta(d.fecha), d.estado, ...ms.map((m) => Number((d as unknown as Record<string, unknown>)[m.key] ?? 0)), d.total_ventas, d.prov_efectivo, d.prov_transferencia, d.total_proveedores, d.neto, d.efectivo_esperado]))
-  }
+  const [exportando, setExportando] = useState(false)
 
   return (
     <div className="max-w-3xl mx-auto">
-      <PageHeader eyebrow="FrytControl" title="Análisis" action={<button type="button" onClick={exportar} disabled={!r} className="btn-secondary px-3" aria-label="Exportar CSV"><Icon name="download" className="w-[18px] h-[18px]" />CSV</button>} />
+      <PageHeader eyebrow="FrytControl" title="Análisis" action={<button type="button" onClick={() => setExportando(true)} disabled={!r} className="btn-secondary px-3"><Icon name="download" className="w-[18px] h-[18px]" />Exportar</button>} />
 
       <div className="flex flex-wrap items-center gap-2 mb-4">
         {(['7', '30', 'mes'] as const).map((p) => (
@@ -134,6 +121,7 @@ export default function Analisis() {
           </div>
         </>
       )}
+      {exportando && r && <ExportarSheet resumen={r} onClose={() => setExportando(false)} />}
     </div>
   )
 }

@@ -11,12 +11,7 @@ export const MODOS: { value: Modo; label: string; icon: 'sun' | 'moon' | 'calend
   { value: 'tarde', label: 'Tarde', icon: 'moon' },
 ]
 
-export function etiquetaModo(modo: string | null | undefined): string {
-  if (modo === 'completo') return 'Día completo'
-  if (modo === 'mañana') return 'Mañana'
-  if (modo === 'tarde') return 'Tarde'
-  return modo ?? ''
-}
+export { etiquetaModo } from './modo'
 
 /** Fila de v_turnos con los campos que la vista garantiza no nulos. */
 export type VTurno = Omit<Tables<'v_turnos'>, 'id' | 'fecha' | 'tipo' | 'modo' | 'is_draft' | 'jornada_id'> & {
