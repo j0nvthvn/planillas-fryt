@@ -1,7 +1,7 @@
-import { lazy, Suspense } from 'react'
+import { lazy, Suspense, type ReactNode } from 'react'
 import { createRootRoute, createRoute, createRouter, redirect, Outlet, Navigate } from '@tanstack/react-router'
 import { z } from 'zod'
-import { esperarSesion, cargarUsuario } from './lib/auth'
+import { esperarSesion, cargarUsuario, useSession } from './lib/auth'
 import Layout from './components/Layout'
 import Spinner from './components/Spinner'
 import Login from './features/auth/Login'
@@ -32,6 +32,16 @@ const loginRoute = createRoute({
   component: Login,
 })
 
+/**
+ * beforeLoad solo corre al navegar: si la sesión se cierra (botón Salir,
+ * token vencido, otra pestaña) con una pantalla abierta, esto la saca a /login.
+ */
+function RequiereSesion({ children }: { children: ReactNode }) {
+  const session = useSession()
+  if (session === null) return <Navigate to="/login" replace />
+  return children
+}
+
 /** Todo lo que requiere sesión cuelga de acá (y comparte el Layout). */
 const appRoute = createRoute({
   getParentRoute: () => rootRoute,
@@ -43,11 +53,13 @@ const appRoute = createRoute({
     return { usuario, esDueno: usuario?.rol === 'dueño' }
   },
   component: () => (
-    <Layout>
-      <Suspense fallback={<Spinner />}>
-        <Outlet />
-      </Suspense>
-    </Layout>
+    <RequiereSesion>
+      <Layout>
+        <Suspense fallback={<Spinner />}>
+          <Outlet />
+        </Suspense>
+      </Layout>
+    </RequiereSesion>
   ),
 })
 

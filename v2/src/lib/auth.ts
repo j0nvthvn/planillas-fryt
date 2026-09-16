@@ -3,6 +3,7 @@ import type { Session } from '@supabase/supabase-js'
 import { supabase } from './supabase'
 import { queryClient, qk } from './query'
 import type { Tables } from './database.types'
+import { debeLimpiarCache } from './sesion'
 
 export type Usuario = Tables<'usuarios'>
 
@@ -19,14 +20,15 @@ const listo = supabase.auth.getSession().then(({ data }) => {
   if (session === undefined) { session = data.session; notify() }
 })
 
+let ultimoUsuarioId: string | null | undefined = undefined
+
 supabase.auth.onAuthStateChange((_evento, s) => {
-  const cambioUsuario = s?.user.id !== session?.user.id
+  const nuevo = s?.user.id ?? null
+  const limpiar = debeLimpiarCache(ultimoUsuarioId, nuevo)
+  ultimoUsuarioId = nuevo
   session = s
   notify()
-  if (cambioUsuario) {
-    // Nada de lo cacheado pertenece al nuevo usuario (o a ninguno).
-    queryClient.clear()
-  }
+  if (limpiar) queryClient.clear()
 })
 
 function subscribe(cb: () => void) {
@@ -60,6 +62,11 @@ export async function iniciarSesion(email: string, password: string) {
   if (error) throw error
 }
 
+/**
+ * Solo borra la sesión de este dispositivo: no espera a la red, así que
+ * sale al instante aun sin conexión. SIGNED_OUT limpia la caché y
+ * RequiereSesion lleva a /login al ver la sesión en null.
+ */
 export async function cerrarSesion() {
-  await supabase.auth.signOut()
+  await supabase.auth.signOut({ scope: 'local' })
 }
