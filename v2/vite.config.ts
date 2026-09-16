@@ -61,12 +61,21 @@ export default defineConfig({
   },
   build: {
     target: 'es2022',
+    // El service worker precachea todos los chunks; los <link modulepreload>
+    // que Vite inyecta compiten con él y Chrome los descarta con un aviso
+    // ("cross-world service worker resource mismatch"). Sin preload, los
+    // chunks llegan igual desde la caché del SW.
+    modulePreload: false,
     rollupOptions: {
       output: {
-        manualChunks: {
-          'vendor-react': ['react', 'react-dom', '@tanstack/react-router', '@tanstack/react-query'],
-          'vendor-supabase': ['@supabase/supabase-js'],
-          'vendor-charts': ['recharts'],
+        // Solo se separan las dependencias que usa toda la app. recharts se
+        // queda en el chunk de Análisis (carga diferida): en forma de objeto,
+        // manualChunks lo convertía en dependencia del entry y se descargaba
+        // en todas las pantallas.
+        manualChunks(id) {
+          if (id.includes('node_modules/@supabase/')) return 'vendor-supabase'
+          if (/node_modules\/(react|react-dom|scheduler|@tanstack\/(react-router|router-core|react-query|query-core|history))\//.test(id)) return 'vendor-react'
+          return undefined
         },
       },
     },
