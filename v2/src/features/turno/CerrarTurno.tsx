@@ -1,0 +1,325 @@
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { Link, useNavigate, useSearch } from '@tanstack/react-router'
+import PageHeader from '@/components/PageHeader'
+import Icon from '@/components/Icon'
+import Spinner from '@/components/Spinner'
+import { ConfirmDialog } from '@/components/ConfirmDialog'
+import { BottomSheet } from '@/components/BottomSheet'
+import { MetodoLogo } from '@/components/MetodoLogo'
+import { useToast } from '@/components/Toast'
+import { useOnline } from '@/hooks/useOnline'
+import { useUsuario } from '@/hooks/useUsuario'
+import { useConfig, useMetodos, useTrabajadores } from '@/features/catalogo/api'
+import { MODOS, etiquetaModo, type Modo } from './api'
+import { modoPorDefecto, modosDisponibles, etiquetaCerrar } from './modo'
+import { useTurnoForm, tieneContenido, type LineaForm } from './useTurnoForm'
+import { ProveedorSheet } from './ProveedorSheet'
+import { MontoSheet } from './MontoSheet'
+import { clp, clpSigno, fechaLegible, hoy, diaSemana, sumarDias, fechaDiaMes } from '@/lib/format'
+import { esMetodo, type MetodoKey } from '@/lib/totales'
+
+export default function CerrarTurno() {
+  const search = useSearch({ from: '/app/turno' })
+  const navigate = useNavigate()
+  const toast = useToast()
+  const online = useOnline()
+  const { esDueno } = useUsuario()
+  const { config } = useConfig()
+  const metodos = useMetodos()
+  const trabajadores = useTrabajadores()
+
+  const fecha = search.fecha ?? hoy()
+  const diaUnicoConfig = config.diasTurnoUnico.includes(diaSemana(fecha))
+
+  // Primero se necesita el día para decidir el modo por defecto.
+  const form = useTurnoForm({ fecha, modo: search.modo ?? 'completo', fondoPorDefecto: config.fondoCajaInicial, online })
+  const estadoDia = useMemo(() => ({
+    turnos: form.dia.map((t) => ({ tipo: t.turno.tipo, modo: t.turno.modo, is_draft: t.turno.is_draft })),
+    diaUnicoConfig,
+  }), [form.dia, diaUnicoConfig])
+
+  useEffect(() => {
+    if (!search.modo && !form.cargandoDia) {
+      void navigate({ to: '/turno', search: { fecha, modo: modoPorDefecto(estadoDia) }, replace: true })
+    }
+  }, [search.modo, form.cargandoDia, estadoDia, fecha, navigate])
+
+  const modo: Modo = search.modo ?? 'completo'
+  const disponibles = modosDisponibles(estadoDia)
+  const { state, cambiar, totales } = form
+
+  const [sheet, setSheet] = useState<
+    | { t: 'prov'; linea: LineaForm | null }
+    | { t: 'venta'; key: MetodoKey }
+    | { t: 'fondo' }
+    | { t: 'conteo' }
+    | { t: 'fecha' }
+    | null
+  >(null)
+  const [confirmarVacio, setConfirmarVacio] = useState(false)
+
+  // Altura de la barra fija → los toasts se muestran encima.
+  const barRef = useRef<HTMLDivElement>(null)
+  useLayoutEffect(() => {
+    const el = barRef.current
+    if (!el) return
+    const set = () => document.documentElement.style.setProperty('--sticky-bar-h', `${el.offsetHeight}px`)
+    set()
+    const ro = new ResizeObserver(set)
+    ro.observe(el)
+    return () => { ro.disconnect(); document.documentElement.style.removeProperty('--sticky-bar-h') }
+  }, [state.cargado])
+
+  const soloLectura = state.cerrado && !esDueno
+  const usadosIds = state.proveedores.map((p) => p.proveedor_id).filter((x): x is string => !!x)
+
+  async function onCerrar() {
+    if (!tieneContenido(state) && !confirmarVacio) { setConfirmarVacio(true); return }
+    setConfirmarVacio(false)
+    const r = await form.cerrar()
+    if (r === 'ok') {
+      toast.ok(state.cerrado ? 'Corrección guardada' : modo === 'completo' ? 'Día cerrado' : `Turno ${modo} cerrado`)
+      void navigate({ to: '/hoy' })
+    } else if (r === 'error') {
+      toast.error(form.errorAutosave ?? 'No se pudo cerrar. Tus datos quedaron guardados en este dispositivo.')
+    }
+  }
+
+  if (!search.modo || !state.cargado || metodos.isPending) return <Spinner />
+
+  return (
+    <div className="max-w-2xl mx-auto pb-28">
+      <PageHeader
+        eyebrow={fecha === hoy() ? 'Hoy' : 'Otro día'}
+        title={state.cerrado ? 'Corregir turno' : 'Cerrar turno'}
+        action={esDueno && (
+          <button type="button" onClick={() => setSheet({ t: 'fecha' })} className="btn-secondary px-3 min-h-[42px]" aria-label="Cambiar fecha">
+            <Icon name="calendar" className="w-[18px] h-[18px]" />{fechaDiaMes(fecha)}
+          </button>
+        )}
+      >
+        <p className="text-sm text-muted capitalize mt-1">{fechaLegible(fecha)}</p>
+      </PageHeader>
+
+      {soloLectura && (
+        <div role="alert" className="mb-4 rounded-2xl bg-info-tint border border-info/30 px-4 py-3 text-[13px] text-info">
+          Este turno ya está cerrado. Solo la dueña puede corregirlo. <Link to="/hoy" className="font-bold underline">Volver a Hoy</Link>
+        </div>
+      )}
+      {state.cerrado && esDueno && (
+        <div className="mb-4 rounded-2xl bg-info-tint border border-info/30 px-4 py-3 text-[13px] text-info">
+          Turno cerrado: al guardar se registra una <b>corrección</b> con la fotografía anterior y la nueva.
+        </div>
+      )}
+      {form.errorAutosave && online && (
+        <div role="alert" className="mb-4 rounded-2xl bg-neg-tint border border-neg/30 px-4 py-3 text-[13px] text-neg">
+          {form.errorAutosave}
+        </div>
+      )}
+
+      {/* Modo */}
+      <section className="mb-5" aria-label="Tipo de registro">
+        <div className="grid grid-cols-3 gap-1 p-1 rounded-2xl bg-soft">
+          {MODOS.map((m) => {
+            const on = modo === m.value
+            const habilitado = disponibles.includes(m.value) || on
+            return (
+              <button key={m.value} type="button" disabled={!habilitado || soloLectura}
+                onClick={() => void navigate({ to: '/turno', search: { fecha, modo: m.value } })}
+                aria-pressed={on}
+                className={`flex items-center justify-center gap-1.5 min-h-[44px] rounded-xl text-[13px] font-semibold transition ${on ? 'bg-card text-brand shadow-card' : 'text-ink2 disabled:opacity-35'}`}>
+                <Icon name={m.icon} className="w-4 h-4" />{m.label}
+              </button>
+            )
+          })}
+        </div>
+        {diaUnicoConfig && modo === 'completo' && <p className="text-[12px] text-muted mt-1.5 px-1">Los {['domingos', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábados'][diaSemana(fecha)]} se registran como un solo turno.</p>}
+      </section>
+
+      {/* Quién estaba */}
+      <section className="mb-5" aria-label="Quién atendió">
+        <h2 className="eyebrow mb-2 px-1">¿Quién atendió?</h2>
+        {trabajadores.data && trabajadores.data.length > 0 ? (
+          <div className="flex gap-2 overflow-x-auto -mx-4 px-4 pb-1 md:flex-wrap md:overflow-visible md:mx-0 md:px-0" role="radiogroup">
+            {trabajadores.data.map((t) => {
+              const on = state.trabajadorId === t.id
+              return (
+                <button key={t.id} type="button" role="radio" aria-checked={on} disabled={soloLectura}
+                  onClick={() => cambiar({ type: 'trabajador', id: on ? null : t.id })}
+                  className={`shrink-0 min-h-[40px] rounded-full px-4 text-sm font-semibold border ${on ? 'bg-brand text-white border-brand' : 'bg-card text-ink2 border-hairline'}`}>
+                  {t.nombre}
+                </button>
+              )
+            })}
+          </div>
+        ) : (
+          <p className="text-[12.5px] text-muted px-1">
+            Sin lista de trabajadores.{esDueno && <> Agrégalos en <Link to="/ajustes" search={{ seccion: 'trabajadores' }} className="underline font-semibold">Ajustes</Link>.</>}
+          </p>
+        )}
+      </section>
+
+      {/* Ventas */}
+      <section className="mb-5" aria-label="Ventas">
+        <div className="flex items-baseline justify-between px-1 mb-2">
+          <h2 className="eyebrow">Ventas del {modo === 'completo' ? 'día' : 'turno'}</h2>
+          <span className="text-sm font-bold text-brand tabular-nums">{clp(totales.total_ventas)}</span>
+        </div>
+        <div className="card p-0 divide-y divide-hairline overflow-hidden">
+          {(metodos.data ?? []).filter((m) => esMetodo(m.key)).map((m) => {
+            const key = m.key as MetodoKey
+            const monto = state.ventas[key]
+            return (
+              <button key={m.key} type="button" disabled={soloLectura} onClick={() => setSheet({ t: 'venta', key })}
+                className="w-full flex items-center gap-3 px-4 py-3 text-left min-h-[60px] hover:bg-soft/60 disabled:opacity-70">
+                <MetodoLogo metodo={m} active={monto > 0} />
+                <span className="flex-1 min-w-0">
+                  <span className="block text-[15px] font-medium text-ink">{m.label}</span>
+                  {m.sub && <span className="block text-[12px] text-muted">{m.sub}</span>}
+                </span>
+                <span className={`text-[16px] font-bold tabular-nums ${monto ? 'text-ink' : 'text-muted2'}`}>{clp(monto)}</span>
+                <Icon name="chevR" className="w-4 h-4 text-muted2" />
+              </button>
+            )
+          })}
+        </div>
+      </section>
+
+      {/* Proveedores */}
+      <section className="mb-5" aria-label="Proveedores">
+        <div className="flex items-baseline justify-between px-1 mb-2">
+          <h2 className="eyebrow">Proveedores pagados</h2>
+          <span className="text-sm font-bold text-brand tabular-nums">{clp(totales.total_proveedores)}</span>
+        </div>
+        {state.proveedores.length > 0 && (
+          <div className="card p-0 divide-y divide-hairline overflow-hidden mb-2">
+            {state.proveedores.map((p) => (
+              <button key={p.key} type="button" disabled={soloLectura} onClick={() => setSheet({ t: 'prov', linea: p })}
+                className="w-full flex items-center gap-3 px-4 py-3 text-left min-h-[56px] hover:bg-soft/60">
+                <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${p.forma_pago === 'efectivo' ? 'bg-pos' : 'bg-info'}`} aria-hidden="true" />
+                <span className="flex-1 min-w-0">
+                  <span className="block text-[15px] font-medium text-ink truncate">{p.nombre}</span>
+                  <span className="block text-[12px] text-muted">{p.forma_pago === 'efectivo' ? 'Efectivo' : 'Transferencia'}</span>
+                </span>
+                <span className="text-[16px] font-bold tabular-nums text-ink">{clp(p.monto)}</span>
+                <Icon name="chevR" className="w-4 h-4 text-muted2" />
+              </button>
+            ))}
+          </div>
+        )}
+        {!soloLectura && (
+          <button type="button" onClick={() => setSheet({ t: 'prov', linea: null })}
+            className={`w-full min-h-[52px] rounded-2xl flex items-center justify-center gap-2 text-sm font-bold ${state.proveedores.length ? 'bg-brand-tint text-brand' : 'border-2 border-dashed border-hairline text-ink2'}`}>
+            <Icon name="plus" className="w-5 h-5" stroke={2.2} />{state.proveedores.length ? 'Agregar proveedor' : 'Agrega el primer proveedor'}
+          </button>
+        )}
+      </section>
+
+      {/* Caja */}
+      <section className="mb-5" aria-label="Caja">
+        <h2 className="eyebrow mb-2 px-1">Caja</h2>
+        <div className="card p-0 divide-y divide-hairline overflow-hidden">
+          <button type="button" disabled={soloLectura} onClick={() => setSheet({ t: 'fondo' })} className="w-full flex items-center justify-between px-4 py-3 min-h-[56px] text-left">
+            <span><span className="block text-[15px] font-medium text-ink">Fondo inicial</span><span className="block text-[12px] text-muted">Con lo que partió la caja</span></span>
+            <span className="text-[16px] font-bold tabular-nums text-ink">{clp(state.fondoInicial)}</span>
+          </button>
+          <div className="flex items-center justify-between px-4 py-3 min-h-[56px]">
+            <span><span className="block text-[15px] font-medium text-ink">Efectivo esperado</span><span className="block text-[12px] text-muted">fondo + efectivo − proveedores en efectivo</span></span>
+            <span className="text-[16px] font-bold tabular-nums text-brand">{clp(totales.efectivo_esperado)}</span>
+          </div>
+          <div className="px-4 py-3">
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-[15px] font-medium text-ink">¿Contaste la caja?</span>
+              <div className="flex gap-1 p-1 rounded-xl bg-soft" role="radiogroup" aria-label="Conteo de caja">
+                <button type="button" role="radio" aria-checked={!state.contoCaja} disabled={soloLectura} onClick={() => cambiar({ type: 'caja', conto: false, monto: null })}
+                  className={`min-h-[36px] px-3 rounded-lg text-[13px] font-semibold ${!state.contoCaja ? 'bg-card text-ink shadow-card' : 'text-ink2'}`}>No</button>
+                <button type="button" role="radio" aria-checked={state.contoCaja} disabled={soloLectura} onClick={() => setSheet({ t: 'conteo' })}
+                  className={`min-h-[36px] px-3 rounded-lg text-[13px] font-semibold ${state.contoCaja ? 'bg-card text-ink shadow-card' : 'text-ink2'}`}>Sí</button>
+              </div>
+            </div>
+            {state.contoCaja && state.efectivoContado != null && (
+              <button type="button" disabled={soloLectura} onClick={() => setSheet({ t: 'conteo' })} className="mt-3 w-full flex items-center justify-between text-left">
+                <span className="text-[13px] text-muted">Contado: <b className="text-ink tabular-nums">{clp(state.efectivoContado)}</b></span>
+                <span className={`text-[13px] font-bold tabular-nums ${form.diferenciaCaja === 0 ? 'text-pos' : 'text-neg'}`}>
+                  {form.diferenciaCaja === 0 ? 'Cuadra' : `Diferencia ${clpSigno(form.diferenciaCaja ?? 0)}`}
+                </span>
+              </button>
+            )}
+          </div>
+        </div>
+      </section>
+
+      {/* Barra fija */}
+      {!soloLectura && (
+        <div ref={barRef} className="fixed inset-x-0 above-nav z-30 bg-card/95 backdrop-blur border-t border-hairline px-4 py-3 md:left-[220px]">
+          <div className="max-w-2xl mx-auto flex items-center gap-3">
+            <div className="flex-1 min-w-0">
+              <p className="text-[11px] text-muted uppercase tracking-wide font-bold">Neto {modo === 'completo' ? 'del día' : 'del turno'}</p>
+              <p className={`amount text-[26px] leading-none ${totales.neto >= 0 ? 'text-ink' : 'text-neg'}`}>{clp(totales.neto)}</p>
+              <p className="text-[11px] text-muted mt-0.5">
+                {state.sucio ? (online ? 'Guardando borrador…' : 'Guardado en este dispositivo') : state.turnoId ? 'Borrador guardado' : ''}
+              </p>
+            </div>
+            <button type="button" onClick={() => void onCerrar()} disabled={form.guardando} className="btn-primary px-5 py-3 text-base min-w-[150px]">
+              {form.guardando ? 'Guardando…' : etiquetaCerrar(modo, state.cerrado)}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Hojas */}
+      {sheet?.t === 'prov' && (
+        <ProveedorSheet
+          linea={sheet.linea}
+          usados={usadosIds}
+          onSave={(l) => { cambiar({ type: 'proveedor', linea: l }); setSheet(null) }}
+          onDelete={sheet.linea ? (key) => { cambiar({ type: 'quitarProveedor', key }); setSheet(null) } : undefined}
+          onClose={() => setSheet(null)}
+        />
+      )}
+      {sheet?.t === 'venta' && (() => {
+        const m = metodos.data?.find((x) => x.key === sheet.key)
+        return (
+          <MontoSheet title={m?.label ?? sheet.key} sub={m?.sub ?? undefined} valor={state.ventas[sheet.key]} color={m?.color}
+            onAccept={(monto) => { cambiar({ type: 'venta', key: sheet.key, monto }); setSheet(null) }} onClose={() => setSheet(null)} />
+        )
+      })()}
+      {sheet?.t === 'fondo' && (
+        <MontoSheet title="Fondo inicial de caja" sub="Con lo que partió la caja" valor={state.fondoInicial}
+          onAccept={(monto) => { cambiar({ type: 'fondo', monto }); setSheet(null) }} onClose={() => setSheet(null)} />
+      )}
+      {sheet?.t === 'conteo' && (
+        <MontoSheet title="Efectivo contado" sub="Lo que hay en el cajón" valor={state.efectivoContado} label="Registrar conteo"
+          ayuda={<p className="text-[12.5px] text-muted px-1">Esperado: <b className="text-ink tabular-nums">{clp(totales.efectivo_esperado)}</b></p>}
+          onAccept={(monto) => { cambiar({ type: 'caja', conto: true, monto }); setSheet(null) }} onClose={() => setSheet(null)} />
+      )}
+      {sheet?.t === 'fecha' && (
+        <BottomSheet title="Cambiar fecha" onClose={() => setSheet(null)}>
+          <div className="flex items-center gap-2">
+            <button type="button" className="btn-secondary" onClick={() => void navigate({ to: '/turno', search: { fecha: sumarDias(fecha, -1) } })} aria-label="Día anterior"><Icon name="chevL" /></button>
+            <input type="date" className="input flex-1 text-center" value={fecha} max={hoy()}
+              onChange={(e) => { if (e.target.value) void navigate({ to: '/turno', search: { fecha: e.target.value } }) }} />
+            <button type="button" className="btn-secondary" disabled={fecha >= hoy()} onClick={() => void navigate({ to: '/turno', search: { fecha: sumarDias(fecha, 1) } })} aria-label="Día siguiente"><Icon name="chevR" /></button>
+          </div>
+          <button type="button" className="btn-primary w-full" onClick={() => setSheet(null)}>Listo</button>
+        </BottomSheet>
+      )}
+
+      {confirmarVacio && (
+        <ConfirmDialog title="¿Cerrar sin ventas?" message="No registraste ventas ni proveedores. ¿Quieres cerrar igual?"
+          confirmLabel="Cerrar igual" onCancel={() => setConfirmarVacio(false)} onConfirm={() => void onCerrar()} />
+      )}
+
+      {form.conflicto && (
+        <BottomSheet title="Este turno cambió en otro dispositivo" onClose={() => void form.adoptarServidor()}>
+          <p className="text-sm text-ink2">
+            Mientras escribías, alguien guardó este mismo turno ({etiquetaModo(form.conflicto.actual.modo)} · ventas {clp(form.conflicto.actual.total_ventas)}).
+            ¿Qué quieres hacer?
+          </p>
+          <button type="button" className="btn-primary w-full" onClick={() => void form.adoptarServidor()}>Ver lo que se guardó (descarta lo mío)</button>
+          <button type="button" className="btn-secondary w-full" onClick={() => void form.sobrescribir(false)}>Conservar lo mío y reemplazar</button>
+        </BottomSheet>
+      )}
+    </div>
+  )
+}

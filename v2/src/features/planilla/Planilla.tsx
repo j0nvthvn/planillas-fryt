@@ -1,0 +1,183 @@
+import { useState } from 'react'
+import { Link, useNavigate, useSearch } from '@tanstack/react-router'
+import PageHeader from '@/components/PageHeader'
+import Icon from '@/components/Icon'
+import Spinner from '@/components/Spinner'
+import Amount from '@/components/Amount'
+import { ConfirmDialog } from '@/components/ConfirmDialog'
+import { CorreccionModal } from '@/components/CorreccionModal'
+import { useToast } from '@/components/Toast'
+import { useUsuario } from '@/hooks/useUsuario'
+import { useMetodos } from '@/features/catalogo/api'
+import { useResumenDia, useTurnosDia, useCierres, guardarTurno, eliminarTurno, etiquetaModo, type TurnoConLineas } from '@/features/turno/api'
+import { EstadoChip } from '@/features/hoy/Hoy'
+import { clp, clpSigno, fechaLegible, fechaDiaMes, sumarDias, hoy, horaCorta } from '@/lib/format'
+import { esMetodo, type MetodoKey } from '@/lib/totales'
+import { mensajeDeError } from '@/lib/errorLog'
+
+export default function Planilla() {
+  const { fecha } = useSearch({ from: '/app/dia' })
+  const navigate = useNavigate()
+  const toast = useToast()
+  const { esDueno } = useUsuario()
+  const resumen = useResumenDia(fecha)
+  const turnos = useTurnosDia(fecha)
+  const metodos = useMetodos()
+  const [accion, setAccion] = useState<{ t: 'dividir' | 'unir' | 'eliminar'; turno: TurnoConLineas } | null>(null)
+  const [diff, setDiff] = useState<TurnoConLineas | null>(null)
+  const [ocupado, setOcupado] = useState(false)
+
+  const lista = turnos.data ?? []
+  const r = resumen.data
+  const puedeUnir = lista.length === 1 && lista[0]?.turno.modo === 'mañana'
+  const esCompleto = lista.some((t) => t.turno.modo === 'completo')
+
+  async function ejecutar() {
+    if (!accion) return
+    setOcupado(true)
+    try {
+      const { turno, proveedores } = accion.turno
+      const ventas = { efectivo: turno.efectivo ?? 0, getnet: turno.getnet ?? 0, mercadopago: turno.mercadopago ?? 0, edenred: turno.edenred ?? 0, amipass: turno.amipass ?? 0, transferencia: turno.transferencia ?? 0 }
+      if (accion.t === 'eliminar') {
+        await eliminarTurno(turno.id, fecha)
+        toast.show({ message: 'Turno enviado a la papelera', actionLabel: 'Ver papelera', onAction: () => void navigate({ to: '/ajustes', search: { seccion: 'papelera' } }) })
+      } else {
+        // Dividir: el día completo pasa a ser solo "mañana" (misma data). Unir: la mañana pasa a día completo.
+        const modo = accion.t === 'dividir' ? 'mañana' : 'completo'
+        const res = await guardarTurno({
+          fecha, modo, ventas,
+          proveedores: proveedores.map((p) => ({ id: p.id, proveedor_id: p.proveedor_id, nombre: p.nombre, monto: p.monto, forma_pago: p.forma_pago === 'transferencia' ? 'transferencia' : 'efectivo' })),
+          cerrar: !turno.is_draft,
+          efectivo_contado: turno.efectivo_contado ?? null,
+          base_updated_at: turno.updated_at,
+        })
+        if (res.conflicto) { toast.error('El turno cambió en otro dispositivo. Recarga e inténtalo de nuevo.'); return }
+        toast.ok(accion.t === 'dividir' ? 'Día dividido. Ahora puedes cerrar la tarde.' : 'Registrado como día completo')
+        if (accion.t === 'dividir') void navigate({ to: '/turno', search: { fecha, modo: 'tarde' } })
+      }
+    } catch (e) {
+      toast.error(mensajeDeError(e))
+    } finally {
+      setOcupado(false)
+      setAccion(null)
+    }
+  }
+
+  return (
+    <div className="max-w-3xl mx-auto">
+      <PageHeader eyebrow="Planilla del día" title={fechaDiaMes(fecha)} subtitle={fechaLegible(fecha)} back={esDueno ? '/historial' : '/hoy'}
+        action={
+          <div className="flex gap-1">
+            <Link to="/dia" search={{ fecha: sumarDias(fecha, -1) }} className="btn-secondary px-3" aria-label="Día anterior"><Icon name="chevL" /></Link>
+            <Link to="/dia" search={{ fecha: sumarDias(fecha, 1) }} disabled={fecha >= hoy()} className={`btn-secondary px-3 ${fecha >= hoy() ? 'opacity-40 pointer-events-none' : ''}`} aria-label="Día siguiente"><Icon name="chevR" /></Link>
+          </div>
+        }
+      />
+
+      {turnos.isPending ? <Spinner /> : (
+        <>
+          <div className="card-hero mb-4 flex flex-wrap items-end justify-between gap-3">
+            <div>
+              <div className="flex items-center gap-2 mb-1"><p className="eyebrow">Neto del día</p><EstadoChip estado={r?.estado ?? 'sin_registro'} /></div>
+              <Amount variant="hero" color={(r?.neto ?? 0) >= 0 ? 'pos' : 'neg'} value={r?.neto ?? 0} />
+            </div>
+            <div className="text-right text-[12.5px] text-muted space-y-0.5">
+              <p>Ventas <b className="text-ink tabular-nums">{clp(r?.total_ventas ?? 0)}</b></p>
+              <p>Proveedores <b className="text-ink tabular-nums">{clp(r?.total_proveedores ?? 0)}</b></p>
+              <p>Efectivo esperado <b className="text-brand tabular-nums">{clp(r?.efectivo_esperado ?? 0)}</b></p>
+            </div>
+          </div>
+
+          {lista.length === 0 && (
+            <div className="card text-center py-8">
+              <p className="text-ink2 font-medium">Sin registro este día</p>
+              <Link to="/turno" search={{ fecha }} className="btn-primary mt-4">Registrar</Link>
+            </div>
+          )}
+
+          <div className={`grid gap-4 ${lista.length > 1 ? 'md:grid-cols-2' : ''}`}>
+            {lista.map((t) => <TarjetaTurno key={t.turno.id} t={t} fecha={fecha} esDueno={esDueno} metodos={metodos.data ?? []} onDiff={() => setDiff(t)} onAccion={(a) => setAccion({ t: a, turno: t })} puedeUnir={puedeUnir} esCompleto={esCompleto} />)}
+          </div>
+
+          {esDueno && lista.length === 1 && lista[0]?.turno.modo === 'mañana' && !lista[0].turno.is_draft && (
+            <Link to="/turno" search={{ fecha, modo: 'tarde' }} className="btn-secondary w-full mt-4"><Icon name="moon" className="w-4 h-4" />Registrar turno tarde</Link>
+          )}
+        </>
+      )}
+
+      {accion && (
+        <ConfirmDialog
+          title={accion.t === 'dividir' ? '¿Dividir en dos turnos?' : accion.t === 'unir' ? '¿Unir como día completo?' : '¿Enviar a la papelera?'}
+          message={accion.t === 'dividir' ? 'Lo registrado queda como turno de mañana y podrás cerrar la tarde aparte.' : accion.t === 'unir' ? 'El turno de mañana pasa a representar todo el día.' : 'El turno deja de contar en los totales. Se puede restaurar desde Ajustes → Papelera.'}
+          confirmLabel={accion.t === 'eliminar' ? 'Enviar a papelera' : 'Confirmar'} danger={accion.t === 'eliminar'} loading={ocupado}
+          onCancel={() => setAccion(null)} onConfirm={() => void ejecutar()} />
+      )}
+      {diff && <DiffLoader t={diff} metodos={metodos.data ?? []} onClose={() => setDiff(null)} />}
+    </div>
+  )
+}
+
+function DiffLoader({ t, metodos, onClose }: { t: TurnoConLineas; metodos: ReturnType<typeof useMetodos>['data'] & object; onClose: () => void }) {
+  const cierres = useCierres(t.turno.id)
+  if (cierres.isPending) return null
+  return <CorreccionModal cierres={cierres.data ?? []} metodos={metodos} titulo={`${etiquetaModo(t.turno.modo)} · correcciones`} onClose={onClose} />
+}
+
+function TarjetaTurno({ t, fecha, esDueno, metodos, onDiff, onAccion, puedeUnir, esCompleto }: {
+  t: TurnoConLineas; fecha: string; esDueno: boolean; metodos: { key: string; label: string; color: string }[]
+  onDiff: () => void; onAccion: (a: 'dividir' | 'unir' | 'eliminar') => void; puedeUnir: boolean; esCompleto: boolean
+}) {
+  const { turno, proveedores } = t
+  const v = turno as unknown as Record<string, number | null>
+  return (
+    <article className="card p-0 overflow-hidden">
+      <div className="px-5 pt-4 pb-3 border-b border-hairline flex items-start justify-between gap-2">
+        <div>
+          <h2 className="text-[17px] font-bold text-ink">{etiquetaModo(turno.modo)}</h2>
+          <p className="text-[12px] text-muted">{turno.trabajador_nombre ?? turno.usuario_nombre ?? '—'}{turno.ultimo_cierre_en ? ` · cerrado ${horaCorta(turno.ultimo_cierre_en)}` : ''}</p>
+        </div>
+        <div className="flex flex-col items-end gap-1">
+          {turno.is_draft ? <span className="text-[10px] font-bold uppercase text-warn bg-warn-tint rounded-full px-2 py-0.5">Borrador</span>
+            : turno.corregido ? <button type="button" onClick={onDiff} className="text-[10px] font-bold uppercase text-info bg-info-tint rounded-full px-2 py-0.5">Corregido · ver</button>
+            : <span className="text-[10px] font-bold uppercase text-pos bg-pos-tint rounded-full px-2 py-0.5">Cerrado</span>}
+        </div>
+      </div>
+      <div className="px-5 py-3 space-y-1.5">
+        {metodos.filter((m) => esMetodo(m.key) && (v[m.key] ?? 0) > 0).map((m) => (
+          <div key={m.key} className="flex items-center gap-2.5 text-[13.5px]">
+            <span className="w-2 h-2 rounded-full" style={{ background: m.color }} /><span className="flex-1 text-ink2">{m.label}</span>
+            <span className="font-semibold tabular-nums text-ink">{clp(v[m.key as MetodoKey])}</span>
+          </div>
+        ))}
+        <div className="flex items-center justify-between text-[14px] pt-1.5 border-t border-soft"><span className="font-bold text-ink">Ventas</span><span className="font-bold tabular-nums text-ink">{clp(turno.total_ventas)}</span></div>
+      </div>
+      {proveedores.length > 0 && (
+        <div className="px-5 py-3 border-t border-hairline space-y-1.5">
+          <p className="eyebrow">Proveedores</p>
+          {proveedores.map((p) => (
+            <div key={p.id} className="flex items-center gap-2 text-[13px]">
+              <span className={`w-2 h-2 rounded-full ${p.forma_pago === 'efectivo' ? 'bg-pos' : 'bg-info'}`} /><span className="flex-1 text-ink2 truncate">{p.nombre}</span>
+              <span className="font-semibold tabular-nums text-ink">{clp(p.monto)}</span>
+            </div>
+          ))}
+          <div className="flex items-center justify-between text-[13px] pt-1.5 border-t border-soft"><span className="font-bold text-ink">Total</span><span className="font-bold tabular-nums text-ink">{clp(turno.total_proveedores)}</span></div>
+        </div>
+      )}
+      <div className="px-5 py-3 border-t border-hairline text-[12.5px] text-muted space-y-1">
+        <p className="flex justify-between"><span>Fondo inicial</span><b className="text-ink tabular-nums">{clp(turno.fondo_inicial)}</b></p>
+        <p className="flex justify-between"><span>Efectivo esperado</span><b className="text-brand tabular-nums">{clp(turno.efectivo_esperado)}</b></p>
+        {turno.efectivo_contado != null ? (
+          <p className="flex justify-between"><span>Contado</span><b className={`tabular-nums ${turno.diferencia_efectivo ? 'text-neg' : 'text-pos'}`}>{clp(turno.efectivo_contado)} ({turno.diferencia_efectivo ? clpSigno(Number(turno.diferencia_efectivo)) : 'cuadra'})</b></p>
+        ) : <p className="italic">Sin conteo de caja</p>}
+      </div>
+      {esDueno && (
+        <div className="px-3 py-2 border-t border-hairline flex flex-wrap gap-1">
+          <Link to="/turno" search={{ fecha, modo: turno.modo }} className="btn-ghost text-[13px] min-h-[40px]"><Icon name="pencil" className="w-4 h-4" />{turno.is_draft ? 'Seguir' : 'Corregir'}</Link>
+          {esCompleto && turno.modo === 'completo' && <button type="button" onClick={() => onAccion('dividir')} className="btn-ghost text-[13px] min-h-[40px]"><Icon name="split" className="w-4 h-4" />Dividir en dos turnos</button>}
+          {puedeUnir && turno.modo === 'mañana' && <button type="button" onClick={() => onAccion('unir')} className="btn-ghost text-[13px] min-h-[40px]"><Icon name="merge" className="w-4 h-4" />Unir como día completo</button>}
+          <button type="button" onClick={() => onAccion('eliminar')} className="btn-ghost text-[13px] min-h-[40px] text-neg ml-auto"><Icon name="trash" className="w-4 h-4" />Eliminar</button>
+        </div>
+      )}
+    </article>
+  )
+}

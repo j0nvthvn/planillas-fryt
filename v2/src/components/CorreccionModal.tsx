@@ -1,0 +1,84 @@
+import { BottomSheet } from './BottomSheet'
+import Icon from './Icon'
+import { clp, fechaHora } from '@/lib/format'
+import { METODO_KEYS } from '@/lib/totales'
+import type { Cierre } from '@/features/turno/api'
+import type { MetodoPago } from '@/features/catalogo/api'
+
+interface Snap { nombre: string; monto: number; forma_pago: string }
+
+function lista(v: unknown): Snap[] {
+  return Array.isArray(v) ? (v as Snap[]) : []
+}
+function ventas(v: unknown): Record<string, number> {
+  return v && typeof v === 'object' ? (v as Record<string, number>) : {}
+}
+
+function ListaProveedores({ items, titulo }: { items: Snap[]; titulo: string }) {
+  const total = items.reduce((s, p) => s + (+p.monto || 0), 0)
+  return (
+    <div>
+      <p className="eyebrow mb-1.5">{titulo}</p>
+      {items.length === 0 ? <p className="text-[12px] text-muted2 italic">Sin proveedores</p> : (
+        <div className="space-y-1">
+          {items.map((p, i) => (
+            <div key={i} className="flex items-center gap-2 text-[12.5px]">
+              <span className="flex-1 text-ink2 truncate">{p.nombre}</span>
+              <span className={`text-[9px] font-bold rounded-full px-1.5 py-0.5 ${p.forma_pago === 'efectivo' ? 'bg-pos-tint text-pos' : 'bg-info-tint text-info'}`}>{p.forma_pago === 'efectivo' ? 'Ef.' : 'Tr.'}</span>
+              <span className="text-ink font-semibold tabular-nums">{clp(p.monto)}</span>
+            </div>
+          ))}
+          <div className="flex items-center gap-2 text-[12.5px] pt-1 border-t border-soft mt-1">
+            <span className="flex-1 font-bold text-ink">Total</span><span className="font-bold text-ink tabular-nums">{clp(total)}</span>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+/**
+ * Original vs. estado actual de un turno corregido, a partir de las
+ * fotografías inmutables de turno_cierres.
+ */
+export function CorreccionModal({ cierres, metodos, titulo, onClose }: { cierres: Cierre[]; metodos: MetodoPago[]; titulo: string; onClose: () => void }) {
+  const orden = [...cierres].sort((a, b) => a.cerrado_en.localeCompare(b.cerrado_en))
+  const original = orden[0]
+  const actual = orden[orden.length - 1]
+  if (!original || !actual) return null
+  const vo = ventas(original.ventas_snapshot)
+  const va = ventas(actual.ventas_snapshot)
+  const filas = METODO_KEYS.map((k) => ({ key: k, label: metodos.find((m) => m.key === k)?.label ?? k, antes: +(vo[k] ?? 0), despues: +(va[k] ?? 0) })).filter((f) => f.antes !== f.despues)
+  const correcciones = orden.length - 1
+
+  return (
+    <BottomSheet title={titulo} onClose={onClose}>
+      <p className="text-[12px] text-muted -mt-1">{correcciones} corrección{correcciones === 1 ? '' : 'es'} desde el cierre original</p>
+      <div className="text-[12px] text-muted bg-canvas rounded-xl px-3 py-2">Original · {fechaHora(original.cerrado_en)} · {original.cerrado_por_usuario?.nombre ?? '—'}</div>
+      {filas.length ? (
+        <div className="space-y-2">
+          <p className="eyebrow">Ventas: qué cambió</p>
+          {filas.map((f) => {
+            const delta = f.despues - f.antes
+            return (
+              <div key={f.key} className="flex items-center gap-2.5 text-[13px]">
+                <span className="flex-1 text-ink2">{f.label}</span>
+                <span className="text-muted2 tabular-nums line-through">{clp(f.antes)}</span>
+                <Icon name="chevR" className="w-3 h-3 text-muted2" />
+                <span className="font-bold text-ink tabular-nums">{clp(f.despues)}</span>
+                <span className={`text-[11px] font-semibold tabular-nums ${delta > 0 ? 'text-pos' : 'text-neg'}`}>({delta > 0 ? '+' : ''}{clp(delta)})</span>
+              </div>
+            )
+          })}
+        </div>
+      ) : <p className="text-[12px] text-muted2 italic">Las ventas no cambiaron.</p>}
+      <div className="grid grid-cols-2 gap-4">
+        <ListaProveedores items={lista(original.proveedores_snapshot)} titulo="Proveedores (original)" />
+        <ListaProveedores items={lista(actual.proveedores_snapshot)} titulo="Proveedores (actual)" />
+      </div>
+      {correcciones > 0 && (
+        <div className="text-[12px] text-info bg-info-tint border border-info/30 rounded-xl px-3 py-2">Última corrección · {fechaHora(actual.cerrado_en)} · {actual.cerrado_por_usuario?.nombre ?? '—'}</div>
+      )}
+    </BottomSheet>
+  )
+}
