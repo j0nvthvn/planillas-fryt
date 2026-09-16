@@ -9,7 +9,7 @@ Documentos complementarios:
 - `docs/operacion.md`: entornos, CLI, migraciones, correos, seguridad, humo.
 - `docs/piloto-v2.md`: cómo se ejecuta el piloto (Fase 3) y sus criterios.
 - `docs/limpieza-datos-2026-09.sql`: consultas de limpieza y de comparación.
-- `docs/mejoras-ux.md`: mejoras de UI/UX de la v2 (tipografía, accesibilidad, flujo): qué se aplicó el 2026-09-17 y qué quedó pendiente.
+- `docs/mejoras-ux.md`: mejoras de UI/UX de la v2 (tipografía, accesibilidad, flujo y la revisión móvil con capturas del 2026-09-16): qué se aplicó y qué quedó pendiente.
 - `v2/README.md`: la app nueva (stack, estructura, cómo correrla).
 
 ## 1. Qué es esto
@@ -72,13 +72,14 @@ Credenciales y dónde están (nunca en el repo, salvo anon keys):
 - Migraciones `20260916*` aplicadas en local (pgTAP 62/62, `scripts/test-db.sh`), staging y prod. Verificado: `turno_totales` reproduce los 115 cierres con 0 diferencias; humo de la app actual (`scripts/smoke-legacy.mjs`, 60 comprobaciones) verde en local y staging.
 - Incidente ya corregido: el backfill de `proveedor_id` tocó `updated_at`; se restauró desde el respaldo y la migración ahora desactiva esos triggers.
 
-### Fase 2 — App v2: **hecha** (2026-09-16/17)
+### Fase 2 — App v2: **hecha** (2026-09-16/17; ajustes móviles 2026-09-16)
 - `v2/`: Vite 7, React 19, TS estricto, TanStack Router + Query (persistencia IndexedDB), Tailwind v4, PWA. Pantallas: Login, Hoy, Cerrar turno, Planilla del día, Historial, Análisis, Proveedores, Ajustes.
 - Diseño decidido con la dueña/Jonathan: identidad café cálida, móvil primero, camino "A" (cifra al frente) + teclado encadenado + planilla en cuaderno. Exploraciones: https://claude.ai/artifact/VibHvxrnP7PXgWvAVUifqa
-- Verificación: `pnpm lint`, `pnpm typecheck`, `pnpm test` (48 unitarios), `pnpm build`, `pnpm e2e` (Playwright contra staging) y 6 tests de integración contra staging (`src/test/integracion.staging.test.ts`, requiere `SMOKE_PASSWORD`).
+- Verificación: `pnpm lint`, `pnpm typecheck`, `pnpm test` (59 unitarios), `pnpm build`, `pnpm e2e` (Playwright contra staging) y 6 tests de integración contra staging (`src/test/integracion.staging.test.ts`, requiere `SMOKE_PASSWORD`).
 - **Mejoras del 2026-09-17** (detalle y pendientes en `docs/mejoras-ux.md`): hoja de revisión antes de cerrar y conteo de caja por billetes —las dos atacan lo medido en prod: 25 % de cierres son correcciones y no hay ningún conteo registrado—, aviso de proveedor parecido, base accesible (foco visible, `prefers-reduced-motion`, hojas como `<dialog>`, nada bajo 12 px, contrastes), escala tipográfica en tokens y fuentes alojadas en el repo.
 - **Ingeniería:** ESLint (flat config con reglas de tipos), GitHub Actions (`.github/workflows/v2.yml`: lint + tipos + tests + build en cada push/PR) y Playwright (`v2/e2e/`, el cierre completo contra staging; requiere `pnpm exec playwright install chromium`).
-- **Pendiente:** revisar en un celular real de vez en cuando.
+- **Ajustes móviles** (commit `33f27f4`, en producción; detalle en `docs/mejoras-ux.md` → "Móvil"): revisión con capturas de Playwright en Pixel 7 (claro/oscuro) e iPhone SE contra staging. Fechas sin "De" en mayúscula (`mayusculaInicial`) y negativos como "−$404.199" en `clp`; `BottomSheet` con `footer` fijo (teclado, conteo y revisión siempre a la vista); sin botón flotante en Cerrar turno; Historial agrupado por mes con filas que caben en 375 px; Análisis con fechas a todo lo ancho y rango siempre válido (`ajustarRango`); Ajustes apilado; esqueletos de carga (`Esqueleto.tsx`) en vez de spinner; login con "Ingresando…" y `?volver=`; color de los métodos aclarado en oscuro (`colorMetodo` + `--metodo-mezcla`). Cierra los tres pendientes que tenía `mejoras-ux.md`.
+- **Pendiente:** revisar en un celular real (Safari de iOS con su barra inferior): altura de las hojas y encabezado pegajoso del Historial.
 
 ### Fase 3 — Piloto en paralelo: **en curso, semana A** (desde 2026-09-16)
 - Semana A automática: 0 diferencias en 59 días entre la fórmula de la app actual y `v_resumen_dia`.
@@ -115,6 +116,8 @@ pnpm exec supabase start -x studio,imgproxy,inbucket,mailpit,logflare,vector,edg
 cd v2 && pnpm install && pnpm dev --mode staging
 pnpm lint && pnpm typecheck && pnpm test && pnpm build
 pnpm e2e                                       # Playwright contra staging (usa STAGING_PASSWORD)
+# mirar la interfaz: pnpm dev --mode staging --port 5174 y un script de Playwright
+# (devices Pixel 7 / iPhone SE) que importe v2/node_modules/@playwright/test por ruta absoluta
 SMOKE_EMAIL=duena@test.local SMOKE_PASSWORD=<.env.staging.local> pnpm vitest run --mode staging src/test/integracion.staging.test.ts
 ```
 
