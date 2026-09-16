@@ -49,7 +49,7 @@ export default function Hoy() {
       <header className="flex items-start justify-between gap-3 mb-4">
         <div>
           <p className="eyebrow text-brand">Hoy</p>
-          <p className="text-[15px] font-medium text-ink capitalize leading-tight">{fechaLegible(fecha)}</p>
+          <p className="text-base font-medium text-ink capitalize leading-tight">{fechaLegible(fecha)}</p>
         </div>
         <AvatarMenu />
       </header>
@@ -58,11 +58,11 @@ export default function Hoy() {
         <div role="alert" className="mb-4 rounded-2xl bg-warn-tint border border-warn/30 px-4 py-3 flex items-start gap-3">
           <span className="w-8 h-8 rounded-full bg-warn/15 grid place-items-center shrink-0 mt-0.5"><Icon name="warning" className="w-4 h-4 text-warn" stroke={2} /></span>
           <div className="flex-1 min-w-0">
-            <p className="text-[13.5px] font-semibold text-warn">{borradoresViejos.length === 1 ? 'Hay un turno sin cerrar' : `Hay ${borradoresViejos.length} turnos sin cerrar`}</p>
+            <p className="text-sm font-semibold text-warn">{borradoresViejos.length === 1 ? 'Hay un turno sin cerrar' : `Hay ${borradoresViejos.length} turnos sin cerrar`}</p>
             <ul className="mt-1 space-y-1">
               {borradoresViejos.slice(0, 5).map((b) => (
                 <li key={b.id}>
-                  <Link to="/turno" search={{ fecha: b.fecha, modo: b.modo }} className="text-[12.5px] font-bold text-warn underline underline-offset-2 capitalize">
+                  <Link to="/turno" search={{ fecha: b.fecha, modo: b.modo }} className="text-xs font-bold text-warn underline underline-offset-2 capitalize">
                     {fechaDiaMes(b.fecha)} · {etiquetaModo(b.modo)} → cerrar
                   </Link>
                 </li>
@@ -77,34 +77,34 @@ export default function Hoy() {
           {/* La cifra al frente */}
           <section aria-label="Neto del día" className="mb-5">
             <p className="eyebrow">Neto del día</p>
-            <p className={`amount text-[60px] leading-[0.95] mt-1 ${neto >= 0 ? 'text-pos' : 'text-neg'}`}>{clp(neto)}</p>
-            <p className="text-[12.5px] text-muted mt-2">{clp(totalVentas)} ventas − {clp(r?.total_proveedores ?? 0)} proveedores</p>
+            <p className={`amount text-hero leading-[0.95] mt-1 ${neto >= 0 ? 'text-pos' : 'text-neg'}`}>{clp(neto)}</p>
+            <p className="text-xs text-muted mt-2">{clp(totalVentas)} ventas − {clp(r?.total_proveedores ?? 0)} proveedores</p>
             <div className="mt-3 flex items-center gap-2 flex-wrap">
               <EstadoChip estado={r?.estado ?? 'sin_registro'} />
-              {borradorHoy && <span className="text-[12px] text-muted">{borradorHoy.turno.trabajador_nombre ?? borradorHoy.turno.usuario_nombre ?? ''}{ultimo ? ` · última anotación ${horaCorta(ultimo)}` : ''}</span>}
-              {!borradorHoy && lista.length > 0 && <span className="text-[12px] text-muted">{lista.map((t) => t.turno.trabajador_nombre ?? t.turno.usuario_nombre).filter(Boolean).join(' y ')}</span>}
+              {borradorHoy && <span className="text-xs text-muted">{borradorHoy.turno.trabajador_nombre ?? borradorHoy.turno.usuario_nombre ?? ''}{ultimo ? ` · última anotación ${horaCorta(ultimo)}` : ''}</span>}
+              {!borradorHoy && lista.length > 0 && <span className="text-xs text-muted">{lista.map((t) => t.turno.trabajador_nombre ?? t.turno.usuario_nombre).filter(Boolean).join(' y ')}</span>}
             </div>
           </section>
 
           {cta ? (
-            <button type="button" onClick={() => void navigate({ to: '/turno', search: { fecha, modo: cta.modo } })} className="btn-primary w-full min-h-[56px] text-[17px] rounded-[18px] mb-4">
+            <button type="button" onClick={() => void navigate({ to: '/turno', search: { fecha, modo: cta.modo } })} className="btn-primary w-full min-h-[56px] text-lg rounded-[18px] mb-4">
               <Icon name={borradorHoy ? 'check' : 'plus'} className="w-5 h-5" stroke={2.4} />{cta.label}
             </button>
           ) : (
             <div className="mb-4 rounded-2xl bg-pos-tint border border-pos-border px-4 py-3 flex items-center justify-between gap-3">
-              <p className="text-[14px] font-semibold text-pos">Día completo registrado</p>
-              {esDueno && <Link to="/dia" search={{ fecha }} className="text-[12.5px] font-bold text-pos underline underline-offset-2">Ver planilla</Link>}
+              <p className="text-base font-semibold text-pos">Día completo registrado</p>
+              {esDueno && <Link to="/dia" search={{ fecha }} className="text-xs font-bold text-pos underline underline-offset-2">Ver planilla</Link>}
             </div>
           )}
 
           <section className="card mb-4" aria-label="Efectivo esperado en caja">
             <div className="flex items-baseline justify-between gap-3">
-              <p className="font-semibold text-ink text-[15px]">Efectivo esperado</p>
-              <span className="amount text-[28px] text-brand">{clp(r?.efectivo_esperado ?? 0)}</span>
+              <p className="font-semibold text-ink text-base">Efectivo esperado</p>
+              <span className="amount text-amount-sm text-brand">{clp(r?.efectivo_esperado ?? 0)}</span>
             </div>
-            <p className="text-[12px] text-muted mt-0.5">fondo + efectivo − proveedores en efectivo</p>
+            <p className="text-xs text-muted mt-0.5">fondo + efectivo − proveedores en efectivo</p>
             {r?.con_conteo && (
-              <p className={`text-[12.5px] font-semibold mt-2 ${r.con_descuadre ? 'text-neg' : 'text-pos'}`}>
+              <p className={`text-xs font-semibold mt-2 ${r.con_descuadre ? 'text-neg' : 'text-pos'}`}>
                 {r.con_descuadre ? `Descuadre al contar: ${descuadres.map(({ turno }) => clpSigno(Number(turno.diferencia_efectivo))).join(' · ')}` : 'La caja cuadró al contar'}
               </p>
             )}
@@ -113,7 +113,7 @@ export default function Hoy() {
                 {porMetodo.map((m) => {
                   const pct = totalVentas ? Math.max(3, (m.monto / totalVentas) * 100) : 0
                   return (
-                    <div key={m.key} className="flex items-center gap-2.5 text-[13px]">
+                    <div key={m.key} className="flex items-center gap-2.5 text-sm">
                       <span className="w-2 h-2 rounded-full shrink-0" style={{ background: m.color }} />
                       <span className="w-[104px] shrink-0 text-ink2 truncate">{m.label}</span>
                       <span className="flex-1 h-1.5 rounded-full bg-soft overflow-hidden"><span className="block h-full rounded-full" style={{ width: `${pct}%`, background: m.color }} /></span>
@@ -131,18 +131,18 @@ export default function Hoy() {
               {lista.map(({ turno }) => (
                 <Link key={turno.id} to="/dia" search={{ fecha }} className="card p-4 flex flex-col gap-1 hover:border-brand/40 transition-colors">
                   <div className="flex items-center justify-between">
-                    <span className="text-[13px] font-semibold text-ink">{etiquetaModo(turno.modo)}</span>
-                    {turno.is_draft ? <span className="text-[10px] font-bold uppercase text-warn">borrador</span> : <Icon name="check" className="w-4 h-4 text-pos" stroke={2.4} />}
+                    <span className="text-sm font-semibold text-ink">{etiquetaModo(turno.modo)}</span>
+                    {turno.is_draft ? <span className="text-xs font-bold uppercase text-warn">borrador</span> : <Icon name="check" className="w-4 h-4 text-pos" stroke={2.4} />}
                   </div>
-                  <span className="amount text-xl text-ink">{clp(turno.total_ventas)}</span>
-                  <span className="text-[11.5px] text-muted truncate">{turno.trabajador_nombre ?? turno.usuario_nombre ?? '—'}</span>
+                  <span className="cifra text-xl text-ink">{clp(turno.total_ventas)}</span>
+                  <span className="text-xs text-muted truncate">{turno.trabajador_nombre ?? turno.usuario_nombre ?? '—'}</span>
                 </Link>
               ))}
             </div>
           )}
 
           {ra && (ra.turnos ?? 0) > 0 && (
-            <Link to="/dia" search={{ fecha: ayer }} className="block text-center text-[12.5px] text-muted hover:text-ink mt-2">
+            <Link to="/dia" search={{ fecha: ayer }} className="block text-center text-xs text-muted hover:text-ink mt-2">
               Ayer: <b className="text-ink tabular-nums">{clp(ra.neto)}</b> neto · {ra.con_conteo ? (ra.con_descuadre ? 'hubo descuadre' : 'cuadró la caja') : 'sin conteo'}
             </Link>
           )}
@@ -160,5 +160,5 @@ export function EstadoChip({ estado }: { estado: string }) {
     completo: { label: 'Completo', cls: 'bg-pos-tint text-pos' },
   }
   const e = map[estado] ?? map.sin_registro!
-  return <span className={`text-[11px] font-bold uppercase tracking-wide rounded-full px-2.5 py-1 ${e.cls}`}>{e.label}</span>
+  return <span className={`text-xs font-bold uppercase tracking-wide rounded-full px-2.5 py-1 ${e.cls}`}>{e.label}</span>
 }

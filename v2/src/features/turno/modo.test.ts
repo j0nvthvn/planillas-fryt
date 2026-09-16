@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { modoPorDefecto, modosDisponibles, etiquetaCerrar } from './modo'
+import { modoPorDefecto, modosDisponibles, etiquetaCerrar, tituloCierre } from './modo'
 
 const m = (tipo: 'mañana' | 'tarde', modo: 'completo' | 'mañana' | 'tarde', is_draft = false) => ({ tipo, modo, is_draft })
 
@@ -40,7 +40,15 @@ describe('modosDisponibles', () => {
 describe('etiquetaCerrar', () => {
   it('varía según modo y si ya estaba cerrado', () => {
     expect(etiquetaCerrar('completo', false)).toBe('Cerrar el día')
-    expect(etiquetaCerrar('tarde', false)).toBe('Cerrar turno tarde')
+    expect(etiquetaCerrar('tarde', false)).toBe('Cerrar la tarde')
     expect(etiquetaCerrar('mañana', true)).toBe('Guardar corrección')
+  })
+})
+
+describe('tituloCierre', () => {
+  it('nombra el modo, no "turno" siempre', () => {
+    expect(tituloCierre('completo', false)).toBe('Cerrar el día')
+    expect(tituloCierre('mañana', false)).toBe('Cerrar la mañana')
+    expect(tituloCierre('tarde', true)).toBe('Corregir la tarde')
   })
 })

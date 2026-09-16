@@ -62,7 +62,7 @@ export default function ProveedorDetalle() {
       <div className="card flex items-center gap-4 mb-4">
         <button type="button" onClick={() => fileRef.current?.click()} className="relative" aria-label="Cambiar logo">
           <ProveedorAvatar nombre={prov.nombre} imagenUrl={prov.imagen_url} size="lg" />
-          <span className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-brand text-white grid place-items-center border-2 border-card"><Icon name="camera" className="w-3.5 h-3.5" /></span>
+          <span className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-brand text-on-solid grid place-items-center border-2 border-card"><Icon name="camera" className="w-3.5 h-3.5" /></span>
         </button>
         <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={(e) => {
           const f = e.target.files?.[0]
@@ -70,14 +70,14 @@ export default function ProveedorDetalle() {
           e.target.value = ''
         }} />
         <div className="flex-1 min-w-0">
-          <p className="text-[12px] text-muted">{compras.data?.length ?? 0} compras · {clp(totalCompras)} en total</p>
+          <p className="text-xs text-muted">{compras.data?.length ?? 0} compras · {clp(totalCompras)} en total</p>
           <div className="flex flex-wrap gap-1.5 mt-2">
-            <button type="button" className="btn-secondary text-[13px] min-h-[38px] px-3" onClick={() => setRenombrar(prov.nombre)}><Icon name="pencil" className="w-4 h-4" />Renombrar</button>
-            <button type="button" className="btn-secondary text-[13px] min-h-[38px] px-3" onClick={() => setFusion({ q: '', destino: null })}><Icon name="merge" className="w-4 h-4" />Fusionar con…</button>
-            <button type="button" className="btn-secondary text-[13px] min-h-[38px] px-3" onClick={() => void correr(() => actualizarProveedor(prov.id, { activo: !prov.activo }), prov.activo ? 'Proveedor desactivado' : 'Proveedor activado')}>
+            <button type="button" className="btn-secondary text-sm min-h-[38px] px-3" onClick={() => setRenombrar(prov.nombre)}><Icon name="pencil" className="w-4 h-4" />Renombrar</button>
+            <button type="button" className="btn-secondary text-sm min-h-[38px] px-3" onClick={() => setFusion({ q: '', destino: null })}><Icon name="merge" className="w-4 h-4" />Fusionar con…</button>
+            <button type="button" className="btn-secondary text-sm min-h-[38px] px-3" onClick={() => void correr(() => actualizarProveedor(prov.id, { activo: !prov.activo }), prov.activo ? 'Proveedor desactivado' : 'Proveedor activado')}>
               {prov.activo ? 'Desactivar' : 'Activar'}
             </button>
-            <button type="button" className="btn-ghost text-[13px] min-h-[38px] px-3 text-neg" onClick={() => setConfirmar('eliminar')}><Icon name="trash" className="w-4 h-4" />Eliminar</button>
+            <button type="button" className="btn-ghost text-sm min-h-[38px] px-3 text-neg" onClick={() => setConfirmar('eliminar')}><Icon name="trash" className="w-4 h-4" />Eliminar</button>
           </div>
         </div>
       </div>
@@ -88,8 +88,8 @@ export default function ProveedorDetalle() {
           {(compras.data ?? []).map((c) => (
             <Link key={c.id} to="/dia" search={{ fecha: c.turno?.jornada?.fecha ?? '' }} className="flex items-center gap-3 px-4 py-2.5 min-h-[52px] hover:bg-soft/60">
               <span className={`w-2 h-2 rounded-full ${c.forma_pago === 'efectivo' ? 'bg-pos' : 'bg-info'}`} />
-              <span className="flex-1 text-[13.5px] text-ink capitalize">{fechaDiaMes(c.turno?.jornada?.fecha)} <span className="text-muted text-[12px]">· {c.turno?.tipo}</span></span>
-              <span className="font-semibold tabular-nums text-ink text-[13.5px]">{clp(c.monto)}</span>
+              <span className="flex-1 text-sm text-ink capitalize">{fechaDiaMes(c.turno?.jornada?.fecha)} <span className="text-muted text-xs">· {c.turno?.tipo}</span></span>
+              <span className="font-semibold tabular-nums text-ink text-sm">{clp(c.monto)}</span>
             </Link>
           ))}
         </div>
@@ -98,20 +98,20 @@ export default function ProveedorDetalle() {
       {renombrar !== null && (
         <BottomSheet title="Renombrar" onClose={() => setRenombrar(null)}>
           <input type="text" className="input" value={renombrar} autoFocus onChange={(e) => setRenombrar(e.target.value)} aria-label="Nuevo nombre" />
-          <p className="text-[12px] text-muted">El nombre nuevo se propaga a todas las compras registradas.</p>
+          <p className="text-xs text-muted">El nombre nuevo se propaga a todas las compras registradas.</p>
           <button type="button" className="btn-primary w-full" disabled={!renombrar.trim() || ocupado}
             onClick={() => void correr(async () => { await actualizarProveedor(prov.id, { nombre: renombrar.trim() }); setRenombrar(null) }, 'Nombre actualizado')}>Guardar</button>
         </BottomSheet>
       )}
       {fusion && (
         <BottomSheet title={`Fusionar “${prov.nombre}” con…`} onClose={() => setFusion(null)}>
-          <p className="text-[12.5px] text-muted">Todas las compras de este proveedor pasan al que elijas y este se elimina. El destino hereda el logo si no tenía.</p>
+          <p className="text-xs text-muted">Todas las compras de este proveedor pasan al que elijas y este se elimina. El destino hereda el logo si no tenía.</p>
           <input type="search" className="input" placeholder="Buscar destino" value={fusion.q} autoFocus onChange={(e) => setFusion({ q: e.target.value, destino: null })} aria-label="Buscar proveedor destino" />
           <div className="flex flex-col gap-1 max-h-[40vh] overflow-y-auto">
             {candidatos.map((c) => (
               <button key={c.id} type="button" onClick={() => setFusion({ ...fusion, destino: c.id })}
                 className={`flex items-center gap-3 rounded-xl px-3 py-2 text-left border ${fusion.destino === c.id ? 'bg-brand-tint border-brand text-brand' : 'bg-card border-hairline text-ink'}`}>
-                <ProveedorAvatar nombre={c.nombre} imagenUrl={c.imagen_url} size="sm" /><span className="flex-1 text-[14px] font-medium">{c.nombre}</span><span className="text-[11px] text-muted">{c.usos} usos</span>
+                <ProveedorAvatar nombre={c.nombre} imagenUrl={c.imagen_url} size="sm" /><span className="flex-1 text-base font-medium">{c.nombre}</span><span className="text-xs text-muted">{c.usos} usos</span>
               </button>
             ))}
           </div>

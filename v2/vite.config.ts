@@ -36,17 +36,13 @@ export default defineConfig({
         ],
       },
       workbox: {
-        // Solo el shell de la app se precachea; los datos viven en React Query
-        // (IndexedDB) y siempre se piden a Supabase.
+        // Solo el shell de la app se precachea (las fuentes incluidas, que
+        // ahora vienen del repo); los datos viven en React Query (IndexedDB)
+        // y siempre se piden a Supabase.
         globPatterns: ['**/*.{js,css,html,svg,png,jpg,woff2}'],
         navigateFallback: '/index.html',
         navigateFallbackDenylist: [/^\/rest\//, /^\/auth\//, /^\/storage\//],
         runtimeCaching: [
-          {
-            urlPattern: /^https:\/\/fonts\.(googleapis|gstatic)\.com\/.*/i,
-            handler: 'CacheFirst',
-            options: { cacheName: 'fuentes', expiration: { maxEntries: 20, maxAgeSeconds: 60 * 60 * 24 * 365 } },
-          },
           {
             urlPattern: /\/storage\/v1\/object\/public\/logos-proveedores\//i,
             handler: 'StaleWhileRevalidate',

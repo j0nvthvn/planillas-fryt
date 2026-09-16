@@ -47,7 +47,7 @@ export class ErrorBoundary extends Component<{ children: ReactNode }, { hasError
             </svg>
           </div>
           <div>
-            <h1 className="font-display text-[26px] text-ink">Algo salió mal</h1>
+            <h1 className="font-display text-2xl text-ink">Algo salió mal</h1>
             <p className="text-sm text-muted mt-1">Ya quedó registrado. Recarga la página para seguir.</p>
           </div>
           <button type="button" onClick={() => window.location.reload()} className="btn-primary w-full py-3 text-base">Recargar</button>

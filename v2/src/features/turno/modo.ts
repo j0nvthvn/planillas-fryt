@@ -56,5 +56,11 @@ export function modosDisponibles(e: EstadoDia): Modo[] {
 export function etiquetaCerrar(modo: Modo, yaCerrado: boolean): string {
   if (yaCerrado) return 'Guardar corrección'
   if (modo === 'completo') return 'Cerrar el día'
-  return `Cerrar turno ${modo}`
+  return `Cerrar la ${modo}`
+}
+
+/** Título de la pantalla: dice qué se está cerrando, no "turno" siempre. */
+export function tituloCierre(modo: Modo, yaCerrado: boolean): string {
+  const que = modo === 'completo' ? 'el día' : `la ${modo}`
+  return yaCerrado ? `Corregir ${que}` : `Cerrar ${que}`
 }

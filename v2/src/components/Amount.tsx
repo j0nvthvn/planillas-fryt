@@ -1,6 +1,6 @@
 import { clp } from '@/lib/format'
 
-const SIZES = { hero: 'text-[52px] leading-none', card: 'text-2xl', inline: 'text-[15px]', sm: 'text-[13px]' } as const
+const SIZES = { hero: 'text-amount-lg leading-none', card: 'text-2xl', inline: 'text-base', sm: 'text-sm' } as const
 const COLORS = { pos: 'text-pos', neg: 'text-neg', brand: 'text-brand', ink: 'text-ink', ink2: 'text-ink2', muted: 'text-muted' } as const
 
 interface Props {

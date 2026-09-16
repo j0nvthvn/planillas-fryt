@@ -41,7 +41,7 @@ export default function Ajustes() {
       <div className="flex gap-2 overflow-x-auto -mx-4 px-4 pb-3 md:flex-wrap md:mx-0 md:px-0" role="tablist">
         {SECCIONES.map((s) => (
           <button key={s.v} type="button" role="tab" aria-selected={seccion === s.v} onClick={() => void navigate({ to: '/ajustes', search: { seccion: s.v } })}
-            className={`shrink-0 min-h-[38px] rounded-full px-4 text-[13px] font-semibold border flex items-center gap-1.5 ${seccion === s.v ? 'bg-brand text-white border-brand' : 'bg-card text-ink2 border-hairline'}`}>
+            className={`shrink-0 min-h-[38px] rounded-full px-4 text-sm font-semibold border flex items-center gap-1.5 ${seccion === s.v ? 'bg-brand text-on-solid border-brand' : 'bg-card text-ink2 border-hairline'}`}>
             <Icon name={s.icon} className="w-4 h-4" />{s.label}
           </button>
         ))}
@@ -49,7 +49,7 @@ export default function Ajustes() {
       {seccion === 'general' && (
         <Link to="/proveedores" className="card mb-4 flex items-center gap-3 hover:border-brand/40">
           <span className="w-10 h-10 rounded-xl bg-brand-tint text-brand grid place-items-center"><Icon name="suppliers" className="w-5 h-5" /></span>
-          <span className="flex-1"><span className="block text-[15px] font-semibold text-ink">Proveedores</span><span className="block text-[12px] text-muted">Catálogo: renombrar, fusionar duplicados, logos</span></span>
+          <span className="flex-1"><span className="block text-base font-semibold text-ink">Proveedores</span><span className="block text-xs text-muted">Catálogo: renombrar, fusionar duplicados, logos</span></span>
           <Icon name="chevR" className="w-4 h-4 text-muted2" />
         </Link>
       )}
@@ -66,7 +66,7 @@ export default function Ajustes() {
 function Fila({ label, hint, children }: { label: string; hint?: string; children: ReactNode }) {
   return (
     <div className="flex items-center justify-between gap-3 px-4 py-3 min-h-[56px]">
-      <div><p className="text-[15px] font-medium text-ink">{label}</p>{hint && <p className="text-[12px] text-muted">{hint}</p>}</div>
+      <div><p className="text-base font-medium text-ink">{label}</p>{hint && <p className="text-xs text-muted">{hint}</p>}</div>
       {children}
     </div>
   )
@@ -90,13 +90,13 @@ function General() {
         <Fila label="Fondo de caja por defecto" hint="Con lo que parte cada turno"><MontoInput className="w-40 text-right" value={f.fondoCajaInicial} onChange={(n) => set({ fondoCajaInicial: n })} ariaLabel="Fondo de caja" /></Fila>
         <Fila label="Corte de la mañana" hint="Hora en que termina el turno mañana"><HoraInput className="w-32 text-right" value={f.horaCorteManana} onChange={(h) => set({ horaCorteManana: h })} ariaLabel="Hora de corte" /></Fila>
         <div className="px-4 py-3">
-          <p className="text-[15px] font-medium text-ink">Días de un solo turno</p>
-          <p className="text-[12px] text-muted mb-2">Esos días se registran siempre como día completo</p>
+          <p className="text-base font-medium text-ink">Días de un solo turno</p>
+          <p className="text-xs text-muted mb-2">Esos días se registran siempre como día completo</p>
           <div className="flex gap-1.5 flex-wrap">
             {DIAS.map((d, i) => {
               const on = f.diasTurnoUnico.includes(i)
               return <button key={d} type="button" aria-pressed={on} onClick={() => set({ diasTurnoUnico: on ? f.diasTurnoUnico.filter((x) => x !== i) : [...f.diasTurnoUnico, i].sort() })}
-                className={`min-h-[38px] px-3 rounded-full text-[13px] font-semibold border ${on ? 'bg-brand text-white border-brand' : 'bg-card text-ink2 border-hairline'}`}>{d}</button>
+                className={`min-h-[38px] px-3 rounded-full text-sm font-semibold border ${on ? 'bg-brand text-on-solid border-brand' : 'bg-card text-ink2 border-hairline'}`}>{d}</button>
             })}
           </div>
         </div>
@@ -107,7 +107,7 @@ function General() {
         <Fila label="Apariencia">
           <div className="flex gap-1 p-1 rounded-xl bg-soft" role="radiogroup">
             {(['sistema', 'claro', 'oscuro'] as Tema[]).map((t) => (
-              <button key={t} type="button" role="radio" aria-checked={tema === t} onClick={() => setTema(t)} className={`min-h-[36px] px-3 rounded-lg text-[13px] font-semibold capitalize ${tema === t ? 'bg-card text-ink shadow-card' : 'text-ink2'}`}>{t}</button>
+              <button key={t} type="button" role="radio" aria-checked={tema === t} onClick={() => setTema(t)} className={`min-h-[36px] px-3 rounded-lg text-sm font-semibold capitalize ${tema === t ? 'bg-card text-ink shadow-card' : 'text-ink2'}`}>{t}</button>
             ))}
           </div>
         </Fila>
@@ -125,7 +125,7 @@ function TiempoDeCierre() {
   return (
     <div className="card p-0 overflow-hidden">
       <Fila label="Tiempo de cierre en este dispositivo" hint={`${lista.length} cierre${lista.length === 1 ? '' : 's'} medidos · promedio ${Math.floor(prom / 60)} min ${prom % 60} s`}>
-        <span className="text-[12px] text-muted tabular-nums text-right">{lista.slice(0, 3).map((m) => `${fechaDiaMes(m.fecha)} ${Math.floor(m.segundos / 60)}:${String(m.segundos % 60).padStart(2, '0')}`).join(' · ')}</span>
+        <span className="text-xs text-muted tabular-nums text-right">{lista.slice(0, 3).map((m) => `${fechaDiaMes(m.fecha)} ${Math.floor(m.segundos / 60)}:${String(m.segundos % 60).padStart(2, '0')}`).join(' · ')}</span>
       </Fila>
     </div>
   )
@@ -140,7 +140,7 @@ function Trabajadores() {
   if (lista.isPending) return <Spinner />
   return (
     <div className="space-y-3">
-      <p className="text-[13px] text-muted px-1">Quiénes atienden el local. No son cuentas: se eligen al cerrar el turno.</p>
+      <p className="text-sm text-muted px-1">Quiénes atienden el local. No son cuentas: se eligen al cerrar el turno.</p>
       <form className="flex gap-2" onSubmit={(e) => { e.preventDefault(); if (nuevo.trim()) void run(() => crearTrabajador(nuevo).then(() => setNuevo('')), 'Agregado') }}>
         <input className="input flex-1" placeholder="Nombre" value={nuevo} onChange={(e) => setNuevo(e.target.value)} aria-label="Nombre del trabajador" />
         <button type="submit" className="btn-primary px-4" disabled={!nuevo.trim()}>Agregar</button>
@@ -149,8 +149,8 @@ function Trabajadores() {
         {(lista.data ?? []).map((t) => (
           <Fila key={t.id} label={t.nombre} hint={t.activo ? undefined : 'Inactivo'}>
             <div className="flex gap-1">
-              <button type="button" className="btn-ghost text-[13px] min-h-[38px] px-3" onClick={() => void run(() => actualizarTrabajador(t.id, { activo: !t.activo }), t.activo ? 'Desactivado' : 'Activado')}>{t.activo ? 'Desactivar' : 'Activar'}</button>
-              <button type="button" className="btn-ghost text-[13px] min-h-[38px] px-3 text-neg" onClick={() => setBorrar(t)} aria-label={`Eliminar ${t.nombre}`}><Icon name="trash" className="w-4 h-4" /></button>
+              <button type="button" className="btn-ghost text-sm min-h-[38px] px-3" onClick={() => void run(() => actualizarTrabajador(t.id, { activo: !t.activo }), t.activo ? 'Desactivado' : 'Activado')}>{t.activo ? 'Desactivar' : 'Activar'}</button>
+              <button type="button" className="btn-ghost text-sm min-h-[38px] px-3 text-neg" onClick={() => setBorrar(t)} aria-label={`Eliminar ${t.nombre}`}><Icon name="trash" className="w-4 h-4" /></button>
             </div>
           </Fila>
         ))}
@@ -168,15 +168,15 @@ function Metodos() {
   const run = (fn: () => Promise<void>) => fn().catch((e) => toast.error(mensajeDeError(e)))
   return (
     <div className="space-y-3">
-      <p className="text-[13px] text-muted px-1">Los métodos inactivos no aparecen al cerrar el turno. "Total del día" es para máquinas que no cierran por turno: al cerrar la tarde se escribe el total y la app resta la mañana.</p>
+      <p className="text-sm text-muted px-1">Los métodos inactivos no aparecen al cerrar el turno. "Total del día" es para máquinas que no cierran por turno: al cerrar la tarde se escribe el total y la app resta la mañana.</p>
       <div className="card p-0 divide-y divide-hairline overflow-hidden">
         {(lista.data ?? []).map((m, i, arr) => (
           <Fila key={m.key} label={m.label} hint={[m.sub, m.acumulado_diario ? 'la máquina muestra el total del día' : null].filter(Boolean).join(' · ') || undefined}>
             <div className="flex items-center gap-1">
               <button type="button" className="btn-ghost min-h-[38px] px-2" disabled={i === 0} aria-label="Subir" onClick={() => { const prev = arr[i - 1]; if (prev) void run(async () => { await actualizarMetodo(m.key, { orden: prev.orden }); await actualizarMetodo(prev.key, { orden: m.orden }) }) }}><Icon name="caretUp" className="w-4 h-4" /></button>
               <button type="button" className="btn-ghost min-h-[38px] px-2" disabled={i === arr.length - 1} aria-label="Bajar" onClick={() => { const next = arr[i + 1]; if (next) void run(async () => { await actualizarMetodo(m.key, { orden: next.orden }); await actualizarMetodo(next.key, { orden: m.orden }) }) }}><Icon name="caretDown" className="w-4 h-4" /></button>
-              <button type="button" className={`btn-ghost text-[13px] min-h-[38px] px-3 ${m.acumulado_diario ? 'text-brand' : 'text-muted'}`} aria-pressed={m.acumulado_diario} title="La máquina muestra el total del día" onClick={() => void run(() => actualizarMetodo(m.key, { acumulado_diario: !m.acumulado_diario }))}>Total del día</button>
-              <button type="button" className={`btn-ghost text-[13px] min-h-[38px] px-3 ${m.activo ? '' : 'text-neg'}`} onClick={() => void run(() => actualizarMetodo(m.key, { activo: !m.activo }))}>{m.activo ? 'Activo' : 'Inactivo'}</button>
+              <button type="button" className={`btn-ghost text-sm min-h-[38px] px-3 ${m.acumulado_diario ? 'text-brand' : 'text-muted'}`} aria-pressed={m.acumulado_diario} title="La máquina muestra el total del día" onClick={() => void run(() => actualizarMetodo(m.key, { acumulado_diario: !m.acumulado_diario }))}>Total del día</button>
+              <button type="button" className={`btn-ghost text-sm min-h-[38px] px-3 ${m.activo ? '' : 'text-neg'}`} onClick={() => void run(() => actualizarMetodo(m.key, { activo: !m.activo }))}>{m.activo ? 'Activo' : 'Inactivo'}</button>
             </div>
           </Fila>
         ))}
@@ -193,13 +193,13 @@ function Papelera() {
   const run = (fn: () => Promise<void>, ok: string) => fn().then(() => toast.ok(ok)).catch((e) => toast.error(mensajeDeError(e)))
   return (
     <div className="space-y-3">
-      <p className="text-[13px] text-muted px-1">Turnos eliminados. Se pueden restaurar o borrar definitivamente.</p>
+      <p className="text-sm text-muted px-1">Turnos eliminados. Se pueden restaurar o borrar definitivamente.</p>
       <div className="card p-0 divide-y divide-hairline overflow-hidden">
         {(lista.data ?? []).map((t) => (
           <Fila key={t.id} label={`${fechaDiaMes(t.jornada?.fecha)} · ${etiquetaModo(t.jornada?.es_turno_unico && t.tipo === 'mañana' ? 'completo' : t.tipo)}`} hint={`ventas ${clp(totalVentas(t.ventas))} · eliminado ${fechaHora(t.deleted_at)}`}>
             <div className="flex gap-1">
-              <button type="button" className="btn-ghost text-[13px] min-h-[38px] px-3" onClick={() => void run(() => restaurarTurno(t.id, t.jornada?.fecha ?? ''), 'Turno restaurado')}><Icon name="undo" className="w-4 h-4" />Restaurar</button>
-              <button type="button" className="btn-ghost text-[13px] min-h-[38px] px-3 text-neg" onClick={() => setPurgar(t.id)} aria-label="Borrar definitivamente"><Icon name="trash" className="w-4 h-4" /></button>
+              <button type="button" className="btn-ghost text-sm min-h-[38px] px-3" onClick={() => void run(() => restaurarTurno(t.id, t.jornada?.fecha ?? ''), 'Turno restaurado')}><Icon name="undo" className="w-4 h-4" />Restaurar</button>
+              <button type="button" className="btn-ghost text-sm min-h-[38px] px-3 text-neg" onClick={() => setPurgar(t.id)} aria-label="Borrar definitivamente"><Icon name="trash" className="w-4 h-4" /></button>
             </div>
           </Fila>
         ))}
@@ -223,9 +223,10 @@ function Usuarios() {
     if (!form) return
     setOcupado(true)
     try {
-      const { data, error } = await supabase.functions.invoke('crear-usuario', { body: form })
-      if (error) throw error
-      if (data && typeof data === 'object' && 'error' in data && (data as { error?: string }).error) throw new Error((data as { error: string }).error)
+      // `invoke` devuelve el error sin tipo: se normaliza a Error.
+      const r = await supabase.functions.invoke<{ error?: string }>('crear-usuario', { body: form })
+      if (r.error) throw r.error instanceof Error ? r.error : new Error(mensajeDeError(r.error))
+      if (r.data?.error) throw new Error(r.data.error)
       toast.ok('Cuenta creada')
       setForm(null)
       await queryClient.invalidateQueries({ queryKey: qk.usuarios })
@@ -234,11 +235,11 @@ function Usuarios() {
   if (lista.isPending) return <Spinner />
   return (
     <div className="space-y-3">
-      <p className="text-[13px] text-muted px-1">Cuentas con acceso a la app. Las nuevas se crean como trabajador (ven Hoy y Cerrar turno).</p>
+      <p className="text-sm text-muted px-1">Cuentas con acceso a la app. Las nuevas se crean como trabajador (ven Hoy y Cerrar turno).</p>
       <div className="card p-0 divide-y divide-hairline overflow-hidden">
         {(lista.data ?? []).map((u) => (
           <Fila key={u.id} label={u.nombre + (u.id === yo?.id ? ' (tú)' : '')} hint={`${u.email} · ${u.rol}${u.activo ? '' : ' · inactivo'}`}>
-            {u.id !== yo?.id && <button type="button" className="btn-ghost text-[13px] min-h-[38px] px-3" onClick={() => void supabase.from('usuarios').update({ activo: !u.activo }).eq('id', u.id).then(({ error }) => { if (error) toast.error(error.message); else void queryClient.invalidateQueries({ queryKey: qk.usuarios }) })}>{u.activo ? 'Desactivar' : 'Activar'}</button>}
+            {u.id !== yo?.id && <button type="button" className="btn-ghost text-sm min-h-[38px] px-3" onClick={() => void supabase.from('usuarios').update({ activo: !u.activo }).eq('id', u.id).then(({ error }) => { if (error) toast.error(error.message); else void queryClient.invalidateQueries({ queryKey: qk.usuarios }) })}>{u.activo ? 'Desactivar' : 'Activar'}</button>}
           </Fila>
         ))}
       </div>
@@ -264,8 +265,8 @@ function Errores() {
     <div className="card p-0 divide-y divide-hairline overflow-hidden">
       {(lista.data ?? []).map((e) => (
         <div key={e.id} className="px-4 py-3">
-          <p className="text-[13.5px] text-ink break-words">{e.mensaje}</p>
-          <p className="text-[11.5px] text-muted mt-0.5">{fechaHora(e.created_at)}{e.contexto ? ` · ${e.contexto}` : ''}{e.ruta ? ` · ${e.ruta}` : ''}</p>
+          <p className="text-sm text-ink break-words">{e.mensaje}</p>
+          <p className="text-xs text-muted mt-0.5">{fechaHora(e.created_at)}{e.contexto ? ` · ${e.contexto}` : ''}{e.ruta ? ` · ${e.ruta}` : ''}</p>
         </div>
       ))}
       {(lista.data ?? []).length === 0 && <p className="text-center text-muted py-6 text-sm">Sin errores registrados.</p>}

@@ -4,6 +4,7 @@ import { useRegisterSW } from 'virtual:pwa-register/react'
 import Icon, { type IconName } from './Icon'
 import { useOnline } from '@/hooks/useOnline'
 import { useUsuario } from '@/hooks/useUsuario'
+import { AvatarMenu } from './AvatarMenu'
 
 interface Item { to: string; label: string; icon: IconName; dueno?: boolean }
 
@@ -27,9 +28,9 @@ function ActualizacionBanner() {
   const { needRefresh: [needRefresh], updateServiceWorker } = useRegisterSW()
   if (!needRefresh) return null
   return (
-    <div className="shrink-0 z-30 flex items-center justify-between gap-3 bg-info text-white text-[13px] font-semibold px-4 py-2">
+    <div className="shrink-0 z-30 flex items-center justify-between gap-3 bg-info text-on-solid text-sm font-semibold px-4 py-2">
       <span>Hay una versión nueva de FrytControl.</span>
-      <button onClick={() => void updateServiceWorker(true)} className="rounded-lg bg-white/20 px-3 py-1 font-bold">Actualizar</button>
+      <button onClick={() => void updateServiceWorker(true)} className="rounded-lg bg-on-solid/20 px-3 py-1 font-bold">Actualizar</button>
     </div>
   )
 }
@@ -49,17 +50,17 @@ export default function Layout({ children }: { children: ReactNode }) {
     <div className="app-shell flex flex-col bg-canvas">
       <ActualizacionBanner />
       {!online && (
-        <div role="status" className="shrink-0 z-30 flex items-center justify-center gap-2 bg-warn text-white text-[12.5px] font-semibold px-3 py-2 text-center">
+        <div role="status" className="shrink-0 z-30 flex items-center justify-center gap-2 bg-warn text-on-solid text-xs font-semibold px-3 py-2 text-center">
           <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse shrink-0" />
           Sin conexión: se guarda en este dispositivo y se reintenta al volver
         </div>
       )}
 
       <div className="flex flex-1 min-h-0 max-w-screen-2xl mx-auto w-full overflow-hidden md:overflow-visible">
-        <aside className="hidden md:flex flex-col w-[220px] shrink-0 border-r border-hairline bg-card sticky top-0 h-screen overflow-y-auto">
+        <aside className="hidden md:flex no-select flex-col w-[220px] shrink-0 border-r border-hairline bg-card sticky top-0 h-screen overflow-y-auto">
           <div className="px-5 pt-6 pb-4">
             <p className="eyebrow text-brand">FrytControl</p>
-            <p className="text-[11px] text-muted2 mt-0.5">Minimarket Fryt</p>
+            <p className="text-xs text-muted2 mt-0.5">Minimarket Fryt</p>
           </div>
           <nav className="flex-1 space-y-0.5 px-2 pb-4" aria-label="Navegación principal">
             {items.map((i) => {
@@ -72,6 +73,9 @@ export default function Layout({ children }: { children: ReactNode }) {
               )
             })}
           </nav>
+          <div className="px-2 pb-4 border-t border-hairline pt-2">
+            <AvatarMenu variante="bloque" />
+          </div>
         </aside>
 
         <main className="flex-1 min-h-0 min-w-0 px-4 sm:px-6 md:px-8 pt-5 pb-nav md:pb-8 overflow-y-auto overflow-x-hidden md:overflow-visible">
@@ -79,7 +83,7 @@ export default function Layout({ children }: { children: ReactNode }) {
         </main>
       </div>
 
-      <nav aria-label="Navegación principal" className="md:hidden shrink-0 relative bg-card border-t border-hairline"
+      <nav aria-label="Navegación principal" className="md:hidden no-select shrink-0 relative bg-card border-t border-hairline"
         style={{ paddingBottom: 'max(8px, env(safe-area-inset-bottom))' }}>
         <div className="flex items-stretch">
           <div className="flex-1 flex items-stretch">{izq.map((i) => <Tab key={i.to} item={i} on={activo(pathname, i.to)} />)}</div>
@@ -87,11 +91,11 @@ export default function Layout({ children }: { children: ReactNode }) {
           <div className="flex-1 flex items-stretch">{der.map((i) => <Tab key={i.to} item={i} on={activo(pathname, i.to)} />)}</div>
         </div>
         <Link to={fab.to} aria-current={activo(pathname, fab.to) ? 'page' : undefined}
-          className="absolute left-1/2 -translate-x-1/2 bottom-[max(8px,env(safe-area-inset-bottom))] z-40 flex flex-col items-center gap-1 text-[11px] font-semibold text-brand">
-          <span className={`flex items-center justify-center w-14 h-14 -mt-7 rounded-full shadow-hero text-white ${activo(pathname, fab.to) ? 'bg-brand-hover' : 'bg-brand'}`}>
+          className="absolute left-1/2 -translate-x-1/2 bottom-[max(8px,env(safe-area-inset-bottom))] z-40 flex flex-col items-center gap-1 text-xs font-semibold text-brand">
+          <span className={`flex items-center justify-center w-14 h-14 -mt-7 rounded-full shadow-hero text-on-solid ${activo(pathname, fab.to) ? 'bg-brand-hover' : 'bg-brand'}`}>
             <Icon name="plus" className="w-6 h-6" stroke={2.2} />
           </span>
-          <span>Cerrar</span>
+          <span>Cerrar caja</span>
         </Link>
       </nav>
     </div>
@@ -101,7 +105,7 @@ export default function Layout({ children }: { children: ReactNode }) {
 function Tab({ item, on }: { item: Item; on: boolean }) {
   return (
     <Link to={item.to} aria-current={on ? 'page' : undefined}
-      className={`flex-1 flex flex-col items-center justify-center gap-0.5 pt-2 pb-1 min-h-[60px] text-[11px] font-medium ${on ? 'text-brand' : 'text-muted'}`}>
+      className={`flex-1 flex flex-col items-center justify-center gap-0.5 pt-2 pb-1 min-h-[60px] text-xs font-medium ${on ? 'text-brand' : 'text-muted'}`}>
       <span className={`flex items-center justify-center w-12 h-7 rounded-full ${on ? 'bg-brand-tint' : ''}`}>
         <Icon name={item.icon} className="w-5 h-5" stroke={on ? 2.2 : 1.8} />
       </span>

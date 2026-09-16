@@ -54,13 +54,13 @@ export default function Proveedores() {
         <Icon name="search" className="w-[18px] h-[18px] absolute left-3.5 top-1/2 -translate-y-1/2 text-muted2" />
         <input type="search" className="input pl-10" placeholder="Buscar proveedor" value={q} onChange={(e) => setQ(e.target.value)} aria-label="Buscar proveedor" />
       </div>
-      <label className="flex items-center gap-2 text-[13px] text-ink2 mb-3 px-1"><input type="checkbox" checked={verInactivos} onChange={(e) => setVerInactivos(e.target.checked)} />Mostrar inactivos</label>
+      <label className="flex items-center gap-2 text-sm text-ink2 mb-3 px-1"><input type="checkbox" checked={verInactivos} onChange={(e) => setVerInactivos(e.target.checked)} />Mostrar inactivos</label>
 
       {sospechosos.length > 0 && !q && (
-        <div className="mb-3 rounded-2xl bg-warn-tint border border-warn/30 px-4 py-3 text-[13px] text-warn">
+        <div className="mb-3 rounded-2xl bg-warn-tint border border-warn/30 px-4 py-3 text-sm text-warn">
           <p className="font-semibold">Posibles duplicados</p>
           <ul className="mt-1 space-y-0.5">{sospechosos.slice(0, 6).map((g) => <li key={g.join('|')}>{g.join(' · ')}</li>)}</ul>
-          <p className="mt-1 text-[12px]">Ábrelos y usa “Fusionar con…” para unificarlos.</p>
+          <p className="mt-1 text-xs">Ábrelos y usa “Fusionar con…” para unificarlos.</p>
         </div>
       )}
 
@@ -69,7 +69,7 @@ export default function Proveedores() {
           {lista.map((p) => (
             <Link key={p.id} to="/proveedores/$id" params={{ id: p.id }} className={`flex items-center gap-3 px-4 py-3 min-h-[60px] hover:bg-soft/60 ${p.activo ? '' : 'opacity-55'}`}>
               <ProveedorAvatar nombre={p.nombre} imagenUrl={p.imagen_url} />
-              <span className="flex-1 min-w-0"><span className="block text-[15px] font-medium text-ink truncate">{p.nombre}</span><span className="block text-[12px] text-muted">{p.usos ? `${p.usos} compra${p.usos === 1 ? '' : 's'} recientes` : 'Sin compras recientes'}{p.activo ? '' : ' · inactivo'}</span></span>
+              <span className="flex-1 min-w-0"><span className="block text-base font-medium text-ink truncate">{p.nombre}</span><span className="block text-xs text-muted">{p.usos ? `${p.usos} compra${p.usos === 1 ? '' : 's'} recientes` : 'Sin compras recientes'}{p.activo ? '' : ' · inactivo'}</span></span>
               <Icon name="chevR" className="w-4 h-4 text-muted2" />
             </Link>
           ))}

@@ -29,22 +29,22 @@ interface KeypadProps {
 export function Keypad({ onKey, onAccept, disabled, label }: KeypadProps) {
   const keys = ['7', '8', '9', '4', '5', '6', '1', '2', '3', '000', '0', 'del']
   return (
-    <div className="flex flex-col gap-2.5">
+    <div className="flex flex-col gap-2.5 no-select">
       <div className="grid grid-cols-3 gap-2.5">
         {keys.map((k) => (
           <button key={k} type="button" onClick={() => onKey(k)}
             aria-label={k === 'del' ? 'Borrar' : k}
-            className={`h-[54px] md:h-[52px] rounded-[15px] text-[23px] font-semibold text-ink active:scale-95 flex items-center justify-center transition-transform duration-75 ${k === 'del' ? 'bg-soft' : 'bg-card border border-hairline'}`}>
+            className={`h-[54px] md:h-[52px] rounded-[15px] text-2xl font-semibold text-ink active:scale-95 flex items-center justify-center transition-transform duration-75 ${k === 'del' ? 'bg-soft' : 'bg-card border border-hairline'}`}>
             {k === 'del' ? (
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="text-ink2">
                 <path d="M20 6H9l-5 6 5 6h11a1 1 0 001-1V7a1 1 0 00-1-1zM15 10l-4 4M11 10l4 4" />
               </svg>
-            ) : <span className={k === '000' ? 'text-[18px] text-ink2' : ''}>{k}</span>}
+            ) : <span className={k === '000' ? 'text-lg text-ink2' : ''}>{k}</span>}
           </button>
         ))}
       </div>
       <button type="button" onClick={onAccept} disabled={disabled}
-        className="h-12 rounded-2xl text-white text-base font-bold flex items-center justify-center gap-2 mt-1 bg-brand disabled:bg-muted2/60 disabled:cursor-not-allowed">
+        className="h-12 rounded-2xl text-on-solid text-base font-bold flex items-center justify-center gap-2 mt-1 bg-brand disabled:bg-muted2/60 disabled:cursor-not-allowed">
         <Icon name="check" className="w-5 h-5" stroke={2.4} />{label}
       </button>
     </div>
@@ -57,7 +57,7 @@ export function AmountDisplay({ digits, sub, color }: { digits: string; sub?: st
   return (
     <div className="rounded-2xl bg-card border border-hairline px-4 py-3">
       {sub && <p className="eyebrow mb-1">{sub}</p>}
-      <p className={`amount text-[44px] leading-none ${n ? 'text-ink' : 'text-muted2'}`} style={n && color ? { color } : undefined} aria-live="polite">
+      <p className={`amount text-amount leading-none ${n ? 'text-ink' : 'text-muted2'}`} style={n && color ? { color } : undefined} aria-live="polite">
         {clp(n)}
       </p>
     </div>

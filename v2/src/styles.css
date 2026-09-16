@@ -7,8 +7,10 @@
    Tokens "Cálido Editorial" (portados de la app actual). Los valores
    viven en variables CSS que cambian en .dark; el @theme los expone a
    Tailwind como colores (bg-brand, text-ink, border-hairline, …).
-   Contraste: muted/muted2 se oscurecieron respecto de la v1 para cumplir
-   4,5:1 sobre tarjeta blanca (antes 2,9:1 y 2,3:1).
+   Contraste: muted, muted2 y warn cumplen 4,5:1 sobre tarjeta, canvas
+   y soft. `on-solid` es el color del texto sobre un fondo sólido de
+   marca/estado: blanco en claro, tinta en oscuro (donde brand, warn,
+   info y neg son claros y el blanco encima no se lee).
    ────────────────────────────────────────────────────────────── */
 :root {
   --brand:       #5C3317;
@@ -21,17 +23,20 @@
   --ink:         #2A211A;
   --ink2:        #5F5245;
   --muted:       #6F5F4E;
-  --muted2:      #857459;
+  --muted2:      #6E5F45;
   --pos:         #1E7A4F;
   --pos-tint:    #E6F1EA;
   --pos-border:  #B8DCC7;
   --neg:         #B91C1C;
   --neg-tint:    #FBE9E9;
-  --warn:        #8F6A22;
+  --warn:        #7A5514;
   --warn-tint:   #FBF1DD;
   --info:        #33518C;
   --info-tint:   #E8EDF6;
   --image-bg:    #F3F4F6;
+  --cash:        #1E7A4F;
+  --wire:        #33518C;
+  --on-solid:    #FFFFFF;
   --shadow-card: 0 6px 20px -14px rgba(92, 51, 23, .20);
   --shadow-hero: 0 8px 24px -14px rgba(92, 51, 23, .28);
   color-scheme: light;
@@ -48,7 +53,7 @@ html.dark {
   --ink:         #F1E7D5;
   --ink2:        #B3A48F;
   --muted:       #A89882;
-  --muted2:      #8D7E69;
+  --muted2:      #9D8D76;
   --pos:         #5DB890;
   --pos-tint:    #1A3C2A;
   --pos-border:  #2E6048;
@@ -59,6 +64,9 @@ html.dark {
   --info:        #7393D2;
   --info-tint:   #263050;
   --image-bg:    #322D26;
+  --cash:        #5DB890;
+  --wire:        #7393D2;
+  --on-solid:    #1A1612;
   --shadow-card: 0 6px 20px -14px rgba(0, 0, 0, .40);
   --shadow-hero: 0 8px 24px -14px rgba(0, 0, 0, .50);
   color-scheme: dark;
@@ -67,6 +75,18 @@ html.dark {
 @theme inline {
   --font-sans: "Hanken Grotesk", system-ui, sans-serif;
   --font-display: "Instrument Serif", Georgia, serif;
+
+  /* Escala tipográfica: seis pasos y nada bajo 12 px (la caja se cierra
+     de noche en un celular). Los tamaños de display son para cifras. */
+  --text-xs: 12px;
+  --text-sm: 13px;
+  --text-base: 15px;
+  --text-lg: 17px;
+  --text-2xl: 24px;
+  --text-amount-sm: 30px;
+  --text-amount: 44px;
+  --text-amount-lg: 52px;
+  --text-hero: 60px;
 
   --color-brand: var(--brand);
   --color-brand-hover: var(--brand-hover);
@@ -89,8 +109,9 @@ html.dark {
   --color-info: var(--info);
   --color-info-tint: var(--info-tint);
   --color-image-bg: var(--image-bg);
-  --color-cash: #1E7A4F;
-  --color-wire: #33518C;
+  --color-cash: var(--cash);
+  --color-wire: var(--wire);
+  --color-on-solid: var(--on-solid);
 
   --radius-xl2: 20px;
   --shadow-card: var(--shadow-card);
@@ -101,8 +122,6 @@ html.dark {
   html {
     -webkit-tap-highlight-color: transparent;
     overscroll-behavior: none;
-    -webkit-user-select: none;
-    user-select: none;
   }
   body {
     margin: 0;
@@ -122,22 +141,38 @@ html.dark {
     html { scrollbar-gutter: stable; }
   }
   input, textarea, select, [contenteditable] {
-    -webkit-user-select: text;
-    user-select: text;
     font-size: 16px; /* evita el zoom automático de iOS al enfocar */
   }
   button { touch-action: manipulation; }
+
+  /* Foco visible en todo lo enfocable, no solo en los botones con `btn`:
+     filas de ventas y proveedores, pestañas, chips y teclado incluidos. */
+  :focus-visible {
+    outline: 2px solid var(--brand);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  /* Quien pide menos movimiento no ve hojas que suben ni teclas que saltan. */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: .01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: .01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
 }
 
 /* Utilidades propias (Tailwind v4: @utility permite usarlas en @apply). */
 @utility btn {
-  @apply inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-2 text-sm font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none;
+  @apply inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-2 text-sm font-semibold transition-colors focus:outline-none disabled:opacity-50 disabled:pointer-events-none;
   min-height: 44px;
 }
-@utility btn-primary { @apply btn bg-brand text-white hover:bg-brand-hover focus-visible:ring-brand; }
-@utility btn-secondary { @apply btn bg-card text-ink2 border border-hairline hover:bg-canvas focus-visible:ring-brand; }
-@utility btn-danger { @apply btn bg-neg text-white hover:opacity-90 focus-visible:ring-neg; }
-@utility btn-ghost { @apply btn bg-transparent text-ink2 hover:bg-soft focus-visible:ring-brand; }
+@utility btn-primary { @apply btn bg-brand text-on-solid hover:bg-brand-hover; }
+@utility btn-secondary { @apply btn bg-card text-ink2 border border-hairline hover:bg-canvas; }
+@utility btn-danger { @apply btn bg-neg text-on-solid hover:opacity-90; }
+@utility btn-ghost { @apply btn bg-transparent text-ink2 hover:bg-soft; }
 
 @utility input {
   @apply block w-full rounded-[14px] px-3.5 py-3 bg-canvas text-ink border border-hairline placeholder:text-muted2 focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand;
@@ -148,9 +183,19 @@ html.dark {
 @utility card { @apply rounded-[20px] p-5 bg-card border border-hairline shadow-card; }
 @utility card-hero { @apply card shadow-hero; }
 
-@utility eyebrow { @apply text-[12px] font-bold uppercase text-muted2 tracking-[0.12em]; }
-@utility amount { @apply font-display tabular-nums; }
+@utility eyebrow { @apply text-xs font-bold uppercase text-muted2 tracking-[0.12em]; }
+/* Cifra de display (serif). Instrument Serif no trae cifras tabulares:
+   para columnas de números va `cifra`, en Hanken Grotesk. */
+@utility amount { @apply font-display; }
+@utility cifra { @apply font-sans font-semibold tabular-nums; }
 @utility label { @apply block text-sm font-medium mb-1 text-ink2; }
+
+/* Solo aquí se bloquea la selección: en el resto de la app un monto o una
+   fila de la planilla se pueden copiar para pegarlos en WhatsApp. */
+@utility no-select {
+  -webkit-user-select: none;
+  user-select: none;
+}
 
 @layer components {
   .safe-bottom { padding-bottom: max(12px, env(safe-area-inset-bottom)); }

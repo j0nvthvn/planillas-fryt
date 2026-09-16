@@ -78,7 +78,7 @@ export default function Planilla() {
               <div className="flex items-center gap-2 mb-1"><p className="eyebrow">Neto del día</p><EstadoChip estado={r?.estado ?? 'sin_registro'} /></div>
               <Amount variant="hero" color={(r?.neto ?? 0) >= 0 ? 'pos' : 'neg'} value={r?.neto ?? 0} />
             </div>
-            <div className="text-right text-[12.5px] text-muted space-y-0.5">
+            <div className="text-right text-xs text-muted space-y-0.5">
               <p>Ventas <b className="text-ink tabular-nums">{clp(r?.total_ventas ?? 0)}</b></p>
               <p>Proveedores <b className="text-ink tabular-nums">{clp(r?.total_proveedores ?? 0)}</b></p>
               <p>Efectivo esperado <b className="text-brand tabular-nums">{clp(r?.efectivo_esperado ?? 0)}</b></p>
@@ -130,13 +130,13 @@ function TarjetaTurno({ t, fecha, esDueno, metodos, onDiff, onAccion, puedeUnir,
     <article className="card p-0 overflow-hidden">
       <div className="px-5 pt-4 pb-3 border-b border-hairline flex items-start justify-between gap-2">
         <div>
-          <h2 className="text-[17px] font-bold text-ink">{etiquetaModo(turno.modo)}</h2>
-          <p className="text-[12px] text-muted">{turno.trabajador_nombre ?? turno.usuario_nombre ?? '—'}{turno.ultimo_cierre_en ? ` · cerrado ${horaCorta(turno.ultimo_cierre_en)}` : ''}</p>
+          <h2 className="text-lg font-bold text-ink">{etiquetaModo(turno.modo)}</h2>
+          <p className="text-xs text-muted">{turno.trabajador_nombre ?? turno.usuario_nombre ?? '—'}{turno.ultimo_cierre_en ? ` · cerrado ${horaCorta(turno.ultimo_cierre_en)}` : ''}</p>
         </div>
         <div className="flex flex-col items-end gap-1">
-          {turno.is_draft ? <span className="text-[10px] font-bold uppercase text-warn bg-warn-tint rounded-full px-2 py-0.5">Borrador</span>
-            : turno.corregido ? <button type="button" onClick={onDiff} className="text-[10px] font-bold uppercase text-info bg-info-tint rounded-full px-2 py-0.5">Corregido · ver</button>
-            : <span className="text-[10px] font-bold uppercase text-pos bg-pos-tint rounded-full px-2 py-0.5">Cerrado</span>}
+          {turno.is_draft ? <span className="text-xs font-bold uppercase text-warn bg-warn-tint rounded-full px-2 py-0.5">Borrador</span>
+            : turno.corregido ? <button type="button" onClick={onDiff} className="text-xs font-bold uppercase text-info bg-info-tint rounded-full px-2 py-0.5">Corregido · ver</button>
+            : <span className="text-xs font-bold uppercase text-pos bg-pos-tint rounded-full px-2 py-0.5">Cerrado</span>}
         </div>
       </div>
       {/* Cuaderno: la planilla de papel pasada a limpio */}
@@ -162,10 +162,10 @@ function TarjetaTurno({ t, fecha, esDueno, metodos, onDiff, onAccion, puedeUnir,
       </div>
       {esDueno && (
         <div className="px-3 py-2 border-t border-hairline flex flex-wrap gap-1">
-          <Link to="/turno" search={{ fecha, modo: turno.modo }} className="btn-ghost text-[13px] min-h-[40px]"><Icon name="pencil" className="w-4 h-4" />{turno.is_draft ? 'Seguir' : 'Corregir'}</Link>
-          {esCompleto && turno.modo === 'completo' && <button type="button" onClick={() => onAccion('dividir')} className="btn-ghost text-[13px] min-h-[40px]"><Icon name="split" className="w-4 h-4" />Dividir en dos turnos</button>}
-          {puedeUnir && turno.modo === 'mañana' && <button type="button" onClick={() => onAccion('unir')} className="btn-ghost text-[13px] min-h-[40px]"><Icon name="merge" className="w-4 h-4" />Unir como día completo</button>}
-          <button type="button" onClick={() => onAccion('eliminar')} className="btn-ghost text-[13px] min-h-[40px] text-neg ml-auto"><Icon name="trash" className="w-4 h-4" />Eliminar</button>
+          <Link to="/turno" search={{ fecha, modo: turno.modo }} className="btn-ghost text-sm min-h-[40px]"><Icon name="pencil" className="w-4 h-4" />{turno.is_draft ? 'Seguir' : 'Corregir'}</Link>
+          {esCompleto && turno.modo === 'completo' && <button type="button" onClick={() => onAccion('dividir')} className="btn-ghost text-sm min-h-[40px]"><Icon name="split" className="w-4 h-4" />Dividir en dos turnos</button>}
+          {puedeUnir && turno.modo === 'mañana' && <button type="button" onClick={() => onAccion('unir')} className="btn-ghost text-sm min-h-[40px]"><Icon name="merge" className="w-4 h-4" />Unir como día completo</button>}
+          <button type="button" onClick={() => onAccion('eliminar')} className="btn-ghost text-sm min-h-[40px] text-neg ml-auto"><Icon name="trash" className="w-4 h-4" />Eliminar</button>
         </div>
       )}
     </article>

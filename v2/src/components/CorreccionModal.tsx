@@ -19,16 +19,16 @@ function ListaProveedores({ items, titulo }: { items: Snap[]; titulo: string }) 
   return (
     <div>
       <p className="eyebrow mb-1.5">{titulo}</p>
-      {items.length === 0 ? <p className="text-[12px] text-muted2 italic">Sin proveedores</p> : (
+      {items.length === 0 ? <p className="text-xs text-muted2 italic">Sin proveedores</p> : (
         <div className="space-y-1">
           {items.map((p, i) => (
-            <div key={i} className="flex items-center gap-2 text-[12.5px]">
+            <div key={i} className="flex items-center gap-2 text-xs">
               <span className="flex-1 text-ink2 truncate">{p.nombre}</span>
-              <span className={`text-[9px] font-bold rounded-full px-1.5 py-0.5 ${p.forma_pago === 'efectivo' ? 'bg-pos-tint text-pos' : 'bg-info-tint text-info'}`}>{p.forma_pago === 'efectivo' ? 'Ef.' : 'Tr.'}</span>
+              <span className={`text-xs font-bold rounded-full px-1.5 py-0.5 ${p.forma_pago === 'efectivo' ? 'bg-pos-tint text-pos' : 'bg-info-tint text-info'}`}>{p.forma_pago === 'efectivo' ? 'Ef.' : 'Tr.'}</span>
               <span className="text-ink font-semibold tabular-nums">{clp(p.monto)}</span>
             </div>
           ))}
-          <div className="flex items-center gap-2 text-[12.5px] pt-1 border-t border-soft mt-1">
+          <div className="flex items-center gap-2 text-xs pt-1 border-t border-soft mt-1">
             <span className="flex-1 font-bold text-ink">Total</span><span className="font-bold text-ink tabular-nums">{clp(total)}</span>
           </div>
         </div>
@@ -60,32 +60,32 @@ export function CorreccionModal({ cierres, metodos, titulo, onClose }: { cierres
 
   return (
     <BottomSheet title={titulo} onClose={onClose}>
-      <p className="text-[12px] text-muted -mt-1">{correcciones} corrección{correcciones === 1 ? '' : 'es'} desde el cierre original</p>
-      <div className="text-[12px] text-muted bg-canvas rounded-xl px-3 py-2">Original · {fechaHora(original.cerrado_en)} · {original.cerrado_por_usuario?.nombre ?? '—'}</div>
-      {sinCambios && <p className="text-[13px] text-ink2 bg-soft rounded-xl px-3 py-2">Se volvió a guardar el turno sin cambios en ventas, proveedores ni caja.</p>}
+      <p className="text-xs text-muted -mt-1">{correcciones} corrección{correcciones === 1 ? '' : 'es'} desde el cierre original</p>
+      <div className="text-xs text-muted bg-canvas rounded-xl px-3 py-2">Original · {fechaHora(original.cerrado_en)} · {original.cerrado_por_usuario?.nombre ?? '—'}</div>
+      {sinCambios && <p className="text-sm text-ink2 bg-soft rounded-xl px-3 py-2">Se volvió a guardar el turno sin cambios en ventas, proveedores ni caja.</p>}
       {(filas.length > 0 || caja.length > 0) ? (
         <div className="space-y-2">
           <p className="eyebrow">Qué cambió</p>
           {[...filas, ...caja].map((f) => {
             const delta = f.despues - f.antes
             return (
-              <div key={f.key} className="flex items-center gap-2.5 text-[13px]">
+              <div key={f.key} className="flex items-center gap-2.5 text-sm">
                 <span className="flex-1 text-ink2">{f.label}</span>
                 <span className="text-muted2 tabular-nums line-through">{clp(f.antes)}</span>
                 <Icon name="chevR" className="w-3 h-3 text-muted2" />
                 <span className="font-bold text-ink tabular-nums">{clp(f.despues)}</span>
-                <span className={`text-[11px] font-semibold tabular-nums ${delta > 0 ? 'text-pos' : 'text-neg'}`}>({delta > 0 ? '+' : ''}{clp(delta)})</span>
+                <span className={`text-xs font-semibold tabular-nums ${delta > 0 ? 'text-pos' : 'text-neg'}`}>({delta > 0 ? '+' : ''}{clp(delta)})</span>
               </div>
             )
           })}
         </div>
-      ) : !sinCambios && <p className="text-[12px] text-muted2 italic">Las ventas y la caja no cambiaron.</p>}
+      ) : !sinCambios && <p className="text-xs text-muted2 italic">Las ventas y la caja no cambiaron.</p>}
       <div className="grid grid-cols-2 gap-4">
         <ListaProveedores items={lista(original.proveedores_snapshot)} titulo="Proveedores (original)" />
         <ListaProveedores items={lista(actual.proveedores_snapshot)} titulo="Proveedores (actual)" />
       </div>
       {correcciones > 0 && (
-        <div className="text-[12px] text-info bg-info-tint border border-info/30 rounded-xl px-3 py-2">Última corrección · {fechaHora(actual.cerrado_en)} · {actual.cerrado_por_usuario?.nombre ?? '—'}</div>
+        <div className="text-xs text-info bg-info-tint border border-info/30 rounded-xl px-3 py-2">Última corrección · {fechaHora(actual.cerrado_en)} · {actual.cerrado_por_usuario?.nombre ?? '—'}</div>
       )}
     </BottomSheet>
   )
