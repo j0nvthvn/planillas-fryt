@@ -29,7 +29,8 @@
 -- ============================================================
 
 -- Ya existen en prod; en un proyecto nuevo (staging/local) hay que crearlas.
-create extension if not exists pg_net;
+-- (pg_net en `extensions`, no en `public`: el linter lo marca si queda en public.)
+create extension if not exists pg_net with schema extensions;
 create extension if not exists pg_cron;
 create extension if not exists supabase_vault;
 

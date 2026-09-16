@@ -1,8 +1,8 @@
 # Plan: FrytControl v2 — renovación sin interrumpir la app actual
 
-> **Estado al 2026-09-15**
-> - Fase 0: código listo (repo limpio, migraciones baseline/grants/hardening/correos, edge functions, arreglos de frontend). Pendiente aplicar en prod: `supabase login` + `migration repair` (ver `docs/operacion.md`), dominio en Resend, secretos en Vault, limpieza de datos con la dueña (`docs/limpieza-datos-2026-09.sql`).
-> - Fase 1: migraciones 1.1–1.4 escritas y probadas en local sobre datos sucios (`scripts/test-db.sh`: 62 tests pgTAP; `scripts/smoke-legacy.mjs`: 60 comprobaciones del flujo de la app actual). Pendiente: crear staging (1.0) y aplicar allí, luego en prod (1.6).
+> **Estado al 2026-09-16**
+> - Fase 0: código listo y commiteado (repo limpio, migraciones baseline/grants/hardening/correos, edge functions, arreglos de frontend). **Nada aplicado en prod todavía** (ni base ni frontend: los commits no se han pusheado). Pendiente: aplicar migraciones en prod vía MCP, dominio en Resend + secretos (pospuesto por decisión del usuario), limpieza de datos con la dueña (`docs/limpieza-datos-2026-09.sql`).
+> - Fase 1: migraciones 1.1–1.4 probadas en local (62 pgTAP) y **aplicadas en staging** `psdhhwcxjcobwxjiemrr` (sa-east-1) sobre una copia real de prod: 0 diferencias entre `turno_totales` y los cierres, humo de la app actual (`scripts/smoke-legacy.mjs`, 60 comprobaciones) en verde contra staging y local. Pendiente: 1.6 (prod) cuando el usuario lo autorice.
 > - Fases 2–5: no iniciadas.
 
 ## Contexto

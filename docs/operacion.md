@@ -9,7 +9,27 @@ cómo aplicar migraciones. El plan completo de la renovación está en
 | Entorno | Proyecto Supabase | Región | Uso |
 |---|---|---|---|
 | Producción | `kfmwhtbvgqurnpotypii` (`planillas-fryt`) | us-east-2 | La app actual (`planillas-fryt.vercel.app`) |
-| Staging | `planillas-fryt-staging` (crear en Fase 1.0) | sa-east-1 | Desarrollo de la v2 con copia de datos |
+| Staging | `psdhhwcxjcobwxjiemrr` (`planillas-fryt-staging`) | sa-east-1 | Desarrollo de la v2 con copia de datos (creado 2026-09-16) |
+
+Staging tiene el esquema completo (Fase 0 + Fase 1), una copia de los datos
+de prod al 2026-09-16 (mismos ids), los logos y estas cuentas:
+
+- Las 3 cuentas reales (`usuarios`) con los mismos ids que prod, y
+  `duena@test.local` (dueño) / `local@test.local` (trabajador) para scripts.
+- Todas con la contraseña de staging que está en `.env.staging.local`
+  (`STAGING_PASSWORD`). Los hashes de prod **no** se copiaron.
+- Correos: sin secretos en Vault → `invocar_edge_function` solo deja un
+  WARNING; no sale ningún correo desde staging.
+
+Para correr la app actual contra staging: `pnpm dev --mode staging`
+(Vite lee `.env.staging.local`).
+
+> La cuenta de la CLI (`supabase login`) es distinta de la organización que
+> tiene prod y staging (`ccfgqstvcbxhllxvuivx`), así que `link`/`db push`
+> no aplican por ahora. Las migraciones se aplicaron con el MCP de
+> Supabase, por lotes, y `supabase_migrations.schema_migrations` se dejó
+> con las versiones de los archivos del repo. Cuando la CLI tenga acceso
+> a esa organización, `supabase migration list` debe salir alineado.
 
 Variables del frontend (Vercel → Settings → Environment Variables, y
 `.env.local` local — **nunca** se versiona):
@@ -69,7 +89,9 @@ aplica las migraciones de la Fase 1 encima y corre los tests pgTAP de
 
 ```sh
 # Checklist de humo automatizado (las mismas consultas/escrituras que
-# hacen las pantallas de la app actual; nunca contra producción):
+# hacen las pantallas de la app actual; nunca contra producción). Usa una
+# fecha aleatoria de 2027 y nombres de proveedor únicos, y limpia al final,
+# así se puede correr también contra staging sin tocar los datos copiados:
 SUPABASE_URL=http://127.0.0.1:54321 SUPABASE_ANON_KEY=<ANON_KEY que imprime supabase start> \
 SMOKE_EMAIL=duena@test.local SMOKE_PASSWORD=password123 node scripts/smoke-legacy.mjs
 
@@ -83,6 +105,30 @@ fila en `turno_cierres` (se marcaron cerrados por migración, antes de que
 existiera la auditoría). En `v_turnos` aparecen con `cantidad_cierres = 0`.
 Sobre los 81 turnos que sí tienen cierre, `turno_totales` reproduce
 exactamente los totales guardados (verificado el 2026-09-15).
+
+### Copiar datos de prod a otro proyecto (sin contraseña de la base)
+
+Así se pobló staging; sirve igual para el proyecto definitivo de la Fase 4
+si no se quiere usar `pg_dump`:
+
+1. Aplicar migraciones hasta la Fase 0 (`20260915000200`) en el destino.
+2. Exportar cada tabla de prod como JSON (`select json_agg(t) from tabla t`)
+   en orden de FKs: usuarios, configuracion, proveedores_frecuentes,
+   jornadas, turnos, ventas_turno, proveedores_turno, turno_cierres
+   (ordenado por `cerrado_en`, por la FK a sí misma), logs_error.
+3. Crear en el destino los `auth.users` con los mismos ids (ver
+   `supabase/tests/seed_test.sql` para el formato) y una RPC temporal
+   `security definer` que haga `insert … select * from
+   jsonb_populate_recordset(null::tabla, $1)` con los triggers
+   `touch_turno_*` y `notificar_cierre` deshabilitados durante la carga
+   (para no pisar `updated_at` ni encolar correos). Eliminarla al terminar.
+4. Verificar conteos y sumas (`sum(total_ventas)` de cierres,
+   `sum(efectivo)` de ventas, `sum(monto)` de proveedores) contra prod.
+5. Aplicar la Fase 1 encima (así el saneo de proveedores corre igual que
+   correrá en prod) y comprobar `turno_totales` vs. cierres = 0 diferencias.
+6. Logos: descargar del bucket público de prod y subir con
+   `scripts/copiar-logos.mjs`; luego `update proveedores_frecuentes set
+   imagen_url = replace(imagen_url, '<url prod>', '<url destino>')`.
 
 ## Correos (Resend)
 
@@ -126,7 +172,11 @@ Las llaves **no** están en el repo ni en las definiciones de la base.
 - Dashboard → Authentication → Providers → Email: activar
   *Leaked password protection*.
 - Después de cada migración: `get_advisors` (MCP) o Dashboard →
-  Database → Advisors, sin advertencias nuevas.
+  Database → Advisors, sin advertencias nuevas. Las esperadas (mismas que
+  en prod): "SECURITY DEFINER ejecutable por authenticated" en
+  `cerrar_turno`, `corregir_turno`, `fusionar_proveedores`, `es_dueno`,
+  `get_my_rol` — son las RPC que la app llama a propósito y validan el
+  rol por dentro.
 
 ## Checklist de humo de la app actual
 

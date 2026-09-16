@@ -38,6 +38,9 @@ function sinError(nombre, { error }) {
 // Un día al azar de 2027 (nunca chocará con datos reales ni con una
 // corrida anterior); al final se borra todo lo creado.
 const fecha = new Date(Date.UTC(2027, 0, 1 + Math.floor(Math.random() * 300))).toISOString().slice(0, 10)
+// Proveedor "nuevo" con nombre único: nunca un nombre real del catálogo
+// (contra staging, los datos son copia de prod y no se deben tocar).
+const NUEVO = `Smoke ${fecha}`
 console.log(`fecha de prueba: ${fecha}`)
 const SELECT_TURNO = 'id, updated_at, is_draft, fondo_inicial, proveedores:proveedores_turno(id, nombre, monto, forma_pago), ventas:ventas_turno(efectivo, getnet, mercadopago, edenred, amipass, transferencia)'
 
@@ -80,19 +83,19 @@ let turnoId
   sinError('crear turno borrador', t)
   turnoId = t.data.id
 
-  // Un nombre con grafía distinta ("pf") y uno nuevo ("Ideal").
+  // Un nombre con grafía distinta ("pf") y uno nuevo (NUEVO).
   const ins = await supabase.from('proveedores_turno').insert([
     { turno_id: turnoId, nombre: 'pf', monto: 30000, forma_pago: 'efectivo' },
-    { turno_id: turnoId, nombre: 'Ideal', monto: 12000, forma_pago: 'transferencia' },
+    { turno_id: turnoId, nombre: NUEVO, monto: 12000, forma_pago: 'transferencia' },
   ]).select('id')
   sinError('insertar proveedores', ins)
   check('devuelve los ids', ins.data?.length === 2)
 
   const up = await supabase.from('proveedores_frecuentes').upsert(
-    [{ nombre: 'pf' }, { nombre: 'Ideal' }], { onConflict: 'nombre', ignoreDuplicates: true })
+    [{ nombre: 'pf' }, { nombre: NUEVO }], { onConflict: 'nombre', ignoreDuplicates: true })
   sinError('upsert de frecuentes (grafía duplicada + nuevo)', up)
-  const cat = await supabase.from('proveedores_frecuentes').select('nombre').in('nombre', ['pf', 'PF', 'Ideal'])
-  check('el catálogo no duplicó "pf"', !cat.data?.some((x) => x.nombre === 'pf') && cat.data?.some((x) => x.nombre === 'Ideal'),
+  const cat = await supabase.from('proveedores_frecuentes').select('nombre').in('nombre', ['pf', 'PF', NUEVO])
+  check('el catálogo no duplicó "pf"', !cat.data?.some((x) => x.nombre === 'pf') && cat.data?.some((x) => x.nombre === NUEVO),
     JSON.stringify(cat.data))
 
   // Editar un proveedor ya guardado (actualizar monto y nombre).
@@ -113,7 +116,7 @@ let turnoId
   const carga = await supabase.from('turnos').select(SELECT_TURNO).eq('jornada_id', j.data.id).eq('tipo', 'mañana').is('deleted_at', null).maybeSingle()
   sinError('recargar turno', carga)
   const nombres = (carga.data?.proveedores ?? []).map((p) => p.nombre).sort()
-  check('proveedores con grafía canónica', JSON.stringify(nombres) === JSON.stringify(['Ideal', 'PF']), JSON.stringify(nombres))
+  check('proveedores con grafía canónica', JSON.stringify(nombres) === JSON.stringify([NUEVO, 'PF'].sort()), JSON.stringify(nombres))
   check('ventas cargadas', carga.data?.ventas?.efectivo === 200000 || carga.data?.ventas?.[0]?.efectivo === 200000)
 }
 
@@ -183,8 +186,9 @@ let turnoId
     { turno_id: turnoId, efectivo: 210000, getnet: 50000, mercadopago: 0, edenred: 0, amipass: 0, transferencia: 10000 },
     { onConflict: 'turno_id' })
   sinError('corregir ventas de turno cerrado (dueño)', v)
-  const actuales = await supabase.from('proveedores_turno').select('id').eq('turno_id', turnoId)
-  const del = await supabase.from('proveedores_turno').delete().in('id', [actuales.data[1].id])
+  // Se borra la fila "PF" (determinista); la fila NUEVO se usa más abajo.
+  const actuales = await supabase.from('proveedores_turno').select('id, nombre').eq('turno_id', turnoId)
+  const del = await supabase.from('proveedores_turno').delete().in('id', [actuales.data.find((p) => p.nombre === 'PF').id])
   sinError('borrar un proveedor del turno cerrado (dueño)', del)
   const r = await supabase.rpc('corregir_turno', { p_turno_id: turnoId, p_efectivo_contado: null })
   sinError('corregir_turno', r)
@@ -194,11 +198,11 @@ let turnoId
 
 // ---- Proveedores.jsx: renombrar, eliminar ----
 {
-  const ideal = await supabase.from('proveedores_frecuentes').select('id, nombre').eq('nombre', 'Ideal').single()
-  sinError('leer proveedor Ideal', ideal)
+  const ideal = await supabase.from('proveedores_frecuentes').select('id, nombre').eq('nombre', NUEVO).single()
+  sinError('leer proveedor nuevo', ideal)
   // La app actual renombra primero en los turnos y después en el catálogo.
-  const renombrado = `Ideal Panadería ${fecha}`
-  sinError('renombrar en turnos', await supabase.from('proveedores_turno').update({ nombre: renombrado }).eq('nombre', 'Ideal'))
+  const renombrado = `${NUEVO} Panadería`
+  sinError('renombrar en turnos', await supabase.from('proveedores_turno').update({ nombre: renombrado }).eq('nombre', NUEVO))
   const upd = await supabase.from('proveedores_frecuentes').update({ nombre: renombrado, imagen_url: null }).eq('id', ideal.data.id).select()
   sinError('renombrar en catálogo', upd)
   check('renombrar devuelve la fila (política UPDATE dueño)', upd.data?.length === 1)
@@ -247,7 +251,7 @@ let turnoId
 // ---- limpieza: la jornada (cascada a turnos/ventas/proveedores/cierres) y el catálogo de prueba ----
 {
   sinError('limpieza: borrar jornada de prueba', await supabase.from('jornadas').delete().eq('fecha', fecha))
-  sinError('limpieza: borrar proveedores de prueba', await supabase.from('proveedores_frecuentes').delete().in('nombre', ['Ideal', `Ideal Panadería ${fecha}`, 'Temporal Smoke']))
+  sinError('limpieza: borrar proveedores de prueba', await supabase.from('proveedores_frecuentes').delete().in('nombre', [NUEVO, `${NUEVO} Panadería`, 'Temporal Smoke']))
 }
 
 await supabase.auth.signOut()
