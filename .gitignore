@@ -1,4 +1,10 @@
 node_modules
 .vercel
 dist
-design_handoff_*
+.env
+.env.local
+.env.*.local
+supabase/.temp
+.codegraph
+/deno.lock
+supabase/.branches
