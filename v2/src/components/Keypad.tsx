@@ -34,7 +34,7 @@ export function Keypad({ onKey, onAccept, disabled, label }: KeypadProps) {
         {keys.map((k) => (
           <button key={k} type="button" onClick={() => onKey(k)}
             aria-label={k === 'del' ? 'Borrar' : k}
-            className={`h-[54px] md:h-[52px] rounded-[15px] text-2xl font-semibold text-ink active:scale-95 flex items-center justify-center transition-transform duration-75 ${k === 'del' ? 'bg-soft' : 'bg-card border border-hairline'}`}>
+            className={`h-[54px] [@media(max-height:700px)]:h-[46px] md:h-[52px] rounded-[15px] text-2xl font-semibold text-ink active:scale-95 flex items-center justify-center transition-transform duration-75 ${k === 'del' ? 'bg-soft' : 'bg-card border border-hairline'}`}>
             {k === 'del' ? (
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="text-ink2">
                 <path d="M20 6H9l-5 6 5 6h11a1 1 0 001-1V7a1 1 0 00-1-1zM15 10l-4 4M11 10l4 4" />

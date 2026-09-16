@@ -6,6 +6,8 @@ interface Props {
   children: ReactNode
   onClose: () => void
   extra?: ReactNode
+  /** Acciones que quedan siempre a la vista bajo el contenido desplazable. */
+  footer?: ReactNode
 }
 
 /**
@@ -13,9 +15,10 @@ interface Props {
  * centrado en escritorio. Es un `<dialog>` nativo abierto con `showModal()`:
  * el foco entra al abrir, queda atrapado adentro, vuelve al botón que la
  * abrió al cerrar y Escape funciona solo. Bloquea además el scroll del
- * fondo, que iOS no detiene por su cuenta.
+ * fondo, que iOS no detiene por su cuenta. Solo el cuerpo se desplaza: el
+ * título y el pie (`footer`) quedan fijos aunque la pantalla sea baja.
  */
-export function BottomSheet({ title, children, onClose, extra }: Props) {
+export function BottomSheet({ title, children, onClose, extra, footer }: Props) {
   const ref = useRef<HTMLDialogElement>(null)
   const startY = useRef<number | null>(null)
   const [dragY, setDragY] = useState(0)
@@ -50,7 +53,7 @@ export function BottomSheet({ title, children, onClose, extra }: Props) {
       onCancel={(e) => { e.preventDefault(); onClose() }}
       // Clic en el fondo oscuro: el destino del evento es el propio <dialog>.
       onClick={(e) => { if (e.target === ref.current) onClose() }}
-      className="fixed inset-x-0 bottom-0 top-auto z-50 m-0 w-full max-w-none p-0 border-0 bg-canvas text-ink rounded-t-[30px] px-5 pt-3 max-h-[92dvh] overflow-y-auto flex flex-col gap-3 safe-bottom backdrop:bg-black/35 dark:backdrop:bg-black/60 md:inset-x-auto md:left-1/2 md:bottom-auto md:top-[8vh] md:w-[480px] md:rounded-3xl md:max-h-[84vh]"
+      className="fixed inset-x-0 bottom-0 top-auto z-50 m-0 w-full max-w-none p-0 border-0 bg-canvas text-ink rounded-t-[30px] px-5 pt-3 max-h-[92dvh] overflow-hidden flex flex-col gap-3 safe-bottom backdrop:bg-black/35 dark:backdrop:bg-black/60 md:inset-x-auto md:left-1/2 md:bottom-auto md:top-[8vh] md:w-[480px] md:rounded-3xl md:max-h-[84vh]"
       style={{
         animation: dragY === 0 ? 'sheetUp .26s cubic-bezier(.2,.8,.2,1)' : 'none',
         transform: isDesktop ? 'translateX(-50%)' : `translateY(${dragY}px)`,
@@ -81,7 +84,10 @@ export function BottomSheet({ title, children, onClose, extra }: Props) {
           </div>
         </div>
       )}
-      {children}
+      <div className="flex flex-col gap-3 min-h-0 overflow-y-auto overscroll-contain -mx-5 px-5 -mt-1 pt-1 pb-1">
+        {children}
+      </div>
+      {footer && <div className="shrink-0 flex flex-col gap-2 -mx-5 px-5 pt-3 border-t border-hairline">{footer}</div>}
     </dialog>
   )
 }

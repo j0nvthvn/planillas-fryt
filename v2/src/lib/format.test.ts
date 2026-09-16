@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { clp, clpSigno, clpCorto, fechaISO, sumarDias, diaSemana, parseNum } from './format'
+import { clp, clpSigno, clpCorto, fechaISO, sumarDias, ajustarRango, diaSemana, parseNum, fechaLegible, mesAnio } from './format'
 
 describe('clp', () => {
   it('formatea pesos chilenos sin decimales', () => {
@@ -39,5 +39,34 @@ describe('parseNum', () => {
     expect(parseNum('12.345')).toBe(12345)
     expect(parseNum('')).toBe(0)
     expect(parseNum('abc')).toBe(0)
+  })
+})
+
+describe('ajustarRango', () => {
+  const tope = '2026-09-16'
+  it('deja igual un rango válido', () => {
+    expect(ajustarRango('2026-09-01', '2026-09-10', undefined, tope)).toEqual({ desde: '2026-09-01', hasta: '2026-09-10' })
+  })
+  it('un rango invertido nunca llega a la consulta', () => {
+    expect(ajustarRango('2026-09-12', '2026-09-05', 'desde', tope)).toEqual({ desde: '2026-09-12', hasta: '2026-09-12' })
+    expect(ajustarRango('2026-09-12', '2026-09-05', 'hasta', tope)).toEqual({ desde: '2026-09-05', hasta: '2026-09-05' })
+    expect(ajustarRango('2026-09-12', '2026-09-05', undefined, tope)).toEqual({ desde: '2026-09-05', hasta: '2026-09-12' })
+  })
+  it('las fechas futuras se ajustan a hoy', () => {
+    expect(ajustarRango('2026-09-30', '2026-09-16', undefined, tope)).toEqual({ desde: tope, hasta: tope })
+    expect(ajustarRango('2026-09-01', '2026-10-05', 'hasta', tope)).toEqual({ desde: '2026-09-01', hasta: tope })
+  })
+})
+
+describe('clp negativo', () => {
+  it('el signo va antes del peso', () => {
+    expect(clp(-404199)).toBe('−$404.199')
+  })
+})
+
+describe('fechas legibles', () => {
+  it('mayúscula solo al comienzo', () => {
+    expect(fechaLegible('2026-09-16')).toBe('Miércoles, 16 de septiembre de 2026')
+    expect(mesAnio('2026-09-01')).toBe('Septiembre de 2026')
   })
 })

@@ -10,9 +10,10 @@ import { ProveedorAvatar } from '@/components/ProveedorAvatar'
 import { useMetodos } from '@/features/catalogo/api'
 import { supabase } from '@/lib/supabase'
 import { qk } from '@/lib/query'
-import { clp, clpCorto, fechaISO, hoy, sumarDias, fechaDiaMes, fechaCorta } from '@/lib/format'
+import { clp, clpCorto, fechaISO, hoy, ajustarRango, sumarDias, fechaDiaMes, fechaCorta } from '@/lib/format'
 import { descargarCSV } from '@/lib/csv'
 import type { VResumenDia } from '@/features/turno/api'
+import { colorMetodo } from '@/lib/theme'
 
 interface Totales { total_ventas: number; total_proveedores: number; neto: number; efectivo_neto: number; dias_con_registro: number; dias_con_borrador?: number; [k: string]: number | undefined }
 interface Resumen {
@@ -32,7 +33,7 @@ function rango(preset: '7' | '30' | 'mes'): { desde: string; hasta: string } {
 export default function Analisis() {
   const search = useSearch({ from: '/app/analisis' })
   const navigate = useNavigate()
-  const { desde, hasta } = search.desde && search.hasta ? { desde: search.desde, hasta: search.hasta } : rango('7')
+  const { desde, hasta } = search.desde && search.hasta ? ajustarRango(search.desde, search.hasta) : rango('7')
   const metodos = useMetodos()
   const q = useQuery({
     queryKey: qk.resumenPeriodo(desde, hasta),
@@ -61,14 +62,15 @@ export default function Analisis() {
       <div className="flex flex-wrap items-center gap-2 mb-4">
         {(['7', '30', 'mes'] as const).map((p) => (
           <button key={p} type="button" onClick={() => void navigate({ to: '/analisis', search: rango(p) })}
-            className={`min-h-[38px] rounded-full px-4 text-sm font-semibold border ${presetActivo === p ? 'bg-brand text-on-solid border-brand' : 'bg-card text-ink2 border-hairline'}`}>
+            className={`min-h-[40px] rounded-full px-4 text-sm font-semibold border ${presetActivo === p ? 'bg-brand text-on-solid border-brand' : 'bg-card text-ink2 border-hairline'}`}>
             {p === 'mes' ? 'Este mes' : `${p} días`}
           </button>
         ))}
-        <div className="flex items-center gap-1 ml-auto text-sm">
-          <input type="date" aria-label="Desde" className="input py-1.5 min-h-[38px] w-[140px]" value={desde} max={hasta} onChange={(e) => e.target.value && void navigate({ to: '/analisis', search: { desde: e.target.value, hasta } })} />
+        {/* En el celular las fechas van en su propia fila a todo lo ancho: a 140 px cada una no cabían en 375 px. */}
+        <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-1 w-full text-sm sm:flex sm:w-auto sm:ml-auto">
+          <input type="date" aria-label="Desde" className="input py-1.5 px-2.5 min-h-[40px] min-w-0 w-full sm:w-[140px]" value={desde} max={hasta} onChange={(e) => e.target.value && void navigate({ to: '/analisis', search: ajustarRango(e.target.value, hasta, 'desde') })} />
           <span className="text-muted">→</span>
-          <input type="date" aria-label="Hasta" className="input py-1.5 min-h-[38px] w-[140px]" value={hasta} min={desde} max={hoy()} onChange={(e) => e.target.value && void navigate({ to: '/analisis', search: { desde, hasta: e.target.value } })} />
+          <input type="date" aria-label="Hasta" className="input py-1.5 px-2.5 min-h-[40px] min-w-0 w-full sm:w-[140px]" value={hasta} min={desde} max={hoy()} onChange={(e) => e.target.value && void navigate({ to: '/analisis', search: ajustarRango(desde, e.target.value, 'hasta') })} />
         </div>
       </div>
 
@@ -78,7 +80,7 @@ export default function Analisis() {
             <Kpi label="Ventas" value={r.totales.total_ventas} anterior={r.anterior.total_ventas} />
             <Kpi label="Proveedores" value={r.totales.total_proveedores} anterior={r.anterior.total_proveedores} invertir />
             <Kpi label="Neto" value={r.totales.neto} anterior={r.anterior.neto} destacado />
-            <Kpi label="Caja (efectivo neto)" value={r.totales.efectivo_neto} anterior={r.anterior.efectivo_neto} />
+            <Kpi label="Efectivo neto" value={r.totales.efectivo_neto} anterior={r.anterior.efectivo_neto} />
           </div>
           <p className="text-xs text-muted mb-4">
             {r.totales.dias_con_registro} día{r.totales.dias_con_registro === 1 ? '' : 's'} con registro · comparado con el período anterior del mismo largo
@@ -114,7 +116,7 @@ export default function Analisis() {
                 return (
                   <div key={m.key} className="mb-2.5">
                     <div className="flex items-center justify-between text-sm"><span className="text-ink2">{m.label}</span><span className="font-semibold tabular-nums text-ink">{clp(monto)} <span className="text-muted2 text-xs">{pct.toFixed(0)}%</span></span></div>
-                    <div className="h-1.5 rounded-full bg-soft mt-1"><div className="h-full rounded-full" style={{ width: `${pct}%`, background: m.color }} /></div>
+                    <div className="h-1.5 rounded-full bg-soft mt-1"><div className="h-full rounded-full" style={{ width: `${pct}%`, background: colorMetodo(m.color) }} /></div>
                   </div>
                 )
               })}
@@ -173,7 +175,8 @@ function Kpi({ label, value, anterior, destacado, invertir }: { label: string; v
   return (
     <div className={`card p-4 ${destacado ? 'bg-brand-tint border-brand/30' : ''}`}>
       <p className="text-xs font-bold uppercase tracking-wide text-muted">{label}</p>
-      <p className={`cifra text-2xl leading-tight mt-1 ${value < 0 ? 'text-neg' : 'text-ink'}`}>{clp(value)}</p>
+      {/* A 375 px una cifra de 7 dígitos en 24 px tocaba el borde de la tarjeta. */}
+      <p className={`cifra text-lg min-[390px]:text-2xl leading-tight mt-1 ${value < 0 ? 'text-neg' : 'text-ink'}`}>{clp(value)}</p>
       <div className="mt-1 min-h-[16px]">{invertir ? <DeltaBadge actual={-value} anterior={anterior == null ? null : -anterior} /> : <DeltaBadge actual={value} anterior={anterior} />}</div>
     </div>
   )

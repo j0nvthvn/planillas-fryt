@@ -18,6 +18,7 @@ import { ConteoSheet } from './ConteoSheet'
 import { RevisionSheet } from './RevisionSheet'
 import { clp, clpSigno, fechaLegible, hoy, diaSemana, sumarDias, fechaDiaMes } from '@/lib/format'
 import { esMetodo, type MetodoKey } from '@/lib/totales'
+import { colorMetodo } from '@/lib/theme'
 
 export default function CerrarTurno() {
   const search = useSearch({ from: '/app/turno' })
@@ -112,7 +113,7 @@ export default function CerrarTurno() {
           </button>
         )}
       >
-        <p className="text-sm text-muted capitalize mt-1">{fechaLegible(fecha)}</p>
+        <p className={`text-sm text-muted mt-1 ${esDueno ? 'hidden sm:block' : ''}`}>{fechaLegible(fecha)}</p>
       </PageHeader>
 
       {soloLectura && (
@@ -141,8 +142,8 @@ export default function CerrarTurno() {
               <button key={m.value} type="button" disabled={!habilitado || soloLectura}
                 onClick={() => void navigate({ to: '/turno', search: { fecha, modo: m.value } })}
                 aria-pressed={on}
-                className={`flex items-center justify-center gap-1.5 min-h-[44px] rounded-xl text-sm font-semibold transition ${on ? 'bg-card text-brand shadow-card' : 'text-ink2 disabled:opacity-35'}`}>
-                <Icon name={m.icon} className="w-4 h-4" />{m.label}
+                className={`flex items-center justify-center gap-1.5 min-h-[44px] px-1 rounded-xl text-sm font-semibold whitespace-nowrap transition ${on ? 'bg-card text-brand shadow-card' : 'text-ink2 disabled:opacity-35'}`}>
+                <Icon name={m.icon} className="w-4 h-4 shrink-0 max-[380px]:hidden" />{m.label}
               </button>
             )
           })}
@@ -248,9 +249,9 @@ export default function CerrarTurno() {
               <span className="text-base font-medium text-ink">¿Contaste la caja?</span>
               <div className="flex gap-1 p-1 rounded-xl bg-soft" role="radiogroup" aria-label="Conteo de caja">
                 <button type="button" role="radio" aria-checked={!state.contoCaja} disabled={soloLectura} onClick={() => cambiar({ type: 'caja', conto: false, monto: null })}
-                  className={`min-h-[36px] px-3 rounded-lg text-sm font-semibold ${!state.contoCaja ? 'bg-card text-ink shadow-card' : 'text-ink2'}`}>No</button>
+                  className={`min-h-[44px] min-w-[52px] px-3 rounded-lg text-sm font-semibold ${!state.contoCaja ? 'bg-card text-ink shadow-card' : 'text-ink2'}`}>No</button>
                 <button type="button" role="radio" aria-checked={state.contoCaja} disabled={soloLectura} onClick={() => setSheet({ t: 'conteo' })}
-                  className={`min-h-[36px] px-3 rounded-lg text-sm font-semibold ${state.contoCaja ? 'bg-card text-ink shadow-card' : 'text-ink2'}`}>Sí</button>
+                  className={`min-h-[44px] min-w-[52px] px-3 rounded-lg text-sm font-semibold ${state.contoCaja ? 'bg-card text-ink shadow-card' : 'text-ink2'}`}>Sí</button>
               </div>
             </div>
             {state.contoCaja && state.efectivoContado != null && (
@@ -304,7 +305,7 @@ export default function CerrarTurno() {
         const mananaMonto = modo === 'tarde' ? Number(turnoManana?.[sheet.key] ?? 0) : null
         const acumulado = m?.acumulado_diario && mananaMonto != null ? { manana: mananaMonto } : undefined
         return (
-          <MontoSheet title={m?.label ?? sheet.key} sub={acumulado ? 'La máquina muestra el total del día' : m?.sub ?? undefined} valor={state.ventas[sheet.key]} color={m?.color}
+          <MontoSheet title={m?.label ?? sheet.key} sub={acumulado ? 'La máquina muestra el total del día' : m?.sub ?? undefined} valor={state.ventas[sheet.key]} color={colorMetodo(m?.color)}
             acumulado={acumulado}
             paso={{ actual: idx + 1, total: activos.length }} siguiente={prox?.label ?? null}
             onAccept={(monto, seguir) => {

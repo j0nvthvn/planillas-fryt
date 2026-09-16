@@ -37,7 +37,14 @@ export function RevisionSheet({
   const que = modo === 'completo' ? 'del día' : `del turno ${modo}`
 
   return (
-    <BottomSheet title={yaCerrado ? 'Revisar la corrección' : 'Revisar antes de cerrar'} onClose={onClose}>
+    <BottomSheet title={yaCerrado ? 'Revisar la corrección' : 'Revisar antes de cerrar'} onClose={onClose} footer={
+      <div className="flex gap-2 pt-1">
+        <button type="button" className="btn-secondary flex-1" onClick={onClose} disabled={guardando}>Revisar</button>
+        <button type="button" className="btn-primary flex-[2]" onClick={onConfirmar} disabled={guardando}>
+          {guardando ? 'Guardando…' : etiquetaCerrar(modo, yaCerrado)}
+        </button>
+      </div>
+    }>
       {yaCerrado && (
         <p className="rounded-2xl bg-info-tint border border-info/30 px-4 py-2.5 text-sm text-info">
           Se guardará una <b>corrección</b>: queda registrada la versión anterior y la nueva.
@@ -79,12 +86,6 @@ export function RevisionSheet({
         <LedgerTotal label={`Neto ${que}`} value={totales.neto} color={totales.neto >= 0 ? undefined : 'var(--neg)'} />
       </Ledger>
 
-      <div className="flex gap-2 pt-1 pb-1">
-        <button type="button" className="btn-secondary flex-1" onClick={onClose} disabled={guardando}>Revisar</button>
-        <button type="button" className="btn-primary flex-[2]" onClick={onConfirmar} disabled={guardando}>
-          {guardando ? 'Guardando…' : etiquetaCerrar(modo, yaCerrado)}
-        </button>
-      </div>
     </BottomSheet>
   )
 }

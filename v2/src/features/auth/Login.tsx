@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import Icon from '@/components/Icon'
-import { useNavigate } from '@tanstack/react-router'
+import { useNavigate, useSearch } from '@tanstack/react-router'
 import { iniciarSesion } from '@/lib/auth'
 import { fechaLegible, hoy } from '@/lib/format'
 
@@ -13,6 +13,7 @@ function saludo() {
 
 export default function Login() {
   const navigate = useNavigate()
+  const { volver } = useSearch({ from: '/login' })
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -25,13 +26,17 @@ export default function Login() {
     setLoading(true)
     try {
       await iniciarSesion(email.trim(), password)
-      void navigate({ to: '/hoy' })
     } catch (err) {
       const status = (err as { status?: number }).status
       setError(status === 429 ? 'Demasiados intentos. Espera un momento antes de volver a ingresar.' : 'Correo o contraseña incorrectos.')
-    } finally {
       setLoading(false)
+      return
     }
+    // El botón sigue en "Ingresando…" mientras la ruta carga el usuario:
+    // antes volvía a quedar activo y la pantalla parecía no responder.
+    // Solo rutas internas ("/x", nunca "//dominio").
+    const destino = volver && /^\/(?!\/)/.test(volver) && volver !== '/login' ? volver : '/hoy'
+    await navigate({ to: destino as '/hoy' }).finally(() => setLoading(false))
   }
 
   return (
@@ -44,7 +49,7 @@ export default function Login() {
         <p className="text-sm text-muted mt-1">FrytControl · Caja y turnos</p>
         <div className="mt-5 text-center">
           <p className="text-base font-semibold text-ink2">{saludo()}</p>
-          <p className="text-sm text-muted mt-0.5 capitalize">{fechaLegible(hoy())}</p>
+          <p className="text-sm text-muted mt-0.5">{fechaLegible(hoy())}</p>
         </div>
       </div>
       <div className="flex-1 px-4">

@@ -3,7 +3,7 @@ import { createRootRoute, createRoute, createRouter, redirect, Outlet, Navigate 
 import { z } from 'zod'
 import { esperarSesion, cargarUsuario, useSession } from './lib/auth'
 import Layout from './components/Layout'
-import Spinner from './components/Spinner'
+import { EsqueletoContenido, EsqueletoPagina } from './components/Esqueleto'
 import Login from './features/auth/Login'
 import Hoy from './features/hoy/Hoy'
 import CerrarTurno from './features/turno/CerrarTurno'
@@ -26,6 +26,7 @@ const rootRoute = createRootRoute({
 const loginRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/login',
+  validateSearch: z.object({ volver: z.string().optional() }),
   beforeLoad: async () => {
     if (await esperarSesion()) throw redirect({ to: '/hoy' })
   },
@@ -48,14 +49,14 @@ const appRoute = createRoute({
   id: 'app',
   beforeLoad: async ({ location }) => {
     const session = await esperarSesion()
-    if (!session) throw redirect({ to: '/login', search: { volver: location.pathname } as never })
+    if (!session) throw redirect({ to: '/login', search: { volver: location.pathname } })
     const usuario = await cargarUsuario(session.user.id).catch(() => null)
     return { usuario, esDueno: usuario?.rol === 'dueño' }
   },
   component: () => (
     <RequiereSesion>
       <Layout>
-        <Suspense fallback={<Spinner />}>
+        <Suspense fallback={<EsqueletoContenido />}>
           <Outlet />
         </Suspense>
       </Layout>
@@ -121,7 +122,7 @@ export const router = createRouter({
   routeTree,
   defaultPreload: 'intent',
   scrollRestoration: true,
-  defaultPendingComponent: Spinner,
+  defaultPendingComponent: EsqueletoPagina,
 })
 
 declare module '@tanstack/react-router' {

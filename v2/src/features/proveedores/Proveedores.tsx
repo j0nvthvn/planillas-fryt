@@ -54,7 +54,7 @@ export default function Proveedores() {
         <Icon name="search" className="w-[18px] h-[18px] absolute left-3.5 top-1/2 -translate-y-1/2 text-muted2" />
         <input type="search" className="input pl-10" placeholder="Buscar proveedor" value={q} onChange={(e) => setQ(e.target.value)} aria-label="Buscar proveedor" />
       </div>
-      <label className="flex items-center gap-2 text-sm text-ink2 mb-3 px-1"><input type="checkbox" checked={verInactivos} onChange={(e) => setVerInactivos(e.target.checked)} />Mostrar inactivos</label>
+      <label className="flex items-center gap-2 min-h-[40px] text-sm text-ink2 mb-1 px-1"><input type="checkbox" className="w-5 h-5 accent-brand" checked={verInactivos} onChange={(e) => setVerInactivos(e.target.checked)} />Mostrar inactivos</label>
 
       {sospechosos.length > 0 && !q && (
         <div className="mb-3 rounded-2xl bg-warn-tint border border-warn/30 px-4 py-3 text-sm text-warn">

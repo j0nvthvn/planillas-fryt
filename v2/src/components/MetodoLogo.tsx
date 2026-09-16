@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import type { MetodoPago } from '@/features/catalogo/api'
+import { colorMetodo } from '@/lib/theme'
 
 const FALLBACK: Record<string, string> = {
   efectivo: 'M3 7h18v10H3zM12 9.7a2.3 2.3 0 100 4.6',
@@ -29,7 +30,7 @@ export function MetodoLogo({ metodo, size = 'md', active = false }: { metodo: Pi
       {showImg ? (
         <img src={metodo.logo ?? ''} alt="" className={`${sz.img} object-contain`} onError={() => setImgError(true)} />
       ) : (
-        <svg viewBox="0 0 24 24" fill="none" className={sz.icon} stroke={metodo.color} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" className={sz.icon} style={{ stroke: colorMetodo(metodo.color) }} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
           <path d={FALLBACK[metodo.key] ?? GENERICO} />
         </svg>
       )}

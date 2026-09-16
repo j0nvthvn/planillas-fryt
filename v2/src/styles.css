@@ -36,6 +36,8 @@
   --image-bg:    #F3F4F6;
   --cash:        #1E7A4F;
   --wire:        #33518C;
+  /* Cuánto del color de cada método (dato de la base) se usa tal cual: en oscuro se aclara. */
+  --metodo-mezcla: 100%;
   --on-solid:    #FFFFFF;
   --shadow-card: 0 6px 20px -14px rgba(92, 51, 23, .20);
   --shadow-hero: 0 8px 24px -14px rgba(92, 51, 23, .28);
@@ -66,6 +68,7 @@ html.dark {
   --image-bg:    #322D26;
   --cash:        #5DB890;
   --wire:        #7393D2;
+  --metodo-mezcla: 55%;
   --on-solid:    #1A1612;
   --shadow-card: 0 6px 20px -14px rgba(0, 0, 0, .40);
   --shadow-hero: 0 8px 24px -14px rgba(0, 0, 0, .50);

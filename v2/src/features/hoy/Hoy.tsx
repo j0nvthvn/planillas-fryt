@@ -1,11 +1,12 @@
 import { Link, useNavigate } from '@tanstack/react-router'
 import Icon from '@/components/Icon'
-import Spinner from '@/components/Spinner'
+import { EsqueletoContenido } from '@/components/Esqueleto'
 import { useUsuario } from '@/hooks/useUsuario'
 import { useResumenDia, useTurnosDia, useBorradores, etiquetaModo, type Modo } from '@/features/turno/api'
 import { useConfig, useMetodos } from '@/features/catalogo/api'
-import { fechaLegible, fechaDiaMes, hoy, clp, clpSigno, diaSemana, sumarDias, horaCorta } from '@/lib/format'
+import { fechaLegible, mayusculaInicial, fechaDiaMes, hoy, clp, clpSigno, diaSemana, sumarDias, horaCorta } from '@/lib/format'
 import { AvatarMenu } from '@/components/AvatarMenu'
+import { colorMetodo } from '@/lib/theme'
 
 export default function Hoy() {
   const fecha = hoy()
@@ -49,7 +50,7 @@ export default function Hoy() {
       <header className="flex items-start justify-between gap-3 mb-4">
         <div>
           <p className="eyebrow text-brand">Hoy</p>
-          <p className="text-base font-medium text-ink capitalize leading-tight">{fechaLegible(fecha)}</p>
+          <p className="text-base font-medium text-ink leading-tight">{fechaLegible(fecha)}</p>
         </div>
         <AvatarMenu />
       </header>
@@ -62,8 +63,8 @@ export default function Hoy() {
             <ul className="mt-1 space-y-1">
               {borradoresViejos.slice(0, 5).map((b) => (
                 <li key={b.id}>
-                  <Link to="/turno" search={{ fecha: b.fecha, modo: b.modo }} className="text-xs font-bold text-warn underline underline-offset-2 capitalize">
-                    {fechaDiaMes(b.fecha)} · {etiquetaModo(b.modo)} → cerrar
+                  <Link to="/turno" search={{ fecha: b.fecha, modo: b.modo }} className="inline-block py-1 text-xs font-bold text-warn underline underline-offset-2">
+                    {mayusculaInicial(`${fechaDiaMes(b.fecha)} · ${etiquetaModo(b.modo).toLowerCase()}`)} → cerrar
                   </Link>
                 </li>
               ))}
@@ -72,7 +73,7 @@ export default function Hoy() {
         </div>
       )}
 
-      {resumen.isPending && turnos.isPending ? <Spinner /> : (
+      {resumen.isPending && turnos.isPending ? <EsqueletoContenido sinTitulo /> : (
         <>
           {/* La cifra al frente */}
           <section aria-label="Neto del día" className="mb-5">
@@ -114,9 +115,9 @@ export default function Hoy() {
                   const pct = totalVentas ? Math.max(3, (m.monto / totalVentas) * 100) : 0
                   return (
                     <div key={m.key} className="flex items-center gap-2.5 text-sm">
-                      <span className="w-2 h-2 rounded-full shrink-0" style={{ background: m.color }} />
+                      <span className="w-2 h-2 rounded-full shrink-0" style={{ background: colorMetodo(m.color) }} />
                       <span className="w-[104px] shrink-0 text-ink2 truncate">{m.label}</span>
-                      <span className="flex-1 h-1.5 rounded-full bg-soft overflow-hidden"><span className="block h-full rounded-full" style={{ width: `${pct}%`, background: m.color }} /></span>
+                      <span className="flex-1 h-1.5 rounded-full bg-soft overflow-hidden"><span className="block h-full rounded-full" style={{ width: `${pct}%`, background: colorMetodo(m.color) }} /></span>
                       <span className="font-bold text-ink tabular-nums w-[84px] text-right">{clp(m.monto)}</span>
                     </div>
                   )
@@ -142,7 +143,7 @@ export default function Hoy() {
           )}
 
           {ra && (ra.turnos ?? 0) > 0 && (
-            <Link to="/dia" search={{ fecha: ayer }} className="block text-center text-xs text-muted hover:text-ink mt-2">
+            <Link to="/dia" search={{ fecha: ayer }} className="block text-center text-xs text-muted hover:text-ink mt-1 py-2">
               Ayer: <b className="text-ink tabular-nums">{clp(ra.neto)}</b> neto · {ra.con_conteo ? (ra.con_descuadre ? 'hubo descuadre' : 'cuadró la caja') : 'sin conteo'}
             </Link>
           )}
@@ -160,5 +161,5 @@ export function EstadoChip({ estado }: { estado: string }) {
     completo: { label: 'Completo', cls: 'bg-pos-tint text-pos' },
   }
   const e = map[estado] ?? map.sin_registro!
-  return <span className={`text-xs font-bold uppercase tracking-wide rounded-full px-2.5 py-1 ${e.cls}`}>{e.label}</span>
+  return <span className={`whitespace-nowrap text-xs font-bold uppercase tracking-wide rounded-full px-2.5 py-1 ${e.cls}`}>{e.label}</span>
 }

@@ -90,13 +90,14 @@ export default function Layout({ children }: { children: ReactNode }) {
           <div className="w-16 shrink-0" aria-hidden="true" />
           <div className="flex-1 flex items-stretch">{der.map((i) => <Tab key={i.to} item={i} on={activo(pathname, i.to)} />)}</div>
         </div>
-        <Link to={fab.to} aria-current={activo(pathname, fab.to) ? 'page' : undefined}
+        {/* En Cerrar turno el botón competía con "Cerrar el día" y tapaba su barra. */}
+        {!activo(pathname, fab.to) && <Link to={fab.to}
           className="absolute left-1/2 -translate-x-1/2 bottom-[max(8px,env(safe-area-inset-bottom))] z-40 flex flex-col items-center gap-1 text-xs font-semibold text-brand">
-          <span className={`flex items-center justify-center w-14 h-14 -mt-7 rounded-full shadow-hero text-on-solid ${activo(pathname, fab.to) ? 'bg-brand-hover' : 'bg-brand'}`}>
+          <span className="flex items-center justify-center w-14 h-14 -mt-7 rounded-full shadow-hero text-on-solid bg-brand">
             <Icon name="plus" className="w-6 h-6" stroke={2.2} />
           </span>
           <span>Cerrar caja</span>
-        </Link>
+        </Link>}
       </nav>
     </div>
   )

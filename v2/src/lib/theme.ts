@@ -32,3 +32,11 @@ export function useTema() {
   }, [tema])
   return { tema, setTema: setTemaState }
 }
+
+/**
+ * Color de un método de pago (viene de la base) apto para el tema actual:
+ * en oscuro se aclara mezclándolo con blanco (`--metodo-mezcla` en styles.css).
+ */
+export function colorMetodo(color: string | null | undefined): string | undefined {
+  return color ? `color-mix(in oklab, ${color} var(--metodo-mezcla), white)` : undefined
+}

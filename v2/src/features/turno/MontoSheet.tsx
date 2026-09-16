@@ -78,15 +78,7 @@ export function MontoSheet({ title, sub, valor, color, label = 'Listo', ayuda, p
       title={title}
       onClose={onClose}
       extra={paso ? <span className="self-center text-xs font-semibold text-muted tabular-nums mr-1">{paso.actual} de {paso.total}</span> : undefined}
-    >
-      {desktop ? (
-        <DesktopAmountInput digits={digits} onChange={setDigits} onEnter={() => aceptar(encadenado)} color={color} label={sub} />
-      ) : (
-        <AmountDisplay digits={digits} sub={sub} color={color} />
-      )}
-      {bloqueAcumulado}
-      {ayuda}
-      {desktop ? (
+      footer={desktop ? (
         <div className="flex gap-2 mt-1">
           {encadenado && <button type="button" className="btn-secondary flex-1" disabled={invalido} onClick={() => aceptar(false)}>Listo</button>}
           <button type="button" className="btn-primary flex-[2]" disabled={invalido} onClick={() => aceptar(encadenado)}>{etiqueta}</button>
@@ -101,6 +93,14 @@ export function MontoSheet({ title, sub, valor, color, label = 'Listo', ayuda, p
           )}
         </>
       )}
+    >
+      {desktop ? (
+        <DesktopAmountInput digits={digits} onChange={setDigits} onEnter={() => aceptar(encadenado)} color={color} label={sub} />
+      ) : (
+        <AmountDisplay digits={digits} sub={sub} color={color} />
+      )}
+      {bloqueAcumulado}
+      {ayuda}
     </BottomSheet>
   )
 }

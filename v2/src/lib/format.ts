@@ -1,9 +1,10 @@
 const CLP = new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', minimumFractionDigits: 0 })
 
-/** Pesos chilenos sin decimales: 12345 → "$12.345". */
+/** Pesos chilenos sin decimales: 12345 → "$12.345"; −800 → "−$800" (es-CL daba "$-800"). */
 export function clp(valor: number | string | null | undefined): string {
   if (valor === null || valor === undefined || valor === '') return '$0'
-  return CLP.format(Number(valor) || 0)
+  const n = Number(valor) || 0
+  return n < 0 ? `−${CLP.format(-n)}` : CLP.format(n)
 }
 
 /** "+$1.200" / "−$800" para diferencias (descuadre, variaciones). */
@@ -27,9 +28,20 @@ function fechaLocal(fecha: string): Date {
   return new Date(fecha + 'T12:00:00')
 }
 
+/** Mayúscula solo en la primera letra: el `capitalize` de CSS dejaba "16 De Septiembre De". */
+export function mayusculaInicial(texto: string): string {
+  return texto.charAt(0).toLocaleUpperCase('es-CL') + texto.slice(1)
+}
+
+/** "Septiembre de 2026" */
+export function mesAnio(fecha: string): string {
+  return mayusculaInicial(fechaLocal(fecha).toLocaleDateString('es-CL', { month: 'long', year: 'numeric' }))
+}
+
+/** "Miércoles, 16 de septiembre de 2026" */
 export function fechaLegible(fecha: string | null | undefined): string {
   if (!fecha) return ''
-  return fechaLocal(fecha).toLocaleDateString('es-CL', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
+  return mayusculaInicial(fechaLocal(fecha).toLocaleDateString('es-CL', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }))
 }
 
 export function fechaCorta(fecha: string | null | undefined): string {
@@ -73,6 +85,20 @@ export function sumarDias(fecha: string, dias: number): string {
   const d = fechaLocal(fecha)
   d.setDate(d.getDate() + dias)
   return fechaISO(d)
+}
+
+/**
+ * Rango "YYYY-MM-DD" siempre válido: ninguna fecha pasa de `tope` y desde ≤ hasta.
+ * Si quedó invertido, la fecha que el usuario acaba de cambiar arrastra a la otra;
+ * sin `cambiado` (p. ej. una URL editada a mano) se intercambian.
+ */
+export function ajustarRango(desde: string, hasta: string, cambiado?: 'desde' | 'hasta', tope = hoy()): { desde: string; hasta: string } {
+  const d = desde > tope ? tope : desde
+  const h = hasta > tope ? tope : hasta
+  if (d <= h) return { desde: d, hasta: h }
+  if (cambiado === 'desde') return { desde: d, hasta: d }
+  if (cambiado === 'hasta') return { desde: h, hasta: h }
+  return { desde: h, hasta: d }
 }
 
 /** 0 = domingo … 6 = sábado, de una fecha "YYYY-MM-DD". */

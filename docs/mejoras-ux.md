@@ -67,13 +67,35 @@ Contexto general en `ESTADO.md`; reglas de diseño en `plan-v2.md` (§2.5).
   sesión) va al pie, sin depender de la pantalla Hoy.
 - **Login**: botón para mostrar la contraseña.
 
+### Móvil (revisión con capturas, 16 de septiembre de 2026)
+
+Capturas con Playwright en Pixel 7 (claro y oscuro) e iPhone SE (375 px)
+contra staging. Lo que se veía mal y cómo quedó:
+
+- **Fechas**: el `capitalize` de CSS daba "16 De Septiembre De 2026";
+  `fechaLegible` pone mayúscula solo al comienzo (`mayusculaInicial`, `mesAnio`).
+- **Negativos**: `clp` daba "$-404.199"; ahora "−$404.199".
+- **Botón flotante**: no aparece en Cerrar turno, donde competía con "Cerrar el
+  día" y tapaba su barra.
+- **Hojas**: `BottomSheet` acepta `footer`; solo el cuerpo se desplaza, así el
+  teclado, "Registrar conteo" y los botones de la revisión quedan siempre a la
+  vista. Las teclas bajan a 46 px en pantallas de menos de 700 px de alto.
+- **Cerrar turno**: sin la fecha repetida (en el celular de la dueña), el
+  selector de modo en una línea, "Sí"/"No" del conteo de 44 px.
+- **Historial**: agrupado por mes con encabezado pegajoso; una sola etiqueta de
+  estado; fila en dos niveles (etiquetas arriba, montos y neto abajo) para que
+  nada choque en 375 px; día sin cero inicial y sin la coma.
+- **Análisis**: fechas en su propia fila a todo lo ancho; cifras de los KPI un
+  paso más chicas bajo 390 px; "Caja (efectivo neto)" pasó a "Efectivo neto".
+- **Ajustes → General**: etiqueta arriba y campo abajo en el celular.
+- **Planilla**: "Corregido" en una línea, con 36 px de alto.
+- **Carga**: esqueletos (`Esqueleto.tsx`) en lugar del spinner al abrir la app,
+  en Hoy y en las pantallas diferidas. El login queda en "Ingresando…" hasta que
+  la ruta carga y respeta `?volver=`.
+- **Color de los métodos en oscuro**: `colorMetodo()` (`lib/theme.ts`) lo mezcla
+  con blanco según `--metodo-mezcla` (100 % en claro, 55 % en oscuro).
+
 ## Pendiente
 
-- **Historial más legible**: agrupar por mes con encabezado pegajoso y la
-  fecha en una línea. La fecha ya no está en tipos diminutos, pero la fila
-  sigue siendo densa.
-- **Esqueletos en vez de spinner** en la primera carga.
-- **Color de cada método de pago** (`metodos_pago.color`, dato de la base) en
-  modo oscuro: `--cash` y `--wire` ya tienen variante oscura, pero el color
-  que viene de la base se sigue usando tal cual como color de texto en el
-  teclado y en las barras de Hoy.
+- Revisar en un celular real (Safari de iOS, con su barra inferior) la altura
+  de las hojas y el encabezado pegajoso del Historial.

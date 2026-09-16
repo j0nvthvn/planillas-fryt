@@ -129,13 +129,13 @@ function TarjetaTurno({ t, fecha, esDueno, metodos, onDiff, onAccion, puedeUnir,
   return (
     <article className="card p-0 overflow-hidden">
       <div className="px-5 pt-4 pb-3 border-b border-hairline flex items-start justify-between gap-2">
-        <div>
+        <div className="min-w-0">
           <h2 className="text-lg font-bold text-ink">{etiquetaModo(turno.modo)}</h2>
           <p className="text-xs text-muted">{turno.trabajador_nombre ?? turno.usuario_nombre ?? '—'}{turno.ultimo_cierre_en ? ` · cerrado ${horaCorta(turno.ultimo_cierre_en)}` : ''}</p>
         </div>
         <div className="flex flex-col items-end gap-1">
           {turno.is_draft ? <span className="text-xs font-bold uppercase text-warn bg-warn-tint rounded-full px-2 py-0.5">Borrador</span>
-            : turno.corregido ? <button type="button" onClick={onDiff} className="text-xs font-bold uppercase text-info bg-info-tint rounded-full px-2 py-0.5">Corregido · ver</button>
+            : turno.corregido ? <button type="button" onClick={onDiff} aria-label="Corregido: ver la corrección" className="whitespace-nowrap min-h-[36px] inline-flex items-center gap-1 text-xs font-bold uppercase text-info bg-info-tint rounded-full px-3">Corregido<Icon name="chevR" className="w-3.5 h-3.5" stroke={2.4} /></button>
             : <span className="text-xs font-bold uppercase text-pos bg-pos-tint rounded-full px-2 py-0.5">Cerrado</span>}
         </div>
       </div>

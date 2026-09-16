@@ -41,7 +41,7 @@ export default function Ajustes() {
       <div className="flex gap-2 overflow-x-auto -mx-4 px-4 pb-3 md:flex-wrap md:mx-0 md:px-0" role="tablist">
         {SECCIONES.map((s) => (
           <button key={s.v} type="button" role="tab" aria-selected={seccion === s.v} onClick={() => void navigate({ to: '/ajustes', search: { seccion: s.v } })}
-            className={`shrink-0 min-h-[38px] rounded-full px-4 text-sm font-semibold border flex items-center gap-1.5 ${seccion === s.v ? 'bg-brand text-on-solid border-brand' : 'bg-card text-ink2 border-hairline'}`}>
+            className={`shrink-0 min-h-[40px] rounded-full px-4 text-sm font-semibold border flex items-center gap-1.5 ${seccion === s.v ? 'bg-brand text-on-solid border-brand' : 'bg-card text-ink2 border-hairline'}`}>
             <Icon name={s.icon} className="w-4 h-4" />{s.label}
           </button>
         ))}
@@ -63,9 +63,10 @@ export default function Ajustes() {
   )
 }
 
-function Fila({ label, hint, children }: { label: string; hint?: string; children: ReactNode }) {
+/** `apilar`: en el celular la etiqueta va arriba y el campo abajo a todo lo ancho. */
+function Fila({ label, hint, apilar, children }: { label: string; hint?: string; apilar?: boolean; children: ReactNode }) {
   return (
-    <div className="flex items-center justify-between gap-3 px-4 py-3 min-h-[56px]">
+    <div className={`flex justify-between gap-3 px-4 py-3 min-h-[56px] ${apilar ? 'flex-col items-stretch gap-2 sm:flex-row sm:items-center' : 'items-center'}`}>
       <div><p className="text-base font-medium text-ink">{label}</p>{hint && <p className="text-xs text-muted">{hint}</p>}</div>
       {children}
     </div>
@@ -86,9 +87,9 @@ function General() {
   return (
     <div className="space-y-4">
       <div className="card p-0 divide-y divide-hairline overflow-hidden">
-        <Fila label="Nombre del local"><input className="input w-40 text-right" value={f.nombreLocal} onChange={(e) => set({ nombreLocal: e.target.value })} aria-label="Nombre del local" /></Fila>
-        <Fila label="Fondo de caja por defecto" hint="Con lo que parte cada turno"><MontoInput className="w-40 text-right" value={f.fondoCajaInicial} onChange={(n) => set({ fondoCajaInicial: n })} ariaLabel="Fondo de caja" /></Fila>
-        <Fila label="Corte de la mañana" hint="Hora en que termina el turno mañana"><HoraInput className="w-32 text-right" value={f.horaCorteManana} onChange={(h) => set({ horaCorteManana: h })} ariaLabel="Hora de corte" /></Fila>
+        <Fila apilar label="Nombre del local"><input className="input w-full sm:w-40 sm:text-right" value={f.nombreLocal} onChange={(e) => set({ nombreLocal: e.target.value })} aria-label="Nombre del local" /></Fila>
+        <Fila apilar label="Fondo de caja por defecto" hint="Con lo que parte cada turno"><MontoInput className="w-full sm:w-40 sm:text-right" value={f.fondoCajaInicial} onChange={(n) => set({ fondoCajaInicial: n })} ariaLabel="Fondo de caja" /></Fila>
+        <Fila apilar label="Corte de la mañana" hint="Hora en que termina el turno mañana"><HoraInput className="w-full sm:w-32 sm:text-right" value={f.horaCorteManana} onChange={(h) => set({ horaCorteManana: h })} ariaLabel="Hora de corte" /></Fila>
         <div className="px-4 py-3">
           <p className="text-base font-medium text-ink">Días de un solo turno</p>
           <p className="text-xs text-muted mb-2">Esos días se registran siempre como día completo</p>
@@ -96,7 +97,7 @@ function General() {
             {DIAS.map((d, i) => {
               const on = f.diasTurnoUnico.includes(i)
               return <button key={d} type="button" aria-pressed={on} onClick={() => set({ diasTurnoUnico: on ? f.diasTurnoUnico.filter((x) => x !== i) : [...f.diasTurnoUnico, i].sort() })}
-                className={`min-h-[38px] px-3 rounded-full text-sm font-semibold border ${on ? 'bg-brand text-on-solid border-brand' : 'bg-card text-ink2 border-hairline'}`}>{d}</button>
+                className={`min-h-[40px] px-3 rounded-full text-sm font-semibold border ${on ? 'bg-brand text-on-solid border-brand' : 'bg-card text-ink2 border-hairline'}`}>{d}</button>
             })}
           </div>
         </div>
@@ -107,7 +108,7 @@ function General() {
         <Fila label="Apariencia">
           <div className="flex gap-1 p-1 rounded-xl bg-soft" role="radiogroup">
             {(['sistema', 'claro', 'oscuro'] as Tema[]).map((t) => (
-              <button key={t} type="button" role="radio" aria-checked={tema === t} onClick={() => setTema(t)} className={`min-h-[36px] px-3 rounded-lg text-sm font-semibold capitalize ${tema === t ? 'bg-card text-ink shadow-card' : 'text-ink2'}`}>{t}</button>
+              <button key={t} type="button" role="radio" aria-checked={tema === t} onClick={() => setTema(t)} className={`min-h-[40px] px-3 rounded-lg text-sm font-semibold capitalize ${tema === t ? 'bg-card text-ink shadow-card' : 'text-ink2'}`}>{t}</button>
             ))}
           </div>
         </Fila>

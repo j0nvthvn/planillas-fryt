@@ -22,7 +22,15 @@ export function ConteoSheet({ inicial, esperado, onAccept, onTotalManual, onClos
   const vacio = !hayConteo(conteo)
 
   return (
-    <BottomSheet title="Conteo de caja" onClose={onClose}>
+    <BottomSheet title="Conteo de caja" onClose={onClose} footer={<>
+      <button type="button" className="btn-primary w-full py-3 text-base" disabled={vacio} onClick={() => onAccept(total, conteo)}>
+        <Icon name="check" className="w-5 h-5" stroke={2.4} />Registrar conteo
+      </button>
+      <div className="flex justify-between gap-2">
+        <button type="button" className="btn-ghost text-sm" onClick={onTotalManual}>Escribir el total a mano</button>
+        {!vacio && <button type="button" className="btn-ghost text-sm text-neg" onClick={() => setConteo({})}>Empezar de nuevo</button>}
+      </div>
+    </>}>
       <div className="rounded-2xl bg-card border border-hairline px-4 py-3">
         <p className="eyebrow mb-1">Contado</p>
         <p className="amount text-amount leading-none text-ink" aria-live="polite">{clp(total)}</p>
@@ -62,13 +70,6 @@ export function ConteoSheet({ inicial, esperado, onAccept, onTotalManual, onClos
         })}
       </ul>
 
-      <button type="button" className="btn-primary w-full py-3 text-base" disabled={vacio} onClick={() => onAccept(total, conteo)}>
-        <Icon name="check" className="w-5 h-5" stroke={2.4} />Registrar conteo
-      </button>
-      <div className="flex justify-between gap-2 pb-1">
-        <button type="button" className="btn-ghost text-sm" onClick={onTotalManual}>Escribir el total a mano</button>
-        {!vacio && <button type="button" className="btn-ghost text-sm text-neg" onClick={() => setConteo({})}>Empezar de nuevo</button>}
-      </div>
     </BottomSheet>
   )
 }
