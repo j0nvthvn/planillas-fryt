@@ -24,6 +24,19 @@ de prod al 2026-09-16 (mismos ids), los logos y estas cuentas:
 Para correr la app actual contra staging: `pnpm dev --mode staging`
 (Vite lee `.env.staging.local`).
 
+### App v2 en Vercel
+
+| Proyecto Vercel | Root Directory | Rama | URL | Apunta a |
+|---|---|---|---|---|
+| `planillas-fryt` | raíz | `main` | planillas-fryt.vercel.app | prod (app actual) |
+| `frytcontrol-v2` (`prj_VR9zMl4lzvSeWZXAwJI9cx7IErlh`) | `v2` | `v2` | frytcontrol-v2.vercel.app | staging (`v2/.env.staging`, build `--mode staging`) |
+
+La rama `v2` se publica aparte para no desplegar la app actual: un push a
+`main` despliega `planillas-fryt`. Cuando la v2 deba apuntar a prod
+(Fase 3), en Vercel → frytcontrol-v2 → Environment Variables:
+`VITE_MODE=production`, `VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY` de
+prod (el `buildCommand` de `v2/vercel.json` usa `--mode ${VITE_MODE:-staging}`).
+
 > La cuenta de la CLI (`supabase login`) es distinta de la organización que
 > tiene prod y staging (`ccfgqstvcbxhllxvuivx`), así que `link`/`db push`
 > no aplican por ahora. Las migraciones se aplicaron con el MCP de
