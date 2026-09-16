@@ -13,5 +13,6 @@ Reglas cortas:
 - Migraciones: probar con `./scripts/test-db.sh` (Docker), aplicar en staging
   (`psdhhwcxjcobwxjiemrr`) y después en prod (`kfmwhtbvgqurnpotypii`), con
   respaldo previo de las tablas.
-- v2: `cd v2 && pnpm typecheck && pnpm test && pnpm build` antes de commitear.
+- v2: `cd v2 && pnpm lint && pnpm typecheck && pnpm test && pnpm build` antes de
+  commitear; `pnpm e2e` (Playwright contra staging) para el flujo de cierre.
 - Idioma del código, commits y documentación: español.

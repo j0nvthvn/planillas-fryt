@@ -9,7 +9,7 @@ Documentos complementarios:
 - `docs/operacion.md`: entornos, CLI, migraciones, correos, seguridad, humo.
 - `docs/piloto-v2.md`: cómo se ejecuta el piloto (Fase 3) y sus criterios.
 - `docs/limpieza-datos-2026-09.sql`: consultas de limpieza y de comparación.
-- `docs/mejoras-ux.md`: mejoras de UI/UX propuestas para la v2 (tipografía, accesibilidad, flujo), con prioridad sugerida; ninguna implementada aún.
+- `docs/mejoras-ux.md`: mejoras de UI/UX de la v2 (tipografía, accesibilidad, flujo): qué se aplicó el 2026-09-17 y qué quedó pendiente.
 - `v2/README.md`: la app nueva (stack, estructura, cómo correrla).
 
 ## 1. Qué es esto
@@ -75,12 +75,15 @@ Credenciales y dónde están (nunca en el repo, salvo anon keys):
 ### Fase 2 — App v2: **hecha** (2026-09-16/17)
 - `v2/`: Vite 7, React 19, TS estricto, TanStack Router + Query (persistencia IndexedDB), Tailwind v4, PWA. Pantallas: Login, Hoy, Cerrar turno, Planilla del día, Historial, Análisis, Proveedores, Ajustes.
 - Diseño decidido con la dueña/Jonathan: identidad café cálida, móvil primero, camino "A" (cifra al frente) + teclado encadenado + planilla en cuaderno. Exploraciones: https://claude.ai/artifact/VibHvxrnP7PXgWvAVUifqa
-- Verificación: `pnpm typecheck`, `pnpm test` (27 unitarios), `pnpm build`, y 6 tests de integración contra staging (`src/test/integracion.staging.test.ts`, requiere `SMOKE_PASSWORD`).
-- **Pendiente:** Playwright e2e (no había navegador disponible en la sesión); revisar en un celular real de vez en cuando.
+- Verificación: `pnpm lint`, `pnpm typecheck`, `pnpm test` (48 unitarios), `pnpm build`, `pnpm e2e` (Playwright contra staging) y 6 tests de integración contra staging (`src/test/integracion.staging.test.ts`, requiere `SMOKE_PASSWORD`).
+- **Mejoras del 2026-09-17** (detalle y pendientes en `docs/mejoras-ux.md`): hoja de revisión antes de cerrar y conteo de caja por billetes —las dos atacan lo medido en prod: 25 % de cierres son correcciones y no hay ningún conteo registrado—, aviso de proveedor parecido, base accesible (foco visible, `prefers-reduced-motion`, hojas como `<dialog>`, nada bajo 12 px, contrastes), escala tipográfica en tokens y fuentes alojadas en el repo.
+- **Ingeniería:** ESLint (flat config con reglas de tipos), GitHub Actions (`.github/workflows/v2.yml`: lint + tipos + tests + build en cada push/PR) y Playwright (`v2/e2e/`, el cierre completo contra staging; requiere `pnpm exec playwright install chromium`).
+- **Pendiente:** revisar en un celular real de vez en cuando.
 
 ### Fase 3 — Piloto en paralelo: **en curso, semana A** (desde 2026-09-16)
 - Semana A automática: 0 diferencias en 59 días entre la fórmula de la app actual y `v_resumen_dia`.
 - Hallazgos ya corregidos durante la semana A: unir/dividir creaba correcciones; cerrar sesión de un toque; tooltip del gráfico; Proveedores inaccesible en móvil; autoguardado no enviaba ceros ni lo pendiente al salir; campos de Ajustes sin formato; Edenred con total del día (`acumulado_diario`).
+- Estado de prod al 2026-09-17: 0 errores `v2:` en `logs_error`, 1 borrador (el del día), ningún borrador de días pasados. 33 de 134 cierres son correcciones (25 %) y no hay un solo conteo de caja en toda la historia: de ahí las dos mejoras de flujo de la Fase 2.
 - Jonathan cerró desde la v2 cinco borradores antiguos en prod el 2026-09-16 (esperado: eran los turnos olvidados).
 - **Siguiente:** semana B (registro parcial desde el móvil del local con la cuenta trabajador o la de la dueña; antes: crear trabajadores en Ajustes) y semana C (v2 principal). Criterios de salida en `docs/piloto-v2.md`.
 
@@ -104,7 +107,8 @@ pnpm exec supabase start -x studio,imgproxy,inbucket,mailpit,logflare,vector,edg
 
 # v2
 cd v2 && pnpm install && pnpm dev --mode staging
-pnpm typecheck && pnpm test && pnpm build
+pnpm lint && pnpm typecheck && pnpm test && pnpm build
+pnpm e2e                                       # Playwright contra staging (usa STAGING_PASSWORD)
 SMOKE_EMAIL=duena@test.local SMOKE_PASSWORD=<.env.staging.local> pnpm vitest run --mode staging src/test/integracion.staging.test.ts
 ```
 

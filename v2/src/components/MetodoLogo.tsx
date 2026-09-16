@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import type { MetodoPago } from '@/features/catalogo/api'
 
 const FALLBACK: Record<string, string> = {
@@ -18,7 +18,10 @@ const SIZES = {
 
 export function MetodoLogo({ metodo, size = 'md', active = false }: { metodo: Pick<MetodoPago, 'key' | 'label' | 'logo' | 'color'>; size?: keyof typeof SIZES; active?: boolean }) {
   const [imgError, setImgError] = useState(false)
-  useEffect(() => { setImgError(false) }, [metodo.logo])
+  // Otro logo: se vuelve a intentar la imagen (ajuste durante el render, que
+  // es más barato que un efecto que re-renderiza).
+  const [logoVisto, setLogoVisto] = useState(metodo.logo)
+  if (logoVisto !== metodo.logo) { setLogoVisto(metodo.logo); setImgError(false) }
   const sz = SIZES[size]
   const showImg = !!metodo.logo && !imgError
   return (

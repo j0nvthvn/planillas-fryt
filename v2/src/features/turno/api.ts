@@ -92,7 +92,7 @@ export function useCierres(turnoId: string | null) {
         .eq('turno_id', turnoId!)
         .order('cerrado_en')
       if (error) throw error
-      return data as unknown as Cierre[]
+      return data
     },
   })
 }
@@ -132,11 +132,11 @@ export async function guardarTurno(input: GuardarTurnoInput): Promise<GuardarTur
   }
   if (input.trabajador_id !== undefined) p.trabajador_id = input.trabajador_id
   if (input.fondo_inicial !== undefined) p.fondo_inicial = input.fondo_inicial
-  if (input.ventas) p.ventas = input.ventas as Json
+  if (input.ventas) p.ventas = input.ventas
   if (input.proveedores) {
     p.proveedores = input.proveedores.map((l) => ({
       id: l.id ?? null, proveedor_id: l.proveedor_id ?? null, nombre: l.nombre, monto: l.monto, forma_pago: l.forma_pago,
-    })) as Json
+    }))
   }
   if (input.efectivo_contado !== undefined) p.efectivo_contado = input.efectivo_contado
   if (input.base_updated_at) p.base_updated_at = input.base_updated_at
@@ -191,7 +191,7 @@ export function usePapelera() {
         .not('deleted_at', 'is', null)
         .order('deleted_at', { ascending: false })
       if (error) throw error
-      return data as unknown as TurnoPapelera[]
+      return data
     },
   })
 }

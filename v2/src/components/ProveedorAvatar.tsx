@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 
 const COLORS = ['#8B5D39', '#1E7A4F', '#33518C', '#B45309', '#0F766E', '#BE185D']
 
@@ -12,7 +12,9 @@ const SIZES = { sm: 'w-8 h-8 text-sm', md: 'w-10 h-10 text-base', lg: 'w-16 h-16
 
 export function ProveedorAvatar({ nombre = '', imagenUrl, size = 'md' }: { nombre?: string; imagenUrl?: string | null; size?: keyof typeof SIZES }) {
   const [imgError, setImgError] = useState(false)
-  useEffect(() => { setImgError(false) }, [imagenUrl])
+  // Otra imagen: se vuelve a intentar (ajuste durante el render).
+  const [urlVista, setUrlVista] = useState(imagenUrl)
+  if (urlVista !== imagenUrl) { setUrlVista(imagenUrl); setImgError(false) }
   const base = `${SIZES[size]} rounded-xl overflow-hidden shrink-0 flex items-center justify-center font-bold text-white`
   if (imagenUrl && !imgError) {
     return (

@@ -1,0 +1,33 @@
+# Lo que antes se corría a mano antes de cada commit. No toca el despliegue:
+# Vercel construye por su cuenta desde la misma rama.
+name: v2
+
+on:
+  push:
+    branches: [main, v2]
+  pull_request:
+
+jobs:
+  verificar:
+    name: lint, tipos, tests y build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: v2
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+          cache-dependency-path: v2/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      - run: pnpm typecheck
+      # Los tests contra staging se saltan solos sin SMOKE_PASSWORD, que no
+      # está acá: se corren a mano (ver v2/README.md).
+      - run: pnpm test
+      - run: pnpm build

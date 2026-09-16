@@ -1,107 +1,79 @@
-# Mejoras de UI/UX propuestas para la v2
+# Mejoras de UI/UX de la v2
 
-Revisión hecha el 16 de septiembre de 2026 sobre la v2 desplegada
-(`v2/`, piloto Fase 3 semana A). Son propuestas, no trabajo hecho: ninguna
-está implementada. Cada una nace de algo concreto en el código o en los datos
-de producción, así que se pueden abordar de a una y en el orden que convenga.
+Revisión hecha el 16 de septiembre de 2026 sobre la v2 desplegada (`v2/`,
+piloto Fase 3 semana A). **Casi todo está aplicado** desde el 16 de
+septiembre de 2026; abajo se marca qué quedó pendiente y por qué.
 Contexto general en `ESTADO.md`; reglas de diseño en `plan-v2.md` (§2.5).
 
-## Prioridad sugerida
+## Aplicado
 
-1. **Base accesible** (un commit, riesgo cero): foco visible global,
-   `prefers-reduced-motion`, ningún texto bajo 12 px, limitar `user-select`.
-2. **Hoja de revisión antes de cerrar** y **conteo de caja por billetes**.
-   Atacan dos problemas medidos en producción: 29 % de cierres corregidos y
-   cero conteos de caja en toda la historia.
-3. **Cifras tabulares en listas**, escala tipográfica y fuentes alojadas en el
-   repo.
-4. **Aviso de proveedor parecido**, junto con la limpieza de datos pendiente
-   con la dueña (`plan-v2.md` §0.5).
+### Base accesible (`v2/src/styles.css`)
 
-## Tipografía y estilo
+- **Foco visible global**: una regla `:focus-visible` con el color de marca,
+  para todo lo enfocable (filas de ventas y proveedores, pestañas, chips,
+  teclado), no solo los botones con `btn`.
+- **`prefers-reduced-motion`**: bajo esa preferencia no hay animaciones de
+  hoja, aparición ni toast, ni el salto del teclado.
+- **Selección de texto**: el `user-select: none` global salió de `html`; ahora
+  está solo en la navegación y el teclado (utilidad `no-select`), así se puede
+  copiar un monto o una fila para pegarla en WhatsApp.
+- **Hojas inferiores**: `BottomSheet` es un `<dialog>` con `showModal()`, que
+  atrapa el foco, lo devuelve al botón que la abrió y maneja Escape. Los
+  avisos (toasts) suben con la API de popover para no quedar detrás.
+- **Contrastes**: `--warn` y `--muted2` se oscurecieron un paso (`warn` sobre
+  `warn-tint` pasó de 4,4:1 a ~6:1; `muted2` cumple sobre `canvas` y `soft`).
+  Sobre fondos sólidos de marca o estado se usa el token `--on-solid` en vez
+  de blanco: en modo oscuro esos fondos son claros y el blanco no se leía.
+- **Semántica**: los filtros de Historial son botones con `aria-pressed` (no
+  `role="tablist"`, que anunciaba paneles inexistentes). El gráfico de
+  Análisis tiene ejes de 12 px y un resumen en texto para lectores de
+  pantalla con el mejor y el peor día del período.
 
-- **Instrument Serif no tiene cifras tabulares.** La utilidad `amount`
-  (`v2/src/styles.css`) combina esa fuente con `tabular-nums`, pero la fuente
-  no trae esa característica y la orden se ignora. Donde hay cifras en
-  columna (neto de cada fila en Historial) los dígitos no alinean. Propuesta:
-  serif solo para la cifra grande de Hoy, la planilla y los títulos; en toda
-  lista o columna usar Hanken Grotesk semibold con `tabular-nums`.
-- **Escala tipográfica.** Conviven tamaños de 10, 10.5, 11, 11.5, 12, 12.5,
-  13, 13.5, 14.5, 15, 16 y 17 px escritos a mano en las clases. Definir seis
-  pasos como tokens (por ejemplo 12, 13, 15, 17, 24 y 60) y eliminar el resto.
-- **Nada bajo 12 px.** Hay nueve usos de `text-[10px]` y varios de 11 px:
-  chips de estado, etiquetas de la barra de pestañas móvil, columna de fecha
-  de Historial, ejes del gráfico. Mínimo 12 px; etiquetas de navegación 12 o
-  13. La dueña cierra caja a las 20 h en un móvil.
-- **Pesos y carga de fuentes.** `v2/index.html` carga cinco pesos de Hanken
-  Grotesk y el 800 no se usa. `display=swap` produce un salto visible en la
-  cifra grande al cargar. Para una PWA que a veces está sin red, alojar las
-  fuentes en el repo con `@fontsource` y quitar la dependencia de Google
-  Fonts.
-- **Colores fuera de tokens.** `--color-cash` y `--color-wire` son
-  hexadecimales fijos y en modo oscuro quedan apagados sobre el fondo. Lo mismo
-  con el color de cada método de pago que viene de `metodos_pago.color` y se
-  usa como color de texto en el teclado y en las barras de Hoy. Necesitan una
-  variante clara para modo oscuro o pasar por un token.
-- **Contrastes al límite.** `warn` sobre `warn-tint` ronda 4,4:1, un poco bajo
-  el mínimo de 4,5:1 para texto normal. `muted2` cumple sobre tarjeta blanca
-  pero no sobre `canvas` ni `soft`, y ahí va el "$0" de los montos vacíos y
-  los placeholders. Oscurecer `warn` y `muted2` un paso más y volver a medir.
-- **Barra lateral de escritorio.** Solo muestra el nombre de la app. Poner
-  abajo el bloque de cuenta que hoy vive en el avatar de Hoy (nombre, rol,
-  salir), para que el escritorio no dependa de una pantalla concreta para
-  cerrar sesión.
+### Tipografía
 
-## Accesibilidad
+- **Escala en tokens**: seis pasos (12, 13, 15, 17, 24 px) más los de cifras
+  (30, 44, 52, 60) en `@theme`. Los 165 tamaños escritos a mano —incluidos
+  los 29 usos de 10 y 11 px— se reemplazaron: **nada bajo 12 px**.
+- **Cifras tabulares de verdad**: Instrument Serif no trae `tabular-nums`, así
+  que la utilidad `amount` quedó solo para las cifras grandes (Hoy, planilla,
+  teclado) y las columnas usan `cifra` (Hanken Grotesk + `tabular-nums`):
+  Historial, los KPI de Análisis y la lista de turnos de Hoy.
+- **Fuentes en el repo** (`@fontsource`), sin Google Fonts y sin el peso 800
+  que no se usaba: el service worker las precachea y ya no hay salto de
+  `display=swap` con la app sin red.
 
-- **Foco visible.** Solo los botones con la utilidad `btn` y el avatar tienen
-  anillo de foco. Las filas de las listas de ventas y proveedores en Cerrar
-  turno, las pestañas, los chips de trabajador y el teclado no muestran nada
-  al navegar con Tab. Una regla global de `:focus-visible` con el color de
-  marca lo resuelve de una vez.
-- **Hojas inferiores** (`v2/src/components/BottomSheet.tsx`). El diálogo no
-  atrapa el foco, no lo mueve adentro al abrir ni lo devuelve al botón que lo
-  abrió al cerrar. Con `<dialog>` nativo y `showModal()` se obtienen las tres
-  cosas sin código extra.
-- **Movimiento.** No hay `prefers-reduced-motion`. Desactivar bajo esa
-  preferencia las animaciones `sheetUp`, `fadeIn`, `toastUp` y el
-  `active:scale` del teclado.
-- **Selección de texto bloqueada.** El `user-select: none` global en `html`
-  impide copiar un monto o una fila de la planilla para pegarla en WhatsApp.
-  Limitarlo a la barra de navegación y al teclado.
-- **Semántica de filtros.** Los filtros de Historial usan `role="tablist"`,
-  pero filtran una lista, no cambian paneles. Corresponde un grupo de botones
-  con `aria-pressed`.
-- **Gráfico de Análisis.** Etiquetas de ejes a 10 px: subir a 12. Agregar un
-  resumen oculto para lectores de pantalla con el mejor y peor día del
-  período.
-- **Etiqueta del botón flotante.** En móvil dice "Cerrar", que en una app
-  también significa salir. "Cierre" o "Cerrar caja" es inequívoco.
+### Flujo
 
-## Flujo
+- **Revisión antes de cerrar** (`RevisionSheet`, reglas en `revision.ts`): el
+  botón de la barra abre una hoja con el resumen completo (quién atendió,
+  ventas por método, proveedores, caja y neto) y los avisos de lo que falta
+  —sin trabajador, sin conteo, caja descuadrada, turno vacío—, ninguno
+  bloqueante. Reemplaza al diálogo de "¿Cerrar sin ventas?".
+- **Conteo de caja por billetes** (`ConteoSheet`, suma en `conteo.ts`): se
+  cuenta cuántas piezas hay de cada denominación y la app suma en vivo y
+  compara con el efectivo esperado. Queda la salida "escribir el total a
+  mano". Al servidor sigue viajando solo `efectivo_contado`; el desglose vive
+  en el borrador del dispositivo.
+- **Aviso de proveedor parecido** (`parecido.ts`): al escribir un nombre sin
+  coincidencia exacta aparece "¿Quisiste decir Río Maipo?" con un botón para
+  usar el existente (distancia de edición sobre el nombre normalizado).
+- **Teclado encadenado**: con el monto vacío el botón dice "Omitir y seguir",
+  así queda claro que dejar un método en cero es válido.
+- **Título de la pantalla de cierre** según el modo ("Cerrar el día",
+  "Cerrar la tarde", "Corregir…") y la fecha en el eyebrow.
+- **Botón flotante**: "Cerrar caja" en vez de "Cerrar" (que también significa
+  salir).
+- **Barra lateral de escritorio**: el bloque de cuenta (nombre, rol, cerrar
+  sesión) va al pie, sin depender de la pantalla Hoy.
+- **Login**: botón para mostrar la contraseña.
 
-- **Revisión antes de cerrar.** El botón de la barra fija cierra de inmediato.
-  Proponer una hoja de confirmación con el resumen (quién atendió, ventas por
-  método, proveedores, caja) y avisos de lo que falta ("sin trabajador", "sin
-  conteo"). Un toque más, pero evita la mayoría de las correcciones.
-- **Conteo de caja por billetes.** Una hoja donde se escriba cuántos billetes
-  y monedas de cada denominación hay, con la suma en vivo, en lugar de pedir
-  una cifra total de memoria. Es lo que le da sentido al "efectivo esperado".
-- **Duplicados de proveedor** (`v2/src/features/turno/ProveedorSheet.tsx`).
-  Al escribir un nombre sin coincidencia exacta se crea uno nuevo. Agregar un
-  aviso "¿Quisiste decir Río Maipo?" cuando hay un parecido cercano (distancia
-  de edición pequeña sobre `normalizar()`), con un botón para usarlo.
-- **Teclado encadenado.** Al aceptar con el monto vacío la etiqueta dice
-  "Siguiente", que funciona, pero un botón explícito "Omitir" deja claro que
-  dejar un método en cero es válido.
-- **Título de la pantalla de cierre.** Dice "Cerrar turno" aunque el modo sea
-  día completo, y el eyebrow "Otro día" no aporta. Título según el modo
-  ("Cerrar el día", "Cerrar la tarde") y la fecha en el eyebrow.
-- **Historial más legible.** Filas densas con la fecha en tres líneas
-  diminutas. Agrupar por mes con un encabezado pegajoso, fecha en una línea,
-  neto en la sans tabular.
-- **Esqueletos en vez de spinner.** Con la caché en IndexedDB casi siempre hay
-  datos al instante; en la primera carga el spinner y luego el salto de
-  contenido se sienten. Un esqueleto con la forma de la cifra y la tarjeta.
-- **Contraseña visible.** El login no tiene botón para mostrar la contraseña.
-  En un móvil compartido con teclado pequeño evita reintentos.
+## Pendiente
+
+- **Historial más legible**: agrupar por mes con encabezado pegajoso y la
+  fecha en una línea. La fecha ya no está en tipos diminutos, pero la fila
+  sigue siendo densa.
+- **Esqueletos en vez de spinner** en la primera carga.
+- **Color de cada método de pago** (`metodos_pago.color`, dato de la base) en
+  modo oscuro: `--cash` y `--wire` ya tienen variante oscura, pero el color
+  que viene de la base se sigue usando tal cual como color de texto en el
+  teclado y en las barras de Hoy.
