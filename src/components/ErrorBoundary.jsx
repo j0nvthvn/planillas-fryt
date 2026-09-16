@@ -7,6 +7,31 @@ import { logError } from '../utils/errorLog'
  * logs_error (mismo mecanismo que useErrorToast) y muestra una pantalla
  * de recuperación en vez del blanco total.
  */
+// Después de cada deploy los chunks viejos (Historial-XXXX.js, etc.)
+// dejan de existir en Vercel; una pestaña que quedó abierta con la
+// versión anterior falla al navegar a una página cargada con lazy() con
+// "Failed to fetch dynamically imported module". La única solución es
+// recargar para tomar el index.html nuevo — se hace sola una vez (flag
+// en sessionStorage para no entrar en loop si el fallo es otro).
+const RELOAD_FLAG = 'frytcontrol:reload-por-chunk'
+
+function esChunkViejo(error) {
+  const msg = String(error?.message || '')
+  return /Failed to fetch dynamically imported module|Importing a module script failed|error loading dynamically imported module/i.test(msg)
+}
+
+function intentarRecargaAutomatica(error) {
+  if (!esChunkViejo(error)) return false
+  try {
+    if (sessionStorage.getItem(RELOAD_FLAG)) return false
+    sessionStorage.setItem(RELOAD_FLAG, '1')
+  } catch {
+    return false
+  }
+  window.location.reload()
+  return true
+}
+
 export class ErrorBoundary extends Component {
   state = { hasError: false }
 
@@ -15,10 +40,17 @@ export class ErrorBoundary extends Component {
   }
 
   componentDidCatch(error, info) {
+    if (intentarRecargaAutomatica(error)) return
     logError(error?.message || 'Error inesperado en la interfaz', {
       contexto: 'ErrorBoundary',
       detalle: { stack: error?.stack, componentStack: info?.componentStack },
     })
+  }
+
+  componentDidMount() {
+    // La app volvió a montar bien tras una recarga automática: se libera
+    // el flag para que un futuro deploy pueda volver a recargar.
+    try { sessionStorage.removeItem(RELOAD_FLAG) } catch { /* sin storage */ }
   }
 
   render() {

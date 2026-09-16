@@ -477,7 +477,7 @@ export default function Turno() {
               {!online ? (
                 <span className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-warn">
                   <span className="w-1.5 h-1.5 rounded-full bg-warn animate-pulse" />
-                  Sin conexión — se guardará al volver
+                  Sin conexión — los cambios no se están guardando
                 </span>
               ) : autoguardando ? (
                 <span className="inline-flex items-center gap-1.5 text-[12px] font-medium text-muted">
