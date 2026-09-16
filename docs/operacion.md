@@ -70,11 +70,12 @@ prod hasta aplicarla.
 Respaldo previo (JSON por tabla) en el scratchpad de la sesión:
 `prod-backup-2026-09-16/`. Sirve para revertir el saneo de nombres.
 
-Efecto secundario detectado: el backfill de `proveedor_id` disparó los
-triggers de `updated_at`, dejando 125 turnos con `updated_at` =
-2026-09-16 02:14 UTC (los de `proveedores_turno` ya se restauraron
-desde el respaldo). La migración ya desactiva esos triggers durante el
-backfill para entornos futuros.
+Efecto secundario detectado y corregido: el backfill de `proveedor_id`
+disparó los triggers de `updated_at` (125 turnos y 585 filas de
+proveedores). Ambos se restauraron desde el respaldo la misma noche;
+`turnos.updated_at` máximo volvió a ser el del último cierre. La
+migración ya desactiva esos triggers durante el backfill para entornos
+futuros.
 
 ## Pruebas de la base en local (Docker)
 
