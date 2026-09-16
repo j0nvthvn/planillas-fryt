@@ -206,7 +206,10 @@ export function useTurnoForm({ fecha, modo, fondoPorDefecto, online }: Opciones)
     if (timer.current) clearTimeout(timer.current)
     timer.current = setTimeout(() => {
       const s = stateRef.current
-      if (!s.sucio || s.cerrado || !online || !tieneContenido(s) || guardando) return
+      // Con un borrador ya creado en el servidor se sincroniza todo, incluso
+      // dejar un monto en 0 (antes "sin contenido" = no enviar, y el servidor
+      // conservaba el valor anterior). Sin borrador aún, se espera al primer dato.
+      if (!s.sucio || s.cerrado || !online || guardando || !(tieneContenido(s) || s.turnoId)) return
       void sincronizar(false)
     }, 1500)
   }, [online, sincronizar, guardando])
@@ -219,7 +222,7 @@ export function useTurnoForm({ fecha, modo, fondoPorDefecto, online }: Opciones)
   // debounce: lo pendiente se manda ya, para que Hoy lo muestre al llegar.
   const flush = useCallback(() => {
     const s = stateRef.current
-    if (s.sucio && !s.cerrado && navigator.onLine && tieneContenido(s)) {
+    if (s.sucio && !s.cerrado && navigator.onLine && (tieneContenido(s) || s.turnoId)) {
       if (timer.current) clearTimeout(timer.current)
       void sincronizarRef.current(false)
     }
