@@ -1,5 +1,9 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "vite",
+  "installCommand": "pnpm install --frozen-lockfile",
+  "buildCommand": "pnpm exec tsc -b && pnpm exec vite build --mode ${VITE_MODE:-staging}",
+  "outputDirectory": "dist",
   "rewrites": [{ "source": "/((?!assets/|metodos/|manifest\\.webmanifest|sw\\.js|workbox-).*)", "destination": "/index.html" }],
   "headers": [
     { "source": "/sw.js", "headers": [{ "key": "Cache-Control", "value": "no-cache" }] },
