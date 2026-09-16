@@ -1,0 +1,17 @@
+# Configuración del proyecto para la CLI de Supabase.
+# Solo se declara lo que difiere del default; el resto lo completa la CLI.
+project_id = "planillas-fryt"
+
+# Las funciones de correo se invocan desde la base (trigger en
+# turno_cierres y pg_cron) con un secreto compartido en el header
+# x-webhook-secret, no con un JWT de usuario — ver
+# supabase/migrations/20260915000200_correos_seguros.sql.
+[functions.enviar-resumen-turno]
+verify_jwt = false
+
+[functions.enviar-resumen-periodico]
+verify_jwt = false
+
+# La llama la app con la sesión de la dueña; además valida el rol adentro.
+[functions.crear-usuario]
+verify_jwt = true

@@ -1,9 +1,20 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { verificarWebhook, fechaChile, sumarDias, diaSemana } from '../_shared/webhook.ts'
 
-// Llamada vía Supabase Cron Job (o manualmente para pruebas)
-// Body: { "tipo": "diario" } o { "tipo": "semanal" }
+// Se invoca desde pg_cron vía public.enviar_resumen_periodico(tipo)
+// (migración 20260915000200_correos_seguros.sql):
+//   diario  → 12:00 UTC, resume el día ANTERIOR (ya cerrado la noche antes)
+//   semanal → lunes 12:00 UTC, resume lunes–domingo anteriores
+// Body: { "tipo": "diario" } | { "tipo": "semanal" }
+//
+// Todas las fechas se calculan en America/Santiago. Antes se usaba
+// toISOString() (UTC): después de las 20-21 h en Chile ya era "mañana"
+// y el resumen apuntaba al día equivocado.
 
 Deno.serve(async (req) => {
+  const rechazo = verificarWebhook(req)
+  if (rechazo) return rechazo
+
   try {
     const { tipo } = await req.json() as { tipo: 'diario' | 'semanal' }
     if (tipo !== 'diario' && tipo !== 'semanal') {
@@ -16,69 +27,50 @@ Deno.serve(async (req) => {
       { auth: { autoRefreshToken: false, persistSession: false } }
     )
 
-    // Verificar si las notificaciones están activas
     const { data: cfgRows } = await supabase
       .from('configuracion')
       .select('clave, valor')
       .in('clave', ['notificaciones_activas', 'notificaciones_email_extra'])
-
     const cfg = Object.fromEntries((cfgRows ?? []).map((r: { clave: string; valor: unknown }) => [r.clave, r.valor]))
     if (cfg.notificaciones_activas === false) return new Response('ok', { status: 200 })
 
-    // Calcular rango de fechas
-    const hoy = new Date()
-    hoy.setHours(0, 0, 0, 0)
-    const desde = new Date(hoy)
+    // Rango del período, en fecha local de Chile.
+    const hoy = fechaChile()
+    let desdeStr: string
+    let hastaStr: string
     if (tipo === 'diario') {
-      // Ayer (el cron corre a las 23:00 del día actual → cubre hoy)
-      // En realidad queremos el día de hoy al momento de correr
+      desdeStr = hastaStr = sumarDias(hoy, -1)
     } else {
-      // Semana anterior: lunes–domingo pasados
-      const diaSemana = hoy.getDay() // 0=dom, 1=lun, ..., 6=sab
-      const diasDesdeHoy = diaSemana === 0 ? 7 : diaSemana
-      desde.setDate(hoy.getDate() - diasDesdeHoy)  // lunes anterior
+      // Lunes–domingo de la semana anterior a la de hoy.
+      const dow = diaSemana(hoy)                 // 0 = domingo
+      const lunesActual = sumarDias(hoy, -((dow + 6) % 7))
+      desdeStr = sumarDias(lunesActual, -7)
+      hastaStr = sumarDias(lunesActual, -1)
     }
-
-    const desdeStr = desde.toISOString().split('T')[0]
-    const hastaStr = tipo === 'diario'
-      ? hoy.toISOString().split('T')[0]
-      : new Date(desde.getTime() + 6 * 86_400_000).toISOString().split('T')[0]
-
-    // Consultar jornadas del período
-    const { data: jornadas } = await supabase
-      .from('jornadas')
-      .select(`
-        id, fecha,
-        turnos(
-          id, tipo,
-          ventas:ventas_turno(efectivo, getnet, mercadopago, edenred, amipass, transferencia),
-          proveedores:proveedores_turno(nombre, monto, forma_pago)
-        )
-      `)
-      .gte('fecha', desdeStr)
-      .lte('fecha', hastaStr)
-      .order('fecha')
-
-    // Consultar período anterior para comparativa
     const diffDias = tipo === 'diario' ? 1 : 7
-    const desdeAntStr = new Date(new Date(desdeStr + 'T00:00:00').getTime() - diffDias * 86_400_000).toISOString().split('T')[0]
-    const hastaAntStr = new Date(new Date(hastaStr + 'T00:00:00').getTime() - diffDias * 86_400_000).toISOString().split('T')[0]
+    const desdeAntStr = sumarDias(desdeStr, -diffDias)
+    const hastaAntStr = sumarDias(hastaStr, -diffDias)
 
-    const { data: jornadasAnt } = await supabase
-      .from('jornadas')
-      .select(`
-        id,
-        turnos(
-          ventas:ventas_turno(efectivo, getnet, mercadopago, edenred, amipass, transferencia)
-        )
-      `)
-      .gte('fecha', desdeAntStr)
-      .lte('fecha', hastaAntStr)
+    const SELECT_JORNADAS = `
+      id, fecha, es_turno_unico,
+      turnos(
+        id, tipo, is_draft, fondo_inicial, deleted_at,
+        ventas:ventas_turno(efectivo, getnet, mercadopago, edenred, amipass, transferencia),
+        proveedores:proveedores_turno(nombre, monto, forma_pago)
+      )
+    `
 
-    // Obtener email(s) del dueño
+    const [{ data: jornadas }, { data: jornadasAnt }] = await Promise.all([
+      supabase.from('jornadas').select(SELECT_JORNADAS)
+        .is('turnos.deleted_at', null)
+        .gte('fecha', desdeStr).lte('fecha', hastaStr).order('fecha'),
+      supabase.from('jornadas').select(SELECT_JORNADAS)
+        .is('turnos.deleted_at', null)
+        .gte('fecha', desdeAntStr).lte('fecha', hastaAntStr),
+    ])
+
     const { data: duenos } = await supabase
       .from('usuarios').select('email').eq('rol', 'dueño').eq('activo', true)
-
     const destinatarios: string[] = (duenos ?? []).map((d: { email: string }) => d.email)
     if (cfg.notificaciones_email_extra && typeof cfg.notificaciones_email_extra === 'string') {
       destinatarios.push(cfg.notificaciones_email_extra)
@@ -94,8 +86,18 @@ Deno.serve(async (req) => {
     // supabase-js infiere ventas_turno como arreglo a partir del string de
     // select (no conoce el UNIQUE turno_id), pero en runtime PostgREST la
     // embebe como objeto — JornadaRow ya refleja la forma real.
-    const totales = calcularTotales((jornadas ?? []) as unknown as JornadaRow[])
-    const totalesAnt = calcularTotales((jornadasAnt ?? []) as unknown as JornadaRow[])
+    const lista = (jornadas ?? []) as unknown as JornadaRow[]
+    const listaAnt = (jornadasAnt ?? []) as unknown as JornadaRow[]
+    const totales = calcularTotales(lista)
+    const totalesAnt = calcularTotales(listaAnt)
+
+    // Sin actividad en el período: no vale la pena un correo vacío
+    // (por ejemplo, el resumen diario de un día que el local no abrió).
+    if (lista.every((j) => (j.turnos ?? []).length === 0)) {
+      return new Response(JSON.stringify({ ok: true, enviado: false, motivo: 'sin turnos en el período' }), {
+        status: 200, headers: { 'Content-Type': 'application/json' },
+      })
+    }
 
     // La narrativa es un extra: si falla (sin API key, rate limit, timeout,
     // etc.) el correo se manda igual solo con los números — nunca debe
@@ -105,7 +107,7 @@ Deno.serve(async (req) => {
       return null
     })
 
-    const html = buildEmailPeriodico({ tipo, desdeStr, hastaStr, jornadas: (jornadas ?? []) as unknown as JornadaRow[], totales, totalesAnt, resumenIA })
+    const html = buildEmailPeriodico({ tipo, desdeStr, hastaStr, jornadas: lista, totales, totalesAnt, resumenIA })
     const asunto = tipo === 'diario'
       ? `Resumen diario · ${fechaLegible(hastaStr)}`
       : `Resumen semanal · ${fechaCorta(desdeStr)} – ${fechaCorta(hastaStr)}`
@@ -127,10 +129,12 @@ Deno.serve(async (req) => {
     if (!res.ok) {
       const err = await res.text()
       console.error('Resend error:', err)
-      return new Response('error', { status: 500 })
+      return new Response(JSON.stringify({ error: 'resend', detail: err }), {
+        status: 502, headers: { 'Content-Type': 'application/json' },
+      })
     }
 
-    return new Response(JSON.stringify({ ok: true }), {
+    return new Response(JSON.stringify({ ok: true, enviado: true, desde: desdeStr, hasta: hastaStr }), {
       status: 200, headers: { 'Content-Type': 'application/json' },
     })
   } catch (err) {
@@ -147,7 +151,7 @@ function clp(v: unknown): string {
 }
 
 function pct(actual: number, anterior: number): string {
-  if (anterior === 0) return actual > 0 ? '+∞%' : '—'
+  if (anterior === 0) return actual > 0 ? 'sin comparación' : '—'
   const diff = ((actual - anterior) / anterior) * 100
   return (diff >= 0 ? '+' : '') + diff.toFixed(0) + '%'
 }
@@ -175,6 +179,10 @@ function capitalizar(s: string): string {
   return s.charAt(0).toUpperCase() + s.slice(1)
 }
 
+function escapeHtml(s: string): string {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+}
+
 const METODOS = [
   { key: 'efectivo',      label: 'Efectivo',      color: '#1E7A4F' },
   { key: 'getnet',        label: 'Getnet',         color: '#33518C' },
@@ -188,26 +196,44 @@ type VentaRow = Record<string, unknown>
 type ProvRow = { nombre: string; monto: number; forma_pago: string }
 // ventas_turno tiene turno_id UNIQUE (una fila por turno) — PostgREST la
 // embebe como objeto, no como arreglo (a diferencia de proveedores_turno,
-// que sí es 1:muchos). Asumir arreglo acá tiraba "object is not iterable"
-// en cada ejecución, por eso este correo nunca llegaba a enviarse.
-type TurnoRow = { id: string; tipo: string; ventas: VentaRow | null; proveedores: ProvRow[] }
-type JornadaRow = { id: string; fecha?: string; turnos: TurnoRow[] }
+// que sí es 1:muchos).
+type TurnoRow = {
+  id: string
+  tipo: string
+  is_draft: boolean
+  fondo_inicial: number | null
+  ventas: VentaRow | null
+  proveedores: ProvRow[]
+}
+type JornadaRow = { id: string; fecha?: string; es_turno_unico?: boolean; turnos: TurnoRow[] }
+
+function ventasTurno(t: TurnoRow): number {
+  if (!t.ventas) return 0
+  return METODOS.reduce((s, m) => s + (Number(t.ventas![m.key]) || 0), 0)
+}
 
 function calcularTotales(jornadas: JornadaRow[]) {
   const metodos: Record<string, number> = { efectivo: 0, getnet: 0, mercadopago: 0, edenred: 0, amipass: 0, transferencia: 0 }
   let efProv = 0, trProv = 0
+  // "Caja": fondo + ventas en efectivo − proveedores en efectivo, sumado
+  // por turno — la misma fórmula que cerrar_turno() y Hoy.jsx.
+  let caja = 0
+  let borradores = 0
   const contProv: Record<string, number> = {}
 
   for (const j of jornadas) {
     for (const t of j.turnos ?? []) {
+      if (t.is_draft) borradores += 1
+      let efProvTurno = 0
       if (t.ventas) {
         for (const m of METODOS) metodos[m.key] += Number(t.ventas[m.key]) || 0
       }
       for (const p of t.proveedores ?? []) {
-        if (p.forma_pago === 'efectivo') efProv += Number(p.monto)
+        if (p.forma_pago === 'efectivo') { efProv += Number(p.monto); efProvTurno += Number(p.monto) }
         else trProv += Number(p.monto)
         contProv[p.nombre] = (contProv[p.nombre] || 0) + Number(p.monto)
       }
+      caja += (Number(t.fondo_inicial) || 0) + (Number(t.ventas?.efectivo) || 0) - efProvTurno
     }
   }
 
@@ -216,7 +242,7 @@ function calcularTotales(jornadas: JornadaRow[]) {
     .sort((a, b) => b[1] - a[1]).slice(0, 5)
     .map(([nombre, monto]) => ({ nombre, monto }))
 
-  return { metodos, totalVentas, efProv, trProv, topProv }
+  return { metodos, totalVentas, efProv, trProv, caja, borradores, topProv }
 }
 
 // ── Resumen narrativo (IA) ────────────────────────────────
@@ -295,10 +321,6 @@ interface EmailPeriodicoParams {
   resumenIA: string | null
 }
 
-function escapeHtml(s: string): string {
-  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-}
-
 function buildEmailPeriodico({ tipo, desdeStr, hastaStr, jornadas, totales, totalesAnt, resumenIA }: EmailPeriodicoParams): string {
   const titulo = tipo === 'diario' ? 'Resumen del día' : 'Resumen semanal'
   const subtitulo = tipo === 'diario'
@@ -321,13 +343,17 @@ function buildEmailPeriodico({ tipo, desdeStr, hastaStr, jornadas, totales, tota
 
   const jornadasRows = jornadas.map((j) => {
     const turnos = j.turnos ?? []
-    const totalDia = turnos.reduce((s, t) =>
-      s + (t.ventas ? METODOS.reduce((sm, m) => sm + (Number(t.ventas![m.key]) || 0), 0) : 0), 0)
-    const tipos = turnos.map((t) => capitalizar(t.tipo)).join(' + ')
+    const totalDia = turnos.reduce((s, t) => s + ventasTurno(t), 0)
+    const tipos = j.es_turno_unico
+      ? 'Día completo'
+      : turnos.map((t) => capitalizar(t.tipo)).join(' + ')
+    const borrador = turnos.some((t) => t.is_draft)
+      ? ' <span style="color:#b45309;font-weight:700;">· borrador</span>'
+      : ''
     return `
       <tr>
         <td style="padding:8px 12px;border-bottom:1px solid #f0ebe3;">${fechaCorta(j.fecha ?? '')}</td>
-        <td style="padding:8px 12px;border-bottom:1px solid #f0ebe3;color:#6b7280;font-size:12px;">${tipos || '—'}</td>
+        <td style="padding:8px 12px;border-bottom:1px solid #f0ebe3;color:#6b7280;font-size:12px;">${tipos || '—'}${borrador}</td>
         <td style="padding:8px 12px;border-bottom:1px solid #f0ebe3;text-align:right;font-weight:600;">${clp(totalDia)}</td>
       </tr>`
   }).join('')
@@ -336,10 +362,15 @@ function buildEmailPeriodico({ tipo, desdeStr, hastaStr, jornadas, totales, tota
     ? totales.topProv.map((p, i) => `
       <tr>
         <td style="padding:6px 12px;border-bottom:1px solid #f0ebe3;color:#9ca3af;font-size:12px;">${i + 1}</td>
-        <td style="padding:6px 12px;border-bottom:1px solid #f0ebe3;">${p.nombre}</td>
+        <td style="padding:6px 12px;border-bottom:1px solid #f0ebe3;">${escapeHtml(p.nombre)}</td>
         <td style="padding:6px 12px;border-bottom:1px solid #f0ebe3;text-align:right;font-weight:600;">${clp(p.monto)}</td>
       </tr>`).join('')
     : `<tr><td colspan="3" style="padding:10px 12px;color:#9ca3af;font-style:italic;">Sin proveedores</td></tr>`
+
+  const avisoBorradores = totales.borradores > 0 ? `
+    <div style="margin:16px 28px 0;padding:12px 16px;background:#FDF1DD;border-radius:12px;border-left:4px solid #b45309;">
+      <p style="margin:0;font-size:13px;color:#7c3f0a;"><strong>${totales.borradores === 1 ? 'Hay 1 turno sin cerrar' : `Hay ${totales.borradores} turnos sin cerrar`}</strong> en este período. Los montos de abajo los incluyen, pero pueden cambiar hasta que se cierren.</p>
+    </div>` : ''
 
   return `<!DOCTYPE html>
 <html lang="es">
@@ -361,6 +392,8 @@ function buildEmailPeriodico({ tipo, desdeStr, hastaStr, jornadas, totales, tota
     </div>
     ` : ''}
 
+    ${avisoBorradores}
+
     <!-- KPIs destacados -->
     <div style="display:flex;gap:0;background:#f9f5ed;border-bottom:1px solid #f0ebe3;">
       <div style="flex:1;padding:18px 20px;border-right:1px solid #f0ebe3;">
@@ -368,10 +401,15 @@ function buildEmailPeriodico({ tipo, desdeStr, hastaStr, jornadas, totales, tota
         <p style="margin:0;font-size:26px;font-weight:800;color:#5C3317;">${clp(totales.totalVentas)}</p>
         <p style="margin:4px 0 0;font-size:12px;font-weight:600;color:${varColor};">${varPct} vs. período anterior</p>
       </div>
-      <div style="flex:1;padding:18px 20px;">
+      <div style="flex:1;padding:18px 20px;border-right:1px solid #f0ebe3;">
         <p style="margin:0 0 4px;font-size:11px;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:.08em;">Proveedores</p>
         <p style="margin:0;font-size:20px;font-weight:700;color:#374151;">${clp(totales.efProv + totales.trProv)}</p>
         <p style="margin:4px 0 0;font-size:12px;color:#6b7280;">Ef: ${clp(totales.efProv)} · Tr: ${clp(totales.trProv)}</p>
+      </div>
+      <div style="flex:1;padding:18px 20px;">
+        <p style="margin:0 0 4px;font-size:11px;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:.08em;">Caja</p>
+        <p style="margin:0;font-size:20px;font-weight:700;color:#1E7A4F;">${clp(totales.caja)}</p>
+        <p style="margin:4px 0 0;font-size:12px;color:#6b7280;">Fondo + efectivo − prov. efectivo</p>
       </div>
     </div>
 
