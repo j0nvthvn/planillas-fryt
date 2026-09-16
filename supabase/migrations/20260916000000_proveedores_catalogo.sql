@@ -94,13 +94,20 @@ alter table public.proveedores_turno
 create index if not exists idx_proveedores_turno_proveedor_id
   on public.proveedores_turno (proveedor_id);
 
--- Los triggers todavía no existen, así que este UPDATE no dispara nada.
+-- Los triggers de este archivo todavía no existen, pero sí los de
+-- updated_at (set_*_updated_at y touch_turno_*): se apagan durante el
+-- backfill para que un saneo de nombres no aparezca como "modificación"
+-- del turno (la app compara turnos.updated_at para detectar conflictos).
+alter table public.proveedores_turno disable trigger set_proveedores_turno_updated_at;
+alter table public.proveedores_turno disable trigger touch_turno_on_proveedores_turno;
 update public.proveedores_turno pt
 set proveedor_id = pf.id,
     nombre = pf.nombre
 from public.proveedores_frecuentes pf
 where pf.nombre_norm = public.norm_nombre(pt.nombre)
   and (pt.proveedor_id is distinct from pf.id or pt.nombre <> pf.nombre);
+alter table public.proveedores_turno enable trigger set_proveedores_turno_updated_at;
+alter table public.proveedores_turno enable trigger touch_turno_on_proveedores_turno;
 
 -- ------------------------------------------------------------
 -- Trigger: vincular cada fila de proveedores_turno con el catálogo

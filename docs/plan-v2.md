@@ -1,9 +1,10 @@
 # Plan: FrytControl v2 — renovación sin interrumpir la app actual
 
 > **Estado al 2026-09-16**
-> - Fase 0: código listo y commiteado (repo limpio, migraciones baseline/grants/hardening/correos, edge functions, arreglos de frontend). **Nada aplicado en prod todavía** (ni base ni frontend: los commits no se han pusheado). Pendiente: aplicar migraciones en prod vía MCP, dominio en Resend + secretos (pospuesto por decisión del usuario), limpieza de datos con la dueña (`docs/limpieza-datos-2026-09.sql`).
-> - Fase 1: migraciones 1.1–1.4 probadas en local (62 pgTAP) y **aplicadas en staging** `psdhhwcxjcobwxjiemrr` (sa-east-1) sobre una copia real de prod: 0 diferencias entre `turno_totales` y los cierres, humo de la app actual (`scripts/smoke-legacy.mjs`, 60 comprobaciones) en verde contra staging y local. Pendiente: 1.6 (prod) cuando el usuario lo autorice.
-> - Fases 2–5: no iniciadas.
+> - Fase 0: **aplicada en prod** (baseline, grants, hardening) el 2026-09-16. Correos (`correos_seguros` + edge functions) pospuestos por decisión del usuario hasta tener dominio en Resend. Frontend: los arreglos están commiteados pero **no pusheados/desplegados**. Pendiente: limpieza de datos con la dueña (`docs/limpieza-datos-2026-09.sql`), activar *leaked password protection*.
+> - Fase 1: migraciones 1.1–1.4 probadas en local (62 pgTAP), en staging `psdhhwcxjcobwxjiemrr` (sa-east-1, copia real de prod, humo 60/60) y **aplicadas en prod** el 2026-09-16: 0 diferencias entre `turno_totales` y los cierres. Ver `docs/operacion.md` (estado de producción).
+> - Fase 2 (app v2): siguiente paso.
+> - Fases 3–5: no iniciadas.
 
 ## Contexto
 

@@ -51,28 +51,30 @@ pnpm exec supabase db push          # aplica migraciones pendientes
 pnpm exec supabase functions deploy # despliega las 3 edge functions
 ```
 
-### Historial de migraciones en producción (una sola vez)
+### Estado de producción (2026-09-16)
 
-Producción tiene 19 versiones registradas con nombres distintos a los
-archivos del repo (se aplicaron desde el dashboard). Para que
-`db push` funcione, alinear el historial **sin tocar el esquema**:
+Fase 0 (baseline, grants, hardening) y Fase 1 (catálogo de proveedores,
+trabajadores/métodos, totales/vistas, `guardar_turno`) **aplicadas en
+prod** el 2026-09-16 a las 23:10 (Chile), vía MCP, después del cierre
+del día. Verificado: conteos y sumas iguales al respaldo previo,
+`turno_totales` vs. cierres = 0 diferencias, 0 filas sin `proveedor_id`,
+advisors solo con lo esperado. El saneo eliminó del catálogo "Pf" y
+"Río Maipo" (sobrevivió "Rio Maipo", la grafía más usada).
 
-```sh
-# 1. Marcar como revertidas las versiones remotas que no existen como archivo
-pnpm exec supabase migration repair --status reverted \
-  20260710045738 20260710052026 20260710052051 20260710052138 \
-  20260710055027 20260710060951 20260710061550 20260710154107 \
-  20260710154704 20260710155727 20260715031254
-# 2. Marcar como aplicadas las locales que ya están en el esquema
-pnpm exec supabase migration repair --status applied \
-  20260703000000 20260710000000 20260710020000 20260710020100 \
-  20260710030000 20260714000000 20260915000000
-# 3. Verificar: solo deben quedar pendientes hardening y correos_seguros
-pnpm exec supabase migration list
-```
+`supabase_migrations.schema_migrations` quedó con las versiones de los
+archivos del repo; `supabase migration list` solo muestra pendiente
+`20260915000200_correos_seguros` (pospuesta hasta tener Resend). El
+trigger `notificaciones` y los crons `Diario`/`semanal` viejos siguen en
+prod hasta aplicarla.
 
-(`20260915000000_baseline_prod.sql` es idempotente: aplicarla en prod
-no cambia nada; existe para que un proyecto nuevo quede igual a prod.)
+Respaldo previo (JSON por tabla) en el scratchpad de la sesión:
+`prod-backup-2026-09-16/`. Sirve para revertir el saneo de nombres.
+
+Efecto secundario detectado: el backfill de `proveedor_id` disparó los
+triggers de `updated_at`, dejando 125 turnos con `updated_at` =
+2026-09-16 02:14 UTC (los de `proveedores_turno` ya se restauraron
+desde el respaldo). La migración ya desactiva esos triggers durante el
+backfill para entornos futuros.
 
 ## Pruebas de la base en local (Docker)
 
