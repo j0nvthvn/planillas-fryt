@@ -29,13 +29,14 @@ Para correr la app actual contra staging: `pnpm dev --mode staging`
 | Proyecto Vercel | Root Directory | Rama | URL | Apunta a |
 |---|---|---|---|---|
 | `planillas-fryt` | raíz | `main` | planillas-fryt.vercel.app | prod (app actual) |
-| `frytcontrol-v2` (`prj_VR9zMl4lzvSeWZXAwJI9cx7IErlh`) | `v2` | `v2` | frytcontrol-v2.vercel.app | staging (`v2/.env.staging`, build `--mode staging`) |
+| `frytcontrol-v2` (`prj_VR9zMl4lzvSeWZXAwJI9cx7IErlh`) | `v2` | `main` | frytcontrol-v2.vercel.app | **prod** (`v2/.env.production`) |
+| `frytcontrol-v2` previews | `v2` | cualquier otra rama (p. ej. `v2`) | frytcontrol-v2-git-<rama>-… (requiere login en Vercel) | staging (`v2/.env.staging`) |
 
-La rama `v2` se publica aparte para no desplegar la app actual: un push a
-`main` despliega `planillas-fryt`. Cuando la v2 deba apuntar a prod
-(Fase 3), en Vercel → frytcontrol-v2 → Environment Variables:
-`VITE_MODE=production`, `VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY` de
-prod (el `buildCommand` de `v2/vercel.json` usa `--mode ${VITE_MODE:-staging}`).
+El entorno lo decide `VERCEL_ENV` en el `buildCommand` de `v2/vercel.json`:
+producción → `--mode production`, preview → `--mode staging`. No hay
+variables en el dashboard. Un push a `main` despliega las dos apps
+(`planillas-fryt` y `frytcontrol-v2`), así que `main` se pushea solo
+cuando la app actual puede recibir lo que lleva.
 
 > La cuenta de la CLI (`supabase login`) es distinta de la organización que
 > tiene prod y staging (`ccfgqstvcbxhllxvuivx`), así que `link`/`db push`
