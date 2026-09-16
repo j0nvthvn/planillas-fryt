@@ -70,7 +70,7 @@ export function BottomSheet({ title, children, onClose, extra, footer }: Props) 
       onPointerMove={(e) => { if (startY.current !== null) setDragY(Math.max(0, e.clientY - startY.current)) }}
       onPointerUp={() => { if (dragY > 80) onClose(); setDragY(0); startY.current = null }}
     >
-      <div data-handle className="md:hidden w-full flex justify-center pt-1 pb-2 cursor-grab touch-none no-select">
+      <div data-handle className="md:hidden w-full flex justify-center pt-1 pb-2 cursor-grab touch-none">
         <div className="w-10 h-1 rounded-full bg-hairline" />
       </div>
       {title && (

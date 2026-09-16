@@ -29,7 +29,7 @@ interface KeypadProps {
 export function Keypad({ onKey, onAccept, disabled, label }: KeypadProps) {
   const keys = ['7', '8', '9', '4', '5', '6', '1', '2', '3', '000', '0', 'del']
   return (
-    <div className="flex flex-col gap-2.5 no-select">
+    <div className="flex flex-col gap-2.5">
       <div className="grid grid-cols-3 gap-2.5">
         {keys.map((k) => (
           <button key={k} type="button" onClick={() => onKey(k)}

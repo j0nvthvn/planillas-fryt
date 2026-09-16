@@ -57,7 +57,7 @@ export default function Layout({ children }: { children: ReactNode }) {
       )}
 
       <div className="flex flex-1 min-h-0 max-w-screen-2xl mx-auto w-full overflow-hidden md:overflow-visible">
-        <aside className="hidden md:flex no-select flex-col w-[220px] shrink-0 border-r border-hairline bg-card sticky top-0 h-screen overflow-y-auto">
+        <aside className="hidden md:flex flex-col w-[220px] shrink-0 border-r border-hairline bg-card sticky top-0 h-screen overflow-y-auto">
           <div className="px-5 pt-6 pb-4">
             <p className="eyebrow text-brand">FrytControl</p>
             <p className="text-xs text-muted2 mt-0.5">Minimarket Fryt</p>
@@ -83,7 +83,7 @@ export default function Layout({ children }: { children: ReactNode }) {
         </main>
       </div>
 
-      <nav aria-label="Navegación principal" className="md:hidden no-select shrink-0 relative bg-card border-t border-hairline"
+      <nav aria-label="Navegación principal" className="md:hidden shrink-0 relative bg-card border-t border-hairline"
         style={{ paddingBottom: 'max(8px, env(safe-area-inset-bottom))' }}>
         <div className="flex items-stretch">
           <div className="flex-1 flex items-stretch">{izq.map((i) => <Tab key={i.to} item={i} on={activo(pathname, i.to)} />)}</div>

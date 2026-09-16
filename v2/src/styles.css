@@ -128,9 +128,20 @@
 }
 
 @layer base {
+  /* La interfaz no se selecciona (ni aparece el menú de copiar al mantener
+     presionado en iOS): para llevarse datos está Compartir. Los campos de
+     texto sí se seleccionan, copian y pegan. */
   html {
     -webkit-tap-highlight-color: transparent;
     overscroll-behavior: none;
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+  }
+  input, textarea, [contenteditable] {
+    -webkit-user-select: text;
+    user-select: text;
+    -webkit-touch-callout: default;
   }
   body {
     margin: 0;
@@ -198,13 +209,6 @@
 @utility amount { @apply font-display; }
 @utility cifra { @apply font-sans font-semibold tabular-nums; }
 @utility label { @apply block text-sm font-medium mb-1 text-ink2; }
-
-/* Solo aquí se bloquea la selección: en el resto de la app un monto o una
-   fila de la planilla se pueden copiar para pegarlos en WhatsApp. */
-@utility no-select {
-  -webkit-user-select: none;
-  user-select: none;
-}
 
 @layer components {
   .pb-nav { padding-bottom: calc(60px + max(8px, env(safe-area-inset-bottom)) + 16px); }
