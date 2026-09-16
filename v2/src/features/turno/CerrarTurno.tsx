@@ -255,7 +255,7 @@ export default function CerrarTurno() {
           <div className="max-w-2xl mx-auto flex items-center gap-3">
             <div className="flex-1 min-w-0">
               <p className="text-[11px] text-muted uppercase tracking-wide font-bold">Neto {modo === 'completo' ? 'del día' : 'del turno'}</p>
-              <p className={`amount text-[26px] leading-none ${totales.neto >= 0 ? 'text-ink' : 'text-neg'}`}>{clp(totales.neto)}</p>
+              <p className={`amount text-[30px] leading-none ${totales.neto >= 0 ? 'text-ink' : 'text-neg'}`}>{clp(totales.neto)}</p>
               <p className="text-[11px] text-muted mt-0.5">
                 {state.sucio ? (online ? 'Guardando borrador…' : 'Guardado en este dispositivo') : state.turnoId ? 'Borrador guardado' : ''}
               </p>
@@ -278,10 +278,20 @@ export default function CerrarTurno() {
         />
       )}
       {sheet?.t === 'venta' && (() => {
-        const m = metodos.data?.find((x) => x.key === sheet.key)
+        // Teclado encadenado: aceptar pasa al siguiente método sin cerrar la hoja.
+        const activos = (metodos.data ?? []).filter((x) => esMetodo(x.key))
+        const idx = activos.findIndex((x) => x.key === sheet.key)
+        const m = activos[idx]
+        const prox = activos[idx + 1]
         return (
           <MontoSheet title={m?.label ?? sheet.key} sub={m?.sub ?? undefined} valor={state.ventas[sheet.key]} color={m?.color}
-            onAccept={(monto) => { cambiar({ type: 'venta', key: sheet.key, monto }); setSheet(null) }} onClose={() => setSheet(null)} />
+            paso={{ actual: idx + 1, total: activos.length }} siguiente={prox?.label ?? null}
+            onAccept={(monto, seguir) => {
+              cambiar({ type: 'venta', key: sheet.key, monto })
+              if (seguir && prox && esMetodo(prox.key)) setSheet({ t: 'venta', key: prox.key })
+              else setSheet(null)
+            }}
+            onClose={() => setSheet(null)} />
         )
       })()}
       {sheet?.t === 'fondo' && (
