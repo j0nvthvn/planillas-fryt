@@ -9,6 +9,7 @@ Documentos complementarios:
 - `docs/operacion.md`: entornos, CLI, migraciones, correos, seguridad, humo.
 - `docs/piloto-v2.md`: cómo se ejecuta el piloto (Fase 3) y sus criterios.
 - `docs/limpieza-datos-2026-09.sql`: consultas de limpieza y de comparación.
+- `docs/mejoras-ux.md`: mejoras de UI/UX propuestas para la v2 (tipografía, accesibilidad, flujo), con prioridad sugerida; ninguna implementada aún.
 - `v2/README.md`: la app nueva (stack, estructura, cómo correrla).
 
 ## 1. Qué es esto
