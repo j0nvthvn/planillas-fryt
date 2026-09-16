@@ -82,6 +82,8 @@ archivos del repo; `supabase migration list` solo muestra pendiente
 la usa la v2) se aplicó en staging y prod el 2026-09-17. El
 trigger `notificaciones` y los crons `Diario`/`semanal` viejos siguen en
 prod hasta aplicarla.
+`20260918000000_integridad` (auditoría, cierres inmutables,
+`verificar_integridad()`) se aplicó en staging y prod el 2026-09-16.
 
 Respaldo previo (JSON por tabla) en el scratchpad de la sesión:
 `prod-backup-2026-09-16/`. Sirve para revertir el saneo de nombres.

@@ -87,10 +87,10 @@ Credenciales y dónde están (nunca en el repo, salvo anon keys):
 - Jonathan cerró desde la v2 cinco borradores antiguos en prod el 2026-09-16 (esperado: eran los turnos olvidados).
 - **Siguiente:** semana B (registro parcial desde el móvil del local con la cuenta trabajador o la de la dueña; antes: crear trabajadores en Ajustes) y semana C (v2 principal). Criterios de salida en `docs/piloto-v2.md`.
 
-### Integridad y respaldos: **código listo, falta activarlo** (2026-09-18)
-- Migración `20260918000000_integridad.sql`: tabla `auditoria` (cambios reales y borrados de las tablas de negocio), `turno_cierres` inmutable (solo se borra en cascada con su turno, y queda en `auditoria`), sin `TRUNCATE` para los roles de la API, CHECKs de `fondo_inicial` y `efectivo_contado`, y `verificar_integridad()`. pgTAP 90/90 y humo de la app actual en verde en local. **Pendiente: aplicarla en prod**.
+### Integridad y respaldos: **migración aplicada; falta activar el respaldo** (2026-09-18)
+- Migración `20260918000000_integridad.sql`: tabla `auditoria` (cambios reales y borrados de las tablas de negocio), `turno_cierres` inmutable (solo se borra en cascada con su turno, y queda en `auditoria`), sin `TRUNCATE` para los roles de la API, CHECKs de `fondo_inicial` y `efectivo_contado`, y `verificar_integridad()`. pgTAP 90/90 y humo de la app actual en verde en local y staging.
 - `.github/workflows/respaldo.yml` + `scripts/respaldo/`: `pg_dump` diario cifrado con age a Google Drive, control de integridad y simulacro de restauración semanal (probado en local, y detecta un manifiesto alterado). **Pendiente: la puesta en marcha manual** (contraseña de la base, clave age, rclone, secretos), ver `docs/operacion.md`.
-- Aplicada en **staging** el 2026-09-18 (versión registrada con el nombre del archivo). Falta prod.
+- Aplicada en **staging** y en **prod** el 2026-09-16 (15:15 Chile, con respaldo JSON previo en el scratchpad de la sesión: `prod-backup-2026-09-18/`), versión registrada con el nombre del archivo, tipos de la v2 regenerados. Conteos iguales al respaldo; advisors solo con lo esperado.
 - Hallazgo en prod (error de `verificar_integridad()`): el 2026-06-17 está marcado como día completo y tiene un turno de tarde sin ventas pero con 2 proveedores ($207.405), sin cierres. Revisarlo con la dueña: o se desmarca el día completo o esos proveedores pasan a la mañana.
 
 ### Fase 4 — Cambio definitivo y migración a sa-east-1: **no iniciada**

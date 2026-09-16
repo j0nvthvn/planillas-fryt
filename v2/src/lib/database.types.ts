@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      auditoria: {
+        Row: {
+          antes: Json | null
+          despues: Json | null
+          en: string
+          id: number
+          operacion: string
+          registro: string | null
+          tabla: string
+          usuario_id: string | null
+        }
+        Insert: {
+          antes?: Json | null
+          despues?: Json | null
+          en?: string
+          id?: never
+          operacion: string
+          registro?: string | null
+          tabla: string
+          usuario_id?: string | null
+        }
+        Update: {
+          antes?: Json | null
+          despues?: Json | null
+          en?: string
+          id?: never
+          operacion?: string
+          registro?: string | null
+          tabla?: string
+          usuario_id?: string | null
+        }
+        Relationships: []
+      }
       configuracion: {
         Row: {
           clave: string
@@ -592,6 +625,15 @@ export type Database = {
           prov_transferencia: number
           total_proveedores: number
           total_ventas: number
+        }[]
+      }
+      verificar_integridad: {
+        Args: never
+        Returns: {
+          cantidad: number
+          chequeo: string
+          ejemplo: string
+          severidad: string
         }[]
       }
     }
