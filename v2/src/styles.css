@@ -115,6 +115,12 @@ html.dark {
     padding-top: env(safe-area-inset-top);
     transition: background-color .2s ease, color .2s ease;
   }
+  /* Escritorio: la página reserva siempre el ancho de la barra de scroll,
+     así el contenido centrado (y la barra lateral) no salta cuando una
+     pantalla es más alta que la ventana. */
+  @media (min-width: 768px) {
+    html { scrollbar-gutter: stable; }
+  }
   input, textarea, select, [contenteditable] {
     -webkit-user-select: text;
     user-select: text;
