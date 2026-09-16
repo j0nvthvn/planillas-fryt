@@ -3,7 +3,7 @@
 > **Estado al 2026-09-16**
 > - Fase 0: **aplicada en prod** (baseline, grants, hardening) el 2026-09-16. Correos (`correos_seguros` + edge functions) pospuestos por decisión del usuario hasta tener dominio en Resend. Frontend: los arreglos están commiteados pero **no pusheados/desplegados**. Pendiente: limpieza de datos con la dueña (`docs/limpieza-datos-2026-09.sql`), activar *leaked password protection*.
 > - Fase 1: migraciones 1.1–1.4 probadas en local (62 pgTAP), en staging `psdhhwcxjcobwxjiemrr` (sa-east-1, copia real de prod, humo 60/60) y **aplicadas en prod** el 2026-09-16: 0 diferencias entre `turno_totales` y los cierres. Ver `docs/operacion.md` (estado de producción).
-> - Fase 2 (app v2): código en `v2/` (stack 2.1, pantallas 2.4, tokens 2.5). Typecheck, tests unitarios y build en verde. Pendiente: prueba manual en el navegador contra staging, proyecto de Vercel con Root Directory `v2`, Playwright.
+> - Fase 2 (app v2): código en `v2/` (stack 2.1, pantallas 2.4, tokens 2.5). Typecheck, tests unitarios y build en verde. Desplegada en https://frytcontrol-v2.vercel.app (proyecto `frytcontrol-v2`, rama `v2`, apunta a staging). Pendiente: prueba manual en el navegador/celular, decisión de diseño (2.5), Playwright.
 > - Fases 3–5: no iniciadas.
 
 ## Contexto
