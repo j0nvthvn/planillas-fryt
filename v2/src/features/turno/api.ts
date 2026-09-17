@@ -3,6 +3,7 @@ import { supabase } from '@/lib/supabase'
 import { qk, queryClient, invalidarDia } from '@/lib/query'
 import type { Tables, Json } from '@/lib/database.types'
 import type { FormaPago, MetodoKey, ProveedorLinea } from '@/lib/totales'
+import type { Estado } from './estado'
 
 export type Modo = 'completo' | 'mañana' | 'tarde'
 export const MODOS: { value: Modo; label: string; icon: 'sun' | 'moon' | 'calendar' }[] = [
@@ -12,6 +13,7 @@ export const MODOS: { value: Modo; label: string; icon: 'sun' | 'moon' | 'calend
 ]
 
 export { etiquetaModo } from './modo'
+export { etiquetaEstado, type Estado } from './estado'
 
 /** Fila de v_turnos con los campos que la vista garantiza no nulos. */
 export type VTurno = Omit<Tables<'v_turnos'>, 'id' | 'fecha' | 'tipo' | 'modo' | 'is_draft' | 'jornada_id'> & {
@@ -22,7 +24,7 @@ export type VTurno = Omit<Tables<'v_turnos'>, 'id' | 'fecha' | 'tipo' | 'modo' |
   is_draft: boolean
   jornada_id: string
 }
-export type VResumenDia = Tables<'v_resumen_dia'> & { fecha: string; jornada_id: string; estado: 'sin_registro' | 'borrador' | 'parcial' | 'completo' }
+export type VResumenDia = Tables<'v_resumen_dia'> & { fecha: string; jornada_id: string; estado: Estado }
 export type ProveedorTurno = Tables<'proveedores_turno'>
 export type Cierre = Tables<'turno_cierres'> & { cerrado_por_usuario: { nombre: string } | null }
 
@@ -144,6 +146,25 @@ export async function guardarTurno(input: GuardarTurnoInput): Promise<GuardarTur
   }
   invalidarDia(input.fecha)
   return { conflicto: false, turno: r as VTurno }
+}
+
+/* ───────── días en que el local no abrió ───────── */
+/**
+ * Marca (o desmarca) una fecha como día en que el local no abrió. Crea
+ * la jornada si no existía, así que sirve para cualquier día pasado.
+ * Errores esperables:
+ *   23514 check_violation        → el día ya tiene turnos registrados
+ *   42501 insufficient_privilege → no es la dueña
+ *   22023 invalid_parameter_value → fecha futura
+ */
+export async function marcarDiaCerrado(fecha: string, cerrado: boolean, motivo?: string | null) {
+  const { error } = await supabase.rpc('marcar_dia_cerrado', {
+    p_fecha: fecha,
+    p_cerrado: cerrado,
+    ...(motivo ? { p_motivo: motivo } : {}),
+  })
+  if (error) throw new ErrorGuardado(error.message, error.code ?? '')
+  invalidarDia(fecha)
 }
 
 /* ───────── papelera (soft delete) ───────── */

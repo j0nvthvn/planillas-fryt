@@ -49,8 +49,8 @@ Deno.serve(async (req) => {
     const r = actual.data as Resumen
     const a = anterior.data as Resumen
 
-    // Un período sin ningún registro (el local cerrado) no amerita correo,
-    // salvo que sea una prueba.
+    // Un período sin ninguna venta registrada no amerita correo, salvo que
+    // sea una prueba: da igual si el local no abrió o si nadie registró.
     if (!soloA && !r.totales.dias_con_registro) {
       return respuesta({ ok: true, enviado: false, motivo: 'sin registros en el período', ...rango })
     }

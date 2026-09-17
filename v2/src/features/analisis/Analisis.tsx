@@ -18,6 +18,7 @@ import type { VResumenDia } from '@/features/turno/api'
 import { colorMetodo } from '@/lib/theme'
 import { BarraMetodos } from '@/components/BarraMetodos'
 import { useIsDesktop } from '@/hooks/useIsDesktop'
+import { promedioNeto, resumenGrafico } from './resumen'
 
 
 function rango(preset: '7' | '30' | 'mes'): { desde: string; hasta: string } {
@@ -45,7 +46,8 @@ export default function Analisis() {
 
   const [exportando, setExportando] = useState(false)
 
-  const promedio = dias.length ? dias.reduce((a, d) => a + d.neto, 0) / dias.length : 0
+  const promedio = promedioNeto(dias)
+  const diasSinAbrir = dias.filter((d) => d.cerrado).length
   const hayBorrador = dias.some((d) => d.estado === 'borrador')
   const hayNegativo = dias.some((d) => d.neto < 0)
   const escritorio = useIsDesktop()
@@ -96,7 +98,9 @@ export default function Analisis() {
             <Kpi label="Efectivo neto" value={r.totales.efectivo_neto} anterior={r.anterior.efectivo_neto} />
           </div>
           <p className="text-xs leading-normal text-muted mb-3">
-            {r.totales.dias_con_registro} día{r.totales.dias_con_registro === 1 ? '' : 's'} con registro · comparado con el período anterior del mismo largo
+            {r.totales.dias_con_registro} día{r.totales.dias_con_registro === 1 ? '' : 's'} con registro
+            {diasSinAbrir > 0 && <> · {diasSinAbrir} sin abrir</>}
+            {' '}· comparado con el período anterior del mismo largo
             {r.totales.dias_con_borrador ? <> · <b className="font-semibold text-warn">{r.totales.dias_con_borrador} con borrador</b></> : null}
           </p>
 
@@ -108,8 +112,9 @@ export default function Analisis() {
                 {/* Leyenda: en el celular solo los colores que no se explican solos
                     (borrador y negativo), para que nada dependa del color. */}
                 <div className={`${hayBorrador || hayNegativo ? 'flex' : 'hidden md:flex'} flex-wrap gap-x-3.5 gap-y-1 text-xs text-muted w-full`} aria-hidden="true">
-                  <span className="hidden md:inline-flex items-center gap-[5px]"><span className="w-[9px] h-[9px] rounded-[2px] bg-brand" />día cerrado</span>
+                  <span className="hidden md:inline-flex items-center gap-[5px]"><span className="w-[9px] h-[9px] rounded-[2px] bg-brand" />día con registro</span>
                   {hayBorrador && <span className="inline-flex items-center gap-[5px]"><span className="w-[9px] h-[9px] rounded-[2px] bg-warn" />con borrador</span>}
+                  {diasSinAbrir > 0 && <span className="inline-flex items-center gap-[5px]"><span className="w-[9px] h-[9px] rounded-[2px] bg-hairline-strong" />no abrió</span>}
                   {hayNegativo && <span className="inline-flex items-center gap-[5px]"><span className="w-[9px] h-[9px] rounded-[2px] bg-neg" />neto negativo</span>}
                   <span className="hidden md:inline-flex items-center gap-[5px]"><span className="w-3.5 border-t border-dashed border-ink2" />promedio</span>
                 </div>
@@ -130,9 +135,9 @@ export default function Analisis() {
                     <Bar dataKey="neto" radius={[5, 5, 0, 0]} maxBarSize={48} activeBar={{ fillOpacity: 0.8 }}
                       className={escritorio ? 'cursor-pointer' : undefined}
                       onClick={escritorio ? (b: { payload?: { fecha?: string } }) => { if (b.payload?.fecha) irADia(b.payload.fecha) } : undefined}>
-                      {dias.map((d) => <Cell key={d.fecha} fill={d.neto < 0 ? 'var(--neg)' : d.estado === 'borrador' ? 'var(--warn)' : 'var(--brand)'} />)}
+                      {dias.map((d) => <Cell key={d.fecha} fill={d.cerrado ? 'var(--hairline-strong)' : d.neto < 0 ? 'var(--neg)' : d.estado === 'borrador' ? 'var(--warn)' : 'var(--brand)'} />)}
                     </Bar>
-                    {dias.length > 1 && (
+                    {dias.filter((d) => Number(d.turnos ?? 0) > 0).length > 1 && (
                       <ReferenceLine y={promedio} stroke="var(--ink2)" strokeDasharray="4 4" strokeOpacity={0.6} ifOverflow="extendDomain" />
                     )}
                   </BarChart>
@@ -203,29 +208,19 @@ function rangoLegible(desde: string, hasta: string): string {
   return `${f(desde, o)} – ${f(hasta, o)}`
 }
 
-type DiaGrafico = VResumenDia & { label: string; neto: number; total_ventas: number }
-
-/** Lo que dice el gráfico, en una frase, para quien no lo ve. */
-function resumenGrafico(dias: DiaGrafico[]): string {
-  const [primero, ...resto] = dias
-  if (!primero) return 'Sin días con registro en el período.'
-  let mejor = primero
-  let peor = primero
-  for (const d of resto) {
-    if (d.neto > mejor.neto) mejor = d
-    if (d.neto < peor.neto) peor = d
-  }
-  const borradores = dias.filter((d) => d.estado === 'borrador').length
-  const base = `Neto por día en ${dias.length} día${dias.length === 1 ? '' : 's'} con registro${borradores ? `, ${borradores} con borrador sin cerrar` : ''}.`
-  if (dias.length === 1) return `${base} ${fechaDiaMes(mejor.fecha)}: ${clp(mejor.neto)}.`
-  return `${base} El mejor fue ${fechaDiaMes(mejor.fecha)} con ${clp(mejor.neto)}; el peor, ${fechaDiaMes(peor.fecha)} con ${clp(peor.neto)}.`
-}
-
 /** Tooltip del gráfico con los tokens del tema (el de recharts venía en gris sobre gris). */
 function TooltipDia({ active, payload, enlace }: { active?: boolean; payload?: { payload?: Record<string, unknown> }[]; enlace?: boolean }) {
   const d = payload?.[0]?.payload as (VResumenDia & { neto: number; total_ventas: number }) | undefined
   if (!active || !d) return null
   const neto = Number(d.neto)
+  if (d.cerrado) {
+    return (
+      <div className="rounded-[12px] bg-card border border-hairline shadow-hero px-3 py-2 text-xs min-w-[170px]">
+        <p className="font-semibold text-ink capitalize mb-1">{fechaDiaMes(d.fecha)}</p>
+        <p className="text-ink2">No abrió{d.motivo_cierre ? ` · ${d.motivo_cierre}` : ''}</p>
+      </div>
+    )
+  }
   return (
     <div className="rounded-[12px] bg-card border border-hairline shadow-hero px-3 py-2 text-xs min-w-[170px]">
       <p className="font-semibold text-ink capitalize mb-1">{fechaDiaMes(d.fecha)}</p>

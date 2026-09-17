@@ -8,7 +8,7 @@ import { get, set, del } from 'idb-keyval'
  * (refetchOnWindowFocus) en vez de usar realtime. Subir PERSIST_BUSTER
  * invalida todo lo guardado (por ejemplo, si cambia la forma de una vista).
  */
-export const PERSIST_BUSTER = 'v2-1'
+export const PERSIST_BUSTER = 'v2-2'
 
 export const queryClient = new QueryClient({
   defaultOptions: {

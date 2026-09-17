@@ -57,12 +57,13 @@ Credenciales y dónde están (nunca en el repo, salvo anon keys):
 
 ## 3. Modelo de datos (lo esencial)
 
-- `jornadas(fecha, es_turno_unico)` → `turnos(tipo 'mañana'|'tarde', is_draft, fondo_inicial, deleted_at, trabajador_id)` → `ventas_turno` (una fila por turno, una columna por método) y `proveedores_turno(nombre, proveedor_id, monto, forma_pago)`.
+- `jornadas(fecha, es_turno_unico, cerrado)` → `turnos(tipo 'mañana'|'tarde', is_draft, fondo_inicial, deleted_at, trabajador_id)` → `ventas_turno` (una fila por turno, una columna por método) y `proveedores_turno(nombre, proveedor_id, monto, forma_pago)`.
 - **"Día completo" (v2) = `tipo='mañana'` + `jornadas.es_turno_unico=true`.** Así la app actual lo muestra como "Turno único".
 - `turno_cierres`: fotografía inmutable de cada cierre y corrección (`es_correccion`), con `efectivo_esperado/contado/diferencia`. Se escribe solo vía `cerrar_turno` / `corregir_turno` (security definer).
 - Catálogo `proveedores_frecuentes` con `nombre_norm` único (sin tildes/mayúsculas/símbolos, función `norm_nombre`) y `activo`; `proveedores_turno.proveedor_id` lo enlaza. Triggers mantienen compatibilidad con la app actual, que escribe solo `nombre`. `fusionar_proveedores(origen, destino)` para duplicados.
 - `trabajadores` (lista sin cuentas) y `metodos_pago` (los 6 métodos como datos; `acumulado_diario` = la máquina entrega el total del día, hoy Edenred).
 - Una sola definición de totales: `turno_totales(id)`, vistas `v_turnos` y `v_resumen_dia`, RPC `resumen_periodo(desde, hasta)`. `neto = ventas − proveedores`, `efectivo_esperado = fondo + ventas.efectivo − proveedores en efectivo`.
+- **Días en que el local no abrió** (`jornadas.cerrado` + `motivo_cierre/cerrado_en/cerrado_por`, migración `20260921000000_dias_cerrados.sql`): `v_resumen_dia.estado` gana `'cerrado'` y `resumen_periodo` devuelve `dias_cerrados` y `dias_periodo`. Se marca solo con `marcar_dia_cerrado(fecha, cerrado, motivo)` (security definer, solo dueña, nunca a futuro). Dos triggers `BEFORE` sostienen la invariante por los dos lados: no se registran turnos en un día marcado (ni se restaura uno desde la papelera) ni se marca un día que tiene turnos. **En la base se llama `cerrado`; en la interfaz y en los correos siempre se dice "No abrió"**, porque "cerrado" ya significa un turno cerrado.
 - **`guardar_turno(jsonb)`**: una llamada, una transacción: asegura jornada, aplica modo, upsert de ventas, proveedores por diferencia, cierre o corrección, control de concurrencia por `base_updated_at` (devuelve `{conflicto:true, actual}`). Sin claves `ventas`/`proveedores` en el JSON solo cambia el modo (así "unir/dividir" no crea correcciones).
 - RLS: todo `to authenticated`; el trabajador solo escribe en sus borradores; la dueña en todo. Grants explícitos para proyectos nuevos (`20260915000010_grants_api.sql`).
 
@@ -107,6 +108,13 @@ Credenciales y dónde están (nunca en el repo, salvo anon keys):
   - **Historial:** sin el chip "Completo", proveedores con signo, "N días · neto" por mes (solo si el mes está cargado entero), barrita del neto relativa al mejor día del mes, hoy destacado y pista de scroll en los filtros.
   - La opción activa de los selectores de opciones ya no se hunde en tema oscuro.
 - **Hoy sin "Efectivo esperado" del día** (commit `772c928`, 2026-09-17, en producción): la tarjeta pasa a ser "Ventas por método" (sin la fórmula en texto) y cada tarjeta de turno muestra "En caja" con su esperado y, si se contó, "Cuadró" o "Descuadre −$X". Motivo: ver la trampa del efectivo esperado por día en la sección 6.
+- **Días en que el local no abrió** (2026-09-17): antes un domingo libre o un feriado no dejaba ninguna fila, así que el día desaparecía del Historial y del gráfico, y en los correos se veía como "Sin registro", igual que un olvido. Ahora la dueña marca el día desde Hoy o desde la planilla (hoja `DiaCerradoSheet`, motivo opcional), y el día aparece como **No abrió** en Historial, Análisis, la exportación y los correos, fuera de los promedios y del "peor día". Además:
+  - **El Historial completa el calendario** (`features/historial/huecos.ts`, con tests): las fechas sin jornada salen como "Sin registro" y llevan a su planilla —así se llega a cualquier hueco pasado, sin buscador de fechas—; una racha de 7 días o más se colapsa en una fila ("1 de febrero al 30 de abril · 89 días sin registro") para que los meses sin uso no sean cientos de filas vacías. Filtro nuevo "No abrió".
+  - **Cerrar turno avisa** si el día está marcado, con un botón para quitar la marca, en vez de dejar que se llene la planilla y falle al guardar.
+  - **Corrige un error viejo**: el promedio y el "peor día" de Análisis y de los correos contaban las jornadas vacías con $0 (en prod, el 1 de enero). Ahora `features/analisis/resumen.ts` los deja fuera.
+  - **El correo semanal y el mensual avisan de los días sin registrar**, que hasta ahora no aparecían en ninguna parte.
+  - La leyenda del gráfico decía "día cerrado" para los días **con** registro; ahora dice "día con registro".
+  - Verificación: pgTAP 151/151 (`supabase/tests/dias_cerrados.test.sql`, 31 casos), 109 unitarios, `pnpm e2e` 12/12 con axe en 0 violaciones, y revisión con capturas en Pixel 7 contra staging.
 - **Pendiente:** revisar en un celular real (Safari de iOS con su barra inferior): altura de las hojas y encabezado pegajoso del Historial.
 
 ### Fase 3 — Piloto en paralelo: **hecha** (2026-09-16/17; semanas B y C abreviadas a pedido del usuario)
@@ -168,6 +176,7 @@ SMOKE_EMAIL=duena@test.local SMOKE_PASSWORD=<.env.staging.local> pnpm vitest run
 - **`v_resumen_dia.efectivo_esperado` no es una caja real** en los días con mañana y tarde: suma los dos turnos, y cada tarde trae su propio fondo ($20.000 en prod). Por eso no se muestra en Hoy; el esperado se muestra por turno (`v_turnos`). Por día, el dato con sentido es `efectivo_neto`, como ya hace la exportación.
 - Para capturar Hoy con datos sin escribir en staging, en Playwright se reescribe `fecha=eq.<hoy>` a otra fecha con `page.route`. Conviene un contexto nuevo por escena, porque la caché de TanStack Query se guarda en IndexedDB.
 - `pnpm e2e` reutiliza un `pnpm dev --mode staging` que ya esté en el puerto 5173. No conviene levantar otro servidor de la v2 en paralelo, porque comparten `.vite`.
+- **Una jornada puede existir sin turnos**: porque está marcada "no abrió" o porque quedó vacía al borrar sus turnos (en prod, el 2026-01-01). Por eso `v_resumen_dia` distingue `sin_registro` de `cerrado`, y todo lo que promedia filtra por `turnos > 0`, no por "hay fila".
 - `docs/superpowers/` no es parte de este trabajo; no tocarlo sin preguntar.
 
 ## 7. Decisiones tomadas por el usuario (no volver a preguntar)
@@ -179,4 +188,5 @@ SMOKE_EMAIL=duena@test.local SMOKE_PASSWORD=<.env.staging.local> pnpm vitest run
 - Correos: con dominio propio (`frytspa.cl`), activos desde el 2026-09-17.
 - Diseño: rediseño Fintech (gris/blanco/indigo, Inter) acordado con la dueña el 2026-09-16, reemplaza al café cálido; priorizar el celular, camino A con préstamos de B y C.
 - Hoy no muestra el efectivo esperado del día: la caja va en cada tarjeta de turno (2026-09-17). En Análisis, tocar una barra en el celular deja el detalle fijo con "Ver día"; en Historial solo se marcan las excepciones, no "Completo".
+- Días en que el local no abrió (2026-09-17): se marcan a mano, un día a la vez y nunca a futuro (el local abre 15 de 20 domingos, así que no hay patrón que deducir); solo la dueña; el motivo es opcional; en la base la columna es `cerrado` y en la interfaz siempre se dice "No abrió". Ausencias por trabajador quedan fuera: la app no modela asistencia individual.
 - Fase 4 adelantada (2026-09-17): la app va en `app.frytspa.cl`, la migración se hace con `pg_dump` conservando las contraseñas y la app antigua se retira al migrar (redirige; no se reconfigura contra la base nueva).

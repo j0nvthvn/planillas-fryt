@@ -129,24 +129,44 @@ export type Database = {
       }
       jornadas: {
         Row: {
+          cerrado: boolean
+          cerrado_en: string | null
+          cerrado_por: string | null
           creado_en: string
           es_turno_unico: boolean
           fecha: string
           id: string
+          motivo_cierre: string | null
         }
         Insert: {
+          cerrado?: boolean
+          cerrado_en?: string | null
+          cerrado_por?: string | null
           creado_en?: string
           es_turno_unico?: boolean
           fecha: string
           id?: string
+          motivo_cierre?: string | null
         }
         Update: {
+          cerrado?: boolean
+          cerrado_en?: string | null
+          cerrado_por?: string | null
           creado_en?: string
           es_turno_unico?: boolean
           fecha?: string
           id?: string
+          motivo_cierre?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "jornadas_cerrado_por_fkey"
+            columns: ["cerrado_por"]
+            isOneToOne: false
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       logs_error: {
         Row: {
@@ -556,6 +576,9 @@ export type Database = {
       v_resumen_dia: {
         Row: {
           amipass: number | null
+          cerrado: boolean | null
+          cerrado_en: string | null
+          cerrado_por: string | null
           con_conteo: boolean | null
           con_descuadre: boolean | null
           corregido: boolean | null
@@ -571,6 +594,7 @@ export type Database = {
           getnet: number | null
           jornada_id: string | null
           mercadopago: number | null
+          motivo_cierre: string | null
           neto: number | null
           prov_efectivo: number | null
           prov_transferencia: number | null
@@ -583,7 +607,15 @@ export type Database = {
           turnos: number | null
           updated_at: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "jornadas_cerrado_por_fkey"
+            columns: ["cerrado_por"]
+            isOneToOne: false
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       v_turnos: {
         Row: {
@@ -680,6 +712,10 @@ export type Database = {
       invocar_edge_function: {
         Args: { p_body: Json; p_nombre: string }
         Returns: undefined
+      }
+      marcar_dia_cerrado: {
+        Args: { p_cerrado?: boolean; p_fecha: string; p_motivo?: string }
+        Returns: Json
       }
       norm_nombre: { Args: { p: string }; Returns: string }
       programar_resumenes: { Args: { p_ahora?: string }; Returns: string[] }

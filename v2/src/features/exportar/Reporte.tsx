@@ -69,7 +69,9 @@ export default function Reporte() {
               <Kpi label="Efectivo neto" value={r.totales.efectivo_neto} anterior={r.anterior.efectivo_neto} />
             </section>
             <p className="text-xs text-muted mb-5">
-              {r.totales.dias_con_registro} día{r.totales.dias_con_registro === 1 ? '' : 's'} con registro · variación contra el período anterior del mismo largo
+              {r.totales.dias_con_registro} día{r.totales.dias_con_registro === 1 ? '' : 's'} con registro
+              {Number(r.totales.dias_cerrados ?? 0) > 0 && <> · {r.totales.dias_cerrados} sin abrir</>}
+              {' '}· variación contra el período anterior del mismo largo
               {r.totales.dias_con_borrador ? <> · <b className="text-warn">{r.totales.dias_con_borrador} con borrador (montos no definitivos)</b></> : null}
             </p>
 

@@ -91,7 +91,7 @@ const historialRoute = createRoute({
   getParentRoute: () => appRoute,
   path: '/historial',
   beforeLoad: soloDueno,
-  validateSearch: z.object({ filtro: z.enum(['todos', 'borradores', 'corregidos', 'descuadres', 'parciales']).optional() }),
+  validateSearch: z.object({ filtro: z.enum(['todos', 'borradores', 'corregidos', 'descuadres', 'parciales', 'sin_abrir']).optional() }),
   component: Historial,
 })
 

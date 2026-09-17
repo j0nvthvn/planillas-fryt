@@ -8,12 +8,13 @@ import { CorreccionModal } from '@/components/CorreccionModal'
 import { useToast } from '@/components/Toast'
 import { useUsuario } from '@/hooks/useUsuario'
 import { useMetodos } from '@/features/catalogo/api'
-import { useResumenDia, useTurnosDia, useCierres, guardarTurno, eliminarTurno, etiquetaModo, type TurnoConLineas } from '@/features/turno/api'
+import { useResumenDia, useTurnosDia, useCierres, guardarTurno, eliminarTurno, marcarDiaCerrado, etiquetaModo, type TurnoConLineas } from '@/features/turno/api'
 import { EstadoChip, Dato } from '@/features/hoy/Hoy'
 import { Ledger, LedgerHead, LedgerLine, LedgerTotal } from '@/components/Ledger'
 import { clp, clpSigno, fechaSinAnio, sumarDias, hoy, horaCorta } from '@/lib/format'
 import { esMetodo, type MetodoKey } from '@/lib/totales'
 import { mensajeDeError } from '@/lib/errorLog'
+import { DiaCerradoSheet } from '@/components/DiaCerradoSheet'
 
 const FLECHA = 'hit w-[38px] h-[38px] rounded-[10px] grid place-items-center bg-card border border-hairline-strong text-ink2 hover:bg-soft'
 const ACCION = 'hit btn min-h-[40px] rounded-[10px] px-3 text-sm text-ink2 bg-card border border-hairline-strong hover:bg-soft'
@@ -28,10 +29,13 @@ export default function Planilla() {
   const metodos = useMetodos()
   const [accion, setAccion] = useState<{ t: 'dividir' | 'unir' | 'eliminar'; turno: TurnoConLineas } | null>(null)
   const [diff, setDiff] = useState<TurnoConLineas | null>(null)
+  const [marcando, setMarcando] = useState(false)
+  const [quitando, setQuitando] = useState(false)
   const [ocupado, setOcupado] = useState(false)
 
   const lista = turnos.data ?? []
   const r = resumen.data
+  const noAbrio = r?.cerrado === true
   const puedeUnir = lista.length === 1 && lista[0]?.turno.modo === 'mañana'
   const esCompleto = lista.some((t) => t.turno.modo === 'completo')
 
@@ -77,21 +81,34 @@ export default function Planilla() {
         <>
           <section aria-label="Neto del día" className="card mb-3">
             <div className="flex items-center justify-between gap-2.5"><p className="eyebrow">Neto del día</p><EstadoChip estado={r?.estado ?? 'sin_registro'} /></div>
-            <p className={`amount text-amount leading-[1.05] mt-2.5 ${Number(r?.neto ?? 0) < 0 ? 'text-neg' : 'text-ink'}`}>{clp(r?.neto ?? 0)}</p>
+            <p className={`amount text-amount leading-[1.05] mt-2.5 ${Number(r?.neto ?? 0) < 0 ? 'text-neg' : 'text-ink'}`}>{noAbrio ? '—' : clp(r?.neto ?? 0)}</p>
             <div className="flex gap-3 mt-4 pt-3.5 border-t border-hairline">
-              <Dato label="Ventas">{clp(r?.total_ventas ?? 0)}</Dato>
+              <Dato label="Ventas">{noAbrio ? '—' : clp(r?.total_ventas ?? 0)}</Dato>
               <span className="w-px bg-hairline" aria-hidden="true" />
-              <Dato label="Proveedores" className={Number(r?.total_proveedores ?? 0) > 0 ? 'text-neg' : 'text-ink'}>{Number(r?.total_proveedores ?? 0) > 0 ? '−' : ''}{clp(r?.total_proveedores ?? 0)}</Dato>
+              <Dato label="Proveedores" className={Number(r?.total_proveedores ?? 0) > 0 ? 'text-neg' : 'text-ink'}>{noAbrio ? '—' : <>{Number(r?.total_proveedores ?? 0) > 0 ? '−' : ''}{clp(r?.total_proveedores ?? 0)}</>}</Dato>
               <span className="w-px bg-hairline" aria-hidden="true" />
-              <Dato label="En caja">{clp(r?.efectivo_esperado ?? 0)}</Dato>
+              <Dato label="En caja">{noAbrio ? '—' : clp(r?.efectivo_esperado ?? 0)}</Dato>
             </div>
           </section>
 
           {lista.length === 0 && (
-            <div className="card text-center py-8 mb-3">
-              <p className="text-ink2 font-medium">Sin registro este día</p>
-              <Link to="/turno" search={{ fecha }} className="btn-primary mt-4">Registrar</Link>
-            </div>
+            noAbrio ? (
+              <div className="card text-center py-8 mb-3">
+                <p className="text-ink2 font-medium">El local no abrió</p>
+                {r?.motivo_cierre && <p className="text-sm text-muted mt-1">{r.motivo_cierre}</p>}
+                {esDueno && (
+                  <button type="button" onClick={() => setQuitando(true)} className="btn-secondary mt-4">Quitar marca</button>
+                )}
+              </div>
+            ) : (
+              <div className="card text-center py-8 mb-3">
+                <p className="text-ink2 font-medium">Sin registro este día</p>
+                <div className="flex flex-col min-[400px]:flex-row gap-2 justify-center mt-4">
+                  <Link to="/turno" search={{ fecha }} className="btn-primary">Registrar</Link>
+                  {esDueno && <button type="button" onClick={() => setMarcando(true)} className="btn-secondary">El local no abrió</button>}
+                </div>
+              </div>
+            )
           )}
 
           <div className={`grid gap-3 ${lista.length > 1 ? 'md:grid-cols-2' : ''}`}>
@@ -112,6 +129,26 @@ export default function Planilla() {
           onCancel={() => setAccion(null)} onConfirm={() => void ejecutar()} />
       )}
       {diff && <DiffLoader t={diff} metodos={metodos.data ?? []} onClose={() => setDiff(null)} />}
+      {marcando && <DiaCerradoSheet fecha={fecha} onClose={() => setMarcando(false)} />}
+      {quitando && (
+        <ConfirmDialog
+          title="¿Quitar la marca?"
+          message="El día vuelve a quedar sin registro y podrás registrarlo normalmente."
+          confirmLabel="Quitar marca" loading={ocupado}
+          onCancel={() => setQuitando(false)}
+          onConfirm={() => void (async () => {
+            setOcupado(true)
+            try {
+              await marcarDiaCerrado(fecha, false)
+              setQuitando(false)
+            } catch (e) {
+              toast.error(mensajeDeError(e, 'No se pudo quitar la marca'))
+            } finally {
+              setOcupado(false)
+            }
+          })()}
+        />
+      )}
     </div>
   )
 }

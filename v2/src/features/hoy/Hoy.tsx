@@ -4,13 +4,17 @@ import { Link, useNavigate } from '@tanstack/react-router'
 import Icon from '@/components/Icon'
 import { EsqueletoContenido } from '@/components/Esqueleto'
 import { useUsuario } from '@/hooks/useUsuario'
-import { useResumenDia, useTurnosDia, useBorradores, etiquetaModo, type Modo } from '@/features/turno/api'
+import { useResumenDia, useTurnosDia, useBorradores, etiquetaModo, etiquetaEstado, marcarDiaCerrado, type Modo } from '@/features/turno/api'
 import { useConfig, useMetodos } from '@/features/catalogo/api'
 import { mayusculaInicial, fechaDiaMes, hoy, clp, clpSigno, diaSemana, sumarDias, horaCorta } from '@/lib/format'
 import { SaludoHeader } from '@/components/SaludoHeader'
 import { BarraMetodos } from '@/components/BarraMetodos'
 import { MetodoLogo } from '@/components/MetodoLogo'
 import { DeltaBadge } from '@/components/DeltaBadge'
+import { DiaCerradoSheet } from '@/components/DiaCerradoSheet'
+import { ConfirmDialog } from '@/components/ConfirmDialog'
+import { useToast } from '@/components/Toast'
+import { mensajeDeError } from '@/lib/errorLog'
 
 export default function Hoy() {
   const fecha = hoy()
@@ -24,6 +28,10 @@ export default function Hoy() {
   const borradores = useBorradores()
   const metodos = useMetodos()
   const [verMetodos, setVerMetodos] = useState(false)
+  const [marcando, setMarcando] = useState(false)
+  const [quitando, setQuitando] = useState(false)
+  const [ocupado, setOcupado] = useState(false)
+  const toast = useToast()
 
   const r = resumen.data
   const lista = turnos.data ?? []
@@ -33,8 +41,12 @@ export default function Hoy() {
   const esCompleto = lista.some((t) => t.turno.modo === 'completo')
   const borradorHoy = lista.find((t) => t.turno.is_draft)
 
+  // El local no abrió: no hay caja que cerrar, así que no va el botón.
+  const noAbrio = r?.cerrado === true
+
   let cta: { label: string; modo: Modo } | null
-  if (borradorHoy) cta = { label: borradorHoy.turno.modo === 'completo' ? 'Terminar de cerrar el día' : `Terminar de cerrar la ${borradorHoy.turno.modo}`, modo: borradorHoy.turno.modo }
+  if (noAbrio) cta = null
+  else if (borradorHoy) cta = { label: borradorHoy.turno.modo === 'completo' ? 'Terminar de cerrar el día' : `Terminar de cerrar la ${borradorHoy.turno.modo}`, modo: borradorHoy.turno.modo }
   else if (!lista.length) cta = { label: 'Cerrar el día', modo: 'completo' }
   else if (hayManana && !hayTarde && !esCompleto && !diaUnico) cta = { label: 'Cerrar turno tarde', modo: 'tarde' }
   else cta = null
@@ -78,8 +90,8 @@ export default function Hoy() {
               <h2 id="hoy-neto" className="eyebrow">Neto del día</h2>
               <EstadoChip estado={r?.estado ?? 'sin_registro'} />
             </div>
-            <p className="amount text-hero leading-[1.05] text-ink mt-2.5">{clp(neto)}</p>
-            {hayAyer && (
+            <p className="amount text-hero leading-[1.05] text-ink mt-2.5">{noAbrio ? '—' : clp(neto)}</p>
+            {hayAyer && !noAbrio && (
               <div className="flex items-center gap-2 flex-wrap mt-2">
                 <DeltaBadge actual={neto} anterior={Number(ra.neto ?? 0)} fondo />
                 <Link to="/dia" search={{ fecha: ayer }} className="hit text-xs text-muted hover:text-ink">
@@ -92,11 +104,21 @@ export default function Hoy() {
               <span className="w-px bg-hairline" aria-hidden="true" />
               <Dato label="Proveedores" className={Number(r?.total_proveedores ?? 0) > 0 ? 'text-neg' : 'text-ink'}>{Number(r?.total_proveedores ?? 0) > 0 ? '−' : ''}{clp(r?.total_proveedores ?? 0)}</Dato>
               <span className="w-px bg-hairline" aria-hidden="true" />
-              <Dato label="Turnos">{Math.min(lista.length, turnosEsperados)} de {turnosEsperados}</Dato>
+              <Dato label="Turnos">{noAbrio ? '—' : `${Math.min(lista.length, turnosEsperados)} de ${turnosEsperados}`}</Dato>
             </div>
           </section>
 
-          {cta ? (
+          {noAbrio ? (
+            <div className="mb-3 rounded-[14px] bg-soft border border-hairline px-4 py-3 min-h-[52px] flex items-center justify-between gap-3">
+              <div className="min-w-0">
+                <p className="text-base font-semibold text-ink2">El local no abrió</p>
+                {r?.motivo_cierre && <p className="text-xs text-muted truncate">{r.motivo_cierre}</p>}
+              </div>
+              {esDueno && (
+                <button type="button" onClick={() => setQuitando(true)} className="hit shrink-0 text-xs font-semibold text-ink2 underline underline-offset-2">Quitar marca</button>
+              )}
+            </div>
+          ) : cta ? (
             <button type="button" onClick={() => void navigate({ to: '/turno', search: { fecha, modo: cta.modo } })} className="btn-primary w-full min-h-[52px] text-base rounded-[14px] mb-3">
               <Icon name={borradorHoy ? 'check' : cta.modo === 'tarde' ? 'moon' : 'plus'} className="w-[18px] h-[18px]" stroke={2.4} />{cta.label}
             </button>
@@ -107,7 +129,16 @@ export default function Hoy() {
             </div>
           )}
 
+          {/* Solo mientras el día esté en blanco: después de registrar algo ya no tiene sentido. */}
+          {esDueno && !noAbrio && !lista.length && (
+            <button type="button" onClick={() => setMarcando(true)}
+              className="hit w-full min-h-[44px] mb-3 -mt-1 text-sm text-muted hover:text-ink2">
+              El local no abrió hoy
+            </button>
+          )}
+
           {/* El efectivo esperado va en cada turno: el del día suma dos fondos cuando hay mañana y tarde. */}
+          {!noAbrio && (
           <section className="card p-0 overflow-hidden mb-3" aria-labelledby="hoy-metodos">
             <div className="px-[18px] pt-4 pb-3.5">
               <div className="flex items-baseline justify-between gap-2.5">
@@ -133,6 +164,7 @@ export default function Hoy() {
             )}
             {porMetodo.length === 0 && <p className="text-sm text-muted text-center py-4 border-t border-hairline">Sin ventas registradas todavía</p>}
           </section>
+          )}
 
           {lista.length > 0 && (
             <div className="grid grid-cols-2 gap-2.5">
@@ -162,6 +194,27 @@ export default function Hoy() {
             </div>
           )}
         </>
+      )}
+
+      {marcando && <DiaCerradoSheet fecha={fecha} onClose={() => setMarcando(false)} />}
+      {quitando && (
+        <ConfirmDialog
+          title="¿Quitar la marca?"
+          message="El día vuelve a quedar sin registro y podrás cerrarlo normalmente."
+          confirmLabel="Quitar marca" loading={ocupado}
+          onCancel={() => setQuitando(false)}
+          onConfirm={() => void (async () => {
+            setOcupado(true)
+            try {
+              await marcarDiaCerrado(fecha, false)
+              setQuitando(false)
+            } catch (e) {
+              toast.error(mensajeDeError(e, 'No se pudo quitar la marca'))
+            } finally {
+              setOcupado(false)
+            }
+          })()}
+        />
       )}
     </div>
   )
@@ -197,12 +250,6 @@ export function Dato({ label, className = 'text-ink', children }: { label: strin
 }
 
 export function EstadoChip({ estado }: { estado: string }) {
-  const map: Record<string, { label: string; cls: string }> = {
-    sin_registro: { label: 'Sin registro', cls: 'bg-soft text-muted' },
-    borrador: { label: 'Borrador', cls: 'bg-warn-tint text-warn' },
-    parcial: { label: 'Falta la tarde', cls: 'bg-info-tint text-info' },
-    completo: { label: 'Completo', cls: 'bg-pos-tint text-pos' },
-  }
-  const e = map[estado] ?? map.sin_registro!
-  return <span className={`badge ${e.cls}`}>{e.label}</span>
+  const e = etiquetaEstado(estado)
+  return <span className={`badge ${e.cls}`}>{e.chip}</span>
 }

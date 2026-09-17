@@ -34,12 +34,20 @@ describe('tablaDias', () => {
     dia({ fecha: '2026-09-01', efectivo: 1000, getnet: 500, total_ventas: 1500, prov_efectivo: 200, total_proveedores: 200, neto: 1300, efectivo_neto: 800, efectivo_esperado: 99999 }),
     dia({ fecha: '2026-09-02', estado: 'parcial', corregido: true, con_descuadre: true, efectivo: 300, amipass: 100, total_ventas: 400, prov_transferencia: 50, total_proveedores: 50, neto: 350, efectivo_neto: 300 }),
     dia({ fecha: '2026-09-03', estado: 'sin_registro', turnos: 0 }),
+    dia({ fecha: '2026-09-04', estado: 'cerrado', turnos: 0, cerrado: true, motivo_cierre: 'Feriado' }),
   ]
   const t = tablaDias(dias, METODOS)
 
   it('omite los días sin turnos y etiqueta el estado', () => {
-    expect(t.filas).toHaveLength(2)
+    expect(t.filas).toHaveLength(3)
     expect(t.filas[1]?.slice(0, 3)).toEqual(['2026-09-02', 'Falta un turno', 'Corregido, Descuadre'])
+  })
+  it('incluye el día en que el local no abrió, con su motivo', () => {
+    expect(t.filas[2]?.slice(0, 3)).toEqual(['2026-09-04', 'No abrió', 'Feriado'])
+  })
+  it('un día sin abrir no mueve los totales', () => {
+    const col = (titulo: string) => t.columnas.findIndex((c) => c.titulo === titulo)
+    expect(t.total?.[col('Total ventas')]).toBe(1900)
   })
   it('agrega la columna del método inactivo con ventas', () => {
     expect(t.columnas.map((c) => c.titulo)).toContain('Amipass')

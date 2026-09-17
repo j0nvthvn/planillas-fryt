@@ -1,4 +1,5 @@
 import { etiquetaModo } from '@/features/turno/modo'
+import { etiquetaEstado } from '@/features/turno/estado'
 import type { VResumenDia, VTurno } from '@/features/turno/api'
 import { esMetodo, type MetodoKey } from '@/lib/totales'
 import { toNum } from '@/lib/format'
@@ -10,7 +11,7 @@ import { toNum } from '@/lib/format'
  * la fila TOTAL, que debe coincidir con los totales de `resumen_periodo`.
  */
 
-export interface Totales { total_ventas: number; total_proveedores: number; neto: number; efectivo_neto: number; dias_con_registro: number; dias_con_borrador?: number; [k: string]: number | undefined }
+export interface Totales { total_ventas: number; total_proveedores: number; neto: number; efectivo_neto: number; dias_con_registro: number; dias_con_borrador?: number; dias_cerrados?: number; [k: string]: number | undefined }
 export interface Resumen {
   desde: string; hasta: string
   dias: VResumenDia[]
@@ -68,15 +69,8 @@ function conTotal(t: Omit<Tabla, 'total'>, desde: number): Tabla {
   return { ...t, total }
 }
 
-const ESTADO_DIA: Record<string, string> = {
-  completo: 'Completo',
-  parcial: 'Falta un turno',
-  borrador: 'Con borrador',
-  sin_registro: 'Sin registro',
-}
-
 export function etiquetaEstadoDia(estado: string): string {
-  return ESTADO_DIA[estado] ?? estado
+  return etiquetaEstado(estado).largo
 }
 
 export function etiquetaEstadoTurno(t: Pick<VTurno, 'is_draft' | 'corregido'>): string {
@@ -90,12 +84,14 @@ function etiquetaFormaPago(f: string): string {
 
 /** Una fila por día con registro. Por día va el efectivo neto: el esperado suma dos fondos cuando hay mañana y tarde. */
 export function tablaDias(dias: readonly VResumenDia[], metodos: readonly MetodoInfo[]): Tabla {
-  const conRegistro = dias.filter((d) => toNum(d.turnos) > 0)
+  // Los días en que el local no abrió van con montos en cero y su motivo:
+  // si no, faltarían fechas en el Excel sin explicación.
+  const conRegistro = dias.filter((d) => toNum(d.turnos) > 0 || d.cerrado)
   const ms = metodosConVentas(metodos, conRegistro)
   const filas = conRegistro.map((d): Valor[] => [
     d.fecha,
     etiquetaEstadoDia(d.estado),
-    [d.corregido && 'Corregido', d.con_descuadre && 'Descuadre'].filter(Boolean).join(', ') || null,
+    [d.cerrado && (d.motivo_cierre || 'No abrió'), d.corregido && 'Corregido', d.con_descuadre && 'Descuadre'].filter(Boolean).join(', ') || null,
     ...ms.map((m) => toNum(d[m.key])),
     toNum(d.total_ventas), toNum(d.prov_efectivo), toNum(d.prov_transferencia), toNum(d.total_proveedores),
     toNum(d.neto), toNum(d.efectivo_neto),
@@ -267,7 +263,7 @@ export function tablaDiasCompacta(dias: readonly VResumenDia[]): Tabla {
       { titulo: 'Estado', tipo: 'texto' },
       monto('Ventas'), monto('Proveedores'), monto('Neto'), monto('Efectivo neto'),
     ],
-    filas: dias.filter((d) => toNum(d.turnos) > 0).map((d) => [
+    filas: dias.filter((d) => toNum(d.turnos) > 0 || d.cerrado).map((d) => [
       d.fecha, etiquetaEstadoDia(d.estado), toNum(d.total_ventas), toNum(d.total_proveedores), toNum(d.neto), toNum(d.efectivo_neto),
     ]),
   }, 2)

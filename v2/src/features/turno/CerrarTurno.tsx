@@ -10,7 +10,7 @@ import { useOnline } from '@/hooks/useOnline'
 import { useRovingRadio } from '@/hooks/useRovingRadio'
 import { useUsuario } from '@/hooks/useUsuario'
 import { useConfig, useMetodos, useTrabajadores } from '@/features/catalogo/api'
-import { MODOS, etiquetaModo, type Modo } from './api'
+import { MODOS, etiquetaModo, marcarDiaCerrado, useResumenDia, type Modo } from './api'
 import { modoPorDefecto, modosDisponibles, etiquetaCerrar, tituloCierre } from './modo'
 import { useTurnoForm, type LineaForm } from './useTurnoForm'
 import { ProveedorSheet } from './ProveedorSheet'
@@ -19,6 +19,7 @@ import { ConteoSheet } from './ConteoSheet'
 import { RevisionSheet } from './RevisionSheet'
 import { clp, clpSigno, fechaLegible, hoy, diaSemana, sumarDias, fechaDiaMes, iniciales } from '@/lib/format'
 import { esMetodo, type MetodoKey } from '@/lib/totales'
+import { mensajeDeError } from '@/lib/errorLog'
 
 export default function CerrarTurno() {
   const search = useSearch({ from: '/app/turno' })
@@ -32,6 +33,11 @@ export default function CerrarTurno() {
 
   const fecha = search.fecha ?? hoy()
   const diaUnicoConfig = config.diasTurnoUnico.includes(diaSemana(fecha))
+  // El día puede estar marcado como "el local no abrió": se avisa antes de
+  // llenar la planilla, porque al guardar la base lo rechaza (23514).
+  const resumenDia = useResumenDia(fecha)
+  const noAbrio = resumenDia.data?.cerrado === true
+  const [quitandoMarca, setQuitandoMarca] = useState(false)
 
   // Primero se necesita el día para decidir el modo por defecto.
   const form = useTurnoForm({ fecha, modo: search.modo ?? 'completo', fondoPorDefecto: config.fondoCajaInicial, online })
@@ -126,6 +132,23 @@ export default function CerrarTurno() {
         )}
       />
 
+      {noAbrio && (
+        <div role="status" className="mb-4 aviso bg-warn-tint text-warn flex flex-wrap items-center gap-x-2 gap-y-1">
+          <span>Este día está marcado como <b>sin abrir</b>.</span>
+          {esDueno && (
+            <button type="button" disabled={quitandoMarca}
+              onClick={() => void (async () => {
+                setQuitandoMarca(true)
+                try { await marcarDiaCerrado(fecha, false) }
+                catch (e) { toast.error(mensajeDeError(e, 'No se pudo quitar la marca')) }
+                finally { setQuitandoMarca(false) }
+              })()}
+              className="hit font-bold underline">
+              {quitandoMarca ? 'Un momento…' : 'Quitar la marca y registrar'}
+            </button>
+          )}
+        </div>
+      )}
       {soloLectura && (
         <div role="status" className="mb-4 aviso bg-info-tint text-info">
           Este turno ya está cerrado. Solo la dueña puede corregirlo. <Link to="/hoy" className="font-bold underline">Volver a Hoy</Link>
