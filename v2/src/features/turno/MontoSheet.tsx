@@ -54,12 +54,12 @@ export function MontoSheet({ title, sub, valor, color, label = 'Listo', ayuda, p
   // dejar la duda de si un método en cero se puede saltar.
   const etiqueta = encadenado ? (escrito === 0 ? 'Omitir y seguir' : `Siguiente: ${siguiente}`) : label
   const bloqueAcumulado = acumulado && (
-    <div className="rounded-2xl bg-soft px-4 py-3 flex flex-col gap-2">
-      <div className="flex gap-1 p-1 rounded-xl bg-card" role="radiogroup" aria-label="Cómo ingresar el monto">
+    <div className="rounded-[14px] border border-hairline px-4 py-3 flex flex-col gap-2.5">
+      <div className="segmented" role="radiogroup" aria-label="Cómo ingresar el monto">
         <button type="button" role="radio" aria-checked={modoTotal} onClick={() => { if (!modoTotal) { setModoTotal(true); setDigits(numeroADigitos(totalDesdeTarde(escrito, acumulado.manana))) } }}
-          className={`flex-1 min-h-[38px] rounded-lg text-sm font-semibold ${modoTotal ? 'bg-brand text-on-solid' : 'text-ink2'}`}>Total del día (máquina)</button>
+          className={`${modoTotal ? 'segmented-item-on' : 'segmented-item'} px-2`}>Total del día (máquina)</button>
         <button type="button" role="radio" aria-checked={!modoTotal} onClick={() => { if (modoTotal) { setModoTotal(false); setDigits(numeroADigitos(derivarTarde(escrito, acumulado.manana).tarde)) } }}
-          className={`flex-1 min-h-[38px] rounded-lg text-sm font-semibold ${!modoTotal ? 'bg-brand text-on-solid' : 'text-ink2'}`}>Solo la tarde</button>
+          className={`${!modoTotal ? 'segmented-item-on' : 'segmented-item'} px-2`}>Solo la tarde</button>
       </div>
       {modoTotal ? (
         <p className={`text-sm tabular-nums ${invalido ? 'text-neg font-semibold' : 'text-ink2'}`}>
@@ -77,18 +77,18 @@ export function MontoSheet({ title, sub, valor, color, label = 'Listo', ayuda, p
     <BottomSheet
       title={title}
       onClose={onClose}
-      extra={paso ? <span className="self-center text-xs font-semibold text-muted tabular-nums mr-1">{paso.actual} de {paso.total}</span> : undefined}
+      extra={paso ? <span className="text-xs font-semibold text-muted tabular-nums">{paso.actual} de {paso.total}</span> : undefined}
       footer={desktop ? (
         <div className="flex gap-2 mt-1">
-          {encadenado && <button type="button" className="btn-secondary flex-1" disabled={invalido} onClick={() => aceptar(false)}>Listo</button>}
-          <button type="button" className="btn-primary flex-[2]" disabled={invalido} onClick={() => aceptar(encadenado)}>{etiqueta}</button>
+          {encadenado && <button type="button" className="btn-secondary flex-1 min-h-[50px] text-[15px]" disabled={invalido} onClick={() => aceptar(false)}>Listo</button>}
+          <button type="button" className="btn-primary flex-[2] min-h-[50px] text-[15px]" disabled={invalido} onClick={() => aceptar(encadenado)}>{etiqueta}</button>
         </div>
       ) : (
         <>
           <Keypad onKey={(k) => setDigits((d) => applyKey(d, k))} onAccept={() => aceptar(encadenado)} disabled={invalido} label={etiqueta} />
           {encadenado && (
-            <button type="button" onClick={() => aceptar(false)} className="self-center -mt-1 min-h-[40px] px-4 text-sm font-semibold text-ink2 flex items-center gap-1.5">
-              <Icon name="check" className="w-4 h-4" />Guardar y volver
+            <button type="button" onClick={() => aceptar(false)} className="w-full -mt-0.5 min-h-[40px] px-4 text-[13px] font-semibold text-ink2 flex items-center justify-center gap-1.5">
+              <Icon name="check" className="w-[15px] h-[15px]" />Guardar y volver
             </button>
           )}
         </>

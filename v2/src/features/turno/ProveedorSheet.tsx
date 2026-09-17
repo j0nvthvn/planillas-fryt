@@ -93,7 +93,7 @@ export function ProveedorSheet({ linea, usados, onSave, onDelete, onClose }: Pro
             const usado = usados.includes(p.id)
             return (
               <button key={p.id} type="button" role="option" aria-selected={on} onClick={() => elegir(p)}
-                className={`shrink-0 flex items-center gap-2 rounded-2xl pl-1.5 pr-3 py-1.5 text-sm font-medium border whitespace-nowrap ${on ? 'bg-brand-tint text-brand border-brand' : 'bg-card text-ink2 border-hairline'}`}>
+                className={`shrink-0 flex items-center gap-2 rounded-[12px] pl-1.5 pr-3 py-1.5 text-sm font-medium border whitespace-nowrap transition-colors ${on ? 'bg-brand-tint text-brand border-brand/40' : 'bg-card text-ink2 border-hairline-strong'}`}>
                 <ProveedorAvatar nombre={p.nombre} imagenUrl={p.imagen_url} size="sm" />
                 {p.nombre}
                 {usado && <Icon name="check" className="w-3 h-3 text-pos" stroke={2.6} />}
@@ -103,9 +103,9 @@ export function ProveedorSheet({ linea, usados, onSave, onDelete, onClose }: Pro
         </div>
       )}
       {parecido && (
-        <div className="flex items-center gap-2 rounded-2xl bg-warn-tint px-3 py-2 -mt-1">
+        <div className="flex items-center gap-2 rounded-[12px] bg-warn-tint border border-hairline px-3 py-2 -mt-1">
           <Icon name="info" className="w-[18px] h-[18px] shrink-0 text-warn" />
-          <span className="flex-1 min-w-0 text-sm text-warn">¿Quisiste decir <b>{parecido.nombre}</b>?</span>
+          <span className="flex-1 min-w-0 text-[13px] font-medium text-warn">¿Quisiste decir <b>{parecido.nombre}</b>?</span>
           <button type="button" onClick={() => elegir(parecido)} className="btn-secondary min-h-[36px] px-3 text-sm shrink-0">Usar ese</button>
         </div>
       )}

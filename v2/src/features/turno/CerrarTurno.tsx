@@ -18,7 +18,6 @@ import { ConteoSheet } from './ConteoSheet'
 import { RevisionSheet } from './RevisionSheet'
 import { clp, clpSigno, fechaLegible, hoy, diaSemana, sumarDias, fechaDiaMes, iniciales } from '@/lib/format'
 import { esMetodo, type MetodoKey } from '@/lib/totales'
-import { colorMetodo } from '@/lib/theme'
 
 export default function CerrarTurno() {
   const search = useSearch({ from: '/app/turno' })
@@ -316,7 +315,7 @@ export default function CerrarTurno() {
         const mananaMonto = modo === 'tarde' ? Number(turnoManana?.[sheet.key] ?? 0) : null
         const acumulado = m?.acumulado_diario && mananaMonto != null ? { manana: mananaMonto } : undefined
         return (
-          <MontoSheet title={m?.label ?? sheet.key} sub={acumulado ? 'La máquina muestra el total del día' : m?.sub ?? undefined} valor={state.ventas[sheet.key]} color={colorMetodo(m?.color)}
+          <MontoSheet title={m?.label ?? sheet.key} sub={acumulado ? 'La máquina muestra el total del día' : m?.sub ?? undefined} valor={state.ventas[sheet.key]}
             acumulado={acumulado}
             paso={{ actual: idx + 1, total: activos.length }} siguiente={prox?.label ?? null}
             onAccept={(monto, seguir) => {

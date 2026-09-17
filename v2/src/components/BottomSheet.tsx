@@ -53,7 +53,7 @@ export function BottomSheet({ title, children, onClose, extra, footer }: Props) 
       onCancel={(e) => { e.preventDefault(); onClose() }}
       // Clic en el fondo oscuro: el destino del evento es el propio <dialog>.
       onClick={(e) => { if (e.target === ref.current) onClose() }}
-      className="fixed inset-x-0 bottom-0 top-auto z-50 m-0 w-full max-w-none border-0 bg-canvas text-ink rounded-t-[30px] px-5 pt-3 pb-[max(20px,env(safe-area-inset-bottom))] max-h-[92dvh] overflow-hidden flex flex-col gap-3 backdrop:bg-black/35 dark:backdrop:bg-black/60 md:inset-x-auto md:left-1/2 md:bottom-auto md:top-[8vh] md:w-[480px] md:rounded-3xl md:max-h-[84vh]"
+      className="fixed inset-x-0 bottom-0 top-auto z-50 m-0 w-full max-w-none border-0 border-t border-hairline bg-card text-ink rounded-t-[28px] px-5 pt-2 pb-[max(20px,env(safe-area-inset-bottom))] max-h-[92dvh] overflow-hidden flex flex-col gap-3 backdrop:bg-black/[.38] dark:backdrop:bg-black/60 md:inset-x-auto md:left-1/2 md:bottom-auto md:top-[8vh] md:w-[480px] md:rounded-[20px] md:border md:max-h-[84vh]"
       style={{
         animation: dragY === 0 ? 'sheetUp .26s cubic-bezier(.2,.8,.2,1)' : 'none',
         transform: isDesktop ? 'translateX(-50%)' : `translateY(${dragY}px)`,
@@ -71,15 +71,15 @@ export function BottomSheet({ title, children, onClose, extra, footer }: Props) 
       onPointerUp={() => { if (dragY > 80) onClose(); setDragY(0); startY.current = null }}
     >
       <div data-handle className="md:hidden w-full flex justify-center pt-1 pb-2 cursor-grab touch-none">
-        <div className="w-10 h-1 rounded-full bg-hairline" />
+        <div className="w-10 h-1 rounded-full bg-hairline-strong" />
       </div>
       {title && (
-        <div className="flex items-center justify-between">
-          <h3 className="text-lg font-bold text-ink">{title}</h3>
-          <div className="flex gap-2">
+        <div className="flex items-center justify-between gap-2.5">
+          <h3 className="font-display text-lg font-semibold tracking-[-0.015em] text-ink">{title}</h3>
+          <div className="flex items-center gap-2.5">
             {extra}
-            <button onClick={onClose} className="w-9 h-9 rounded-full grid place-items-center bg-hairline text-ink2" aria-label="Cerrar">
-              <Icon name="close" className="w-4 h-4" stroke={2.2} />
+            <button onClick={onClose} className="w-[34px] h-[34px] rounded-full grid place-items-center bg-soft text-ink2 hover:bg-hairline" aria-label="Cerrar">
+              <Icon name="close" className="w-[15px] h-[15px]" stroke={2.2} />
             </button>
           </div>
         </div>
