@@ -246,8 +246,11 @@
 }
 
 @layer components {
-  .pb-nav { padding-bottom: calc(58px + max(10px, env(safe-area-inset-bottom)) + 16px); }
-  .above-nav { bottom: calc(58px + max(10px, env(safe-area-inset-bottom))); }
+  /* Alto de la barra inferior del celular; 0 en pantallas sin barra (Cerrar turno). */
+  :root { --nav-h: calc(58px + max(10px, env(safe-area-inset-bottom))); }
+  :root:has([data-sin-nav]) { --nav-h: 0px; }
+  .pb-nav { padding-bottom: calc(var(--nav-h) + 16px); }
+  .above-nav { bottom: var(--nav-h); }
   @media (min-width: 768px) { .above-nav { bottom: 0; } }
 
   .app-shell { height: 100dvh; overflow: hidden; }

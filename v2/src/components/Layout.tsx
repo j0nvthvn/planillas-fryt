@@ -45,9 +45,12 @@ export default function Layout({ children }: { children: ReactNode }) {
   const izq = tabsMovil.slice(0, mitad)
   const der = tabsMovil.slice(mitad)
   const fab = items.find((i) => i.to === '/turno')!
+  // Cerrar turno es una tarea con principio y fin: en el celular va sin barra
+  // inferior (se sale con la flecha del encabezado) y gana alto para el cierre.
+  const enfoque = activo(pathname, fab.to)
 
   return (
-    <div className="app-shell flex flex-col bg-canvas">
+    <div className="app-shell flex flex-col bg-canvas" data-sin-nav={enfoque || undefined}>
       <ActualizacionBanner />
       {!online && (
         <div role="status" className="shrink-0 z-30 flex items-center justify-center gap-2 bg-warn text-on-solid text-xs font-semibold px-3 py-2 text-center">
@@ -83,19 +86,18 @@ export default function Layout({ children }: { children: ReactNode }) {
         </main>
       </div>
 
-      <nav aria-label="Navegación principal" className="md:hidden shrink-0 relative bg-card border-t border-hairline"
+      {!enfoque && <nav aria-label="Navegación principal" className="md:hidden shrink-0 relative bg-card border-t border-hairline"
         style={{ paddingBottom: 'max(10px, env(safe-area-inset-bottom))' }}>
         <div className="flex items-stretch">
           <div className="flex-1 flex items-stretch">{izq.map((i) => <Tab key={i.to} item={i} on={activo(pathname, i.to)} />)}</div>
           <div className="w-[76px] shrink-0" aria-hidden="true" />
           <div className="flex-1 flex items-stretch">{der.map((i) => <Tab key={i.to} item={i} on={activo(pathname, i.to)} />)}</div>
         </div>
-        {/* En Cerrar turno el botón competía con "Cerrar el día" y tapaba su barra. */}
-        {!activo(pathname, fab.to) && <Link to={fab.to} aria-label="Cerrar caja"
+        <Link to={fab.to} aria-label="Cerrar caja"
           className="absolute left-1/2 -translate-x-1/2 -top-[22px] z-40 grid place-items-center w-[58px] h-[58px] rounded-[19px] border-[3px] border-card bg-brand text-on-solid shadow-[0_8px_20px_-6px_rgba(79,70,229,.5)] hover:bg-brand-hover transition-colors">
           <Icon name="cash" className="w-6 h-6" stroke={2.3} />
-        </Link>}
-      </nav>
+        </Link>
+      </nav>}
     </div>
   )
 }

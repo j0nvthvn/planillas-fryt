@@ -160,6 +160,10 @@ Aplicado desde `docs/design_handoff_rediseno_fintech/` (README = especificación
 - **Historial, Proveedores, Ajustes**: píldoras con la activa en tinta
   (`components/pildora.ts`), filas de 64–72 px, métodos con acciones en una
   segunda línea en el celular.
+- **Cerrar turno sin barra inferior en el celular**: es una tarea con principio
+  y fin; se sale con la flecha del encabezado y la barra del neto queda al
+  borde. `Layout` marca `data-sin-nav` y `--nav-h` (alto de la barra) pasa a 0
+  para `.pb-nav`, `.above-nav` y los toasts.
 - `theme-color`, manifest, encabezado del Excel y `privacidad.html` con los
   colores nuevos. Se quitó `Amount.tsx` (sin uso).
 

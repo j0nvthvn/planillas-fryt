@@ -276,7 +276,7 @@ export default function CerrarTurno() {
 
       {/* Barra fija */}
       {!soloLectura && (
-        <div ref={barRef} className="fixed inset-x-0 above-nav z-30 bg-card border-t border-hairline px-4 pt-3 pb-3.5 shadow-[0_-6px_20px_-12px_rgba(16,24,40,.18)] md:left-[236px]">
+        <div ref={barRef} className="fixed inset-x-0 above-nav z-30 bg-card border-t border-hairline px-4 pt-3 pb-[max(14px,env(safe-area-inset-bottom))] md:pb-3.5 shadow-[0_-6px_20px_-12px_rgba(16,24,40,.18)] md:left-[236px]">
           <div className="max-w-2xl mx-auto flex items-center gap-3">
             <div className="flex-1 min-w-0">
               <p className="text-[10.5px] leading-none font-semibold uppercase tracking-[0.1em] text-muted mb-[5px]">Neto {modo === 'completo' ? 'del día' : 'del turno'}</p>

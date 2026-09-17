@@ -72,7 +72,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   return (
     <ToastContext.Provider value={value}>
       {children}
-      <div ref={capa} popover={SOPORTA_POPOVER ? 'manual' : undefined} className="above-nav fixed inset-x-0 inset-y-auto z-[60] w-full max-w-none m-0 p-0 px-4 border-0 bg-transparent overflow-visible pointer-events-none" style={{ display: 'block', bottom: 'calc(58px + max(10px, env(safe-area-inset-bottom)) + var(--sticky-bar-h, 0px))' }}>
+      <div ref={capa} popover={SOPORTA_POPOVER ? 'manual' : undefined} className="above-nav fixed inset-x-0 inset-y-auto z-[60] w-full max-w-none m-0 p-0 px-4 border-0 bg-transparent overflow-visible pointer-events-none" style={{ display: 'block', bottom: 'calc(var(--nav-h) + var(--sticky-bar-h, 0px))' }}>
         <div className="max-w-md mx-auto flex flex-col gap-2">
           {toasts.map((t) => <ToastView key={t.id} toast={t} onHide={() => hide(t.id)} />)}
         </div>
