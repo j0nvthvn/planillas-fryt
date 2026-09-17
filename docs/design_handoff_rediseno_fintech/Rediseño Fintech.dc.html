@@ -1,0 +1,1332 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics><meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Inter+Tight:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--cv:#F6F7F9;--cd:#FFFFFF;--bd:#EBEDF1;--bd2:#DFE2E8;--ink:#0F1115;--in2:#3C424E;--mu:#667085;--mu2:#6B7280;--acc:#4F46E5;--accT:#EEF0FE;--pos:#047857;--posT:#E7F4EF;--neg:#DC2626;--negT:#FDECEC;--wrn:#B45309;--wrnT:#FDF2E3;--chip:#F1F3F6;--sh:0 1px 2px rgba(16,24,40,.05), 0 1px 3px rgba(16,24,40,.06);--sh2:0 6px 20px -8px rgba(16,24,40,.14)}
+.dk{--cv:#0B0D10;--cd:#15181D;--bd:#242931;--bd2:#2E343E;--ink:#F3F5F8;--in2:#C6CBD5;--mu:#9AA2B0;--mu2:#7C8492;--acc:#8B93F8;--accT:#1E2240;--pos:#34D399;--posT:#0F2A22;--neg:#FB7185;--negT:#2E1519;--wrn:#FBBF24;--wrnT:#2D2211;--chip:#1D2128;--sh:0 1px 2px rgba(0,0,0,.5);--sh2:0 10px 28px -12px rgba(0,0,0,.7)}
+body{margin:0;background:#E9EBEF;font-family:Inter,system-ui,sans-serif;color:#0F1115;-webkit-font-smoothing:antialiased}
+a{color:#4F46E5}a:hover{color:#3730A3}
+</style></helmet>
+
+<section style="padding:40px 44px 60px">
+<div style="max-width:740px;margin:0 0 34px">
+<p style="font:600 11px/1.2 Inter,sans-serif;text-transform:uppercase;letter-spacing:.1em;color:#667085;margin:0 0 10px">Turno 1 · Rediseño de UI</p>
+<h1 style="font:700 40px/1.08 'Inter Tight',Inter,sans-serif;letter-spacing:-.025em;margin:0 0 14px;color:#0F1115">FrytControl, versión fintech</h1>
+<p style="font:400 15px/1.6 Inter,sans-serif;color:#3C424E;margin:0 0 12px;text-wrap:pretty">Mismo flujo, misma información, misma jerarquía de datos que <a href="Estado actual (recreación).dc.html">la recreación del estado actual</a>. Cambia la piel: superficie gris ultraclaro, tarjetas blancas con sombra de 1px, acento indigo para acciones, semántica verde/rojo solo donde el número lo pide, y cifras en Inter Tight con <code style="font:500 13px ui-monospace,Menlo,monospace;background:#F1F3F6;padding:2px 6px;border-radius:5px">tabular-nums</code> en tres tamaños fijos (28 / 20 / 15 px).</p>
+<p style="font:400 14px/1.6 Inter,sans-serif;color:#667085;margin:0;text-wrap:pretty">Lo que ataca el “se ve hecho por IA”: cero serif decorativa, cero degradados, una sola familia tipográfica, bordes de 1px en vez de sombras difusas, y listas con altura de fila de 64 px como en las apps de banco. Abajo, la misma pantalla en variantes para elegir (<a href="#1b">1b</a> tarjetas, <a href="#1c">1c</a> jerarquía de Hoy, <a href="#1d">1d</a> nav y FAB, <a href="#1e">1e</a> gráfico).</p>
+</div>
+
+<div style="display:flex;flex-wrap:wrap;gap:30px;align-items:flex-start">
+
+<!-- ══════════ 1a HOY ══════════ -->
+<div id="1a" style="flex:none;display:flex;flex-direction:column;gap:9px;scroll-margin-top:16px">
+<div style="display:flex;align-items:baseline;gap:8px"><a href="#1a" style="font:600 10.5px ui-monospace,Menlo,monospace;background:rgba(0,0,0,.08);color:#0F1115;border-radius:5px;padding:3px 7px;text-decoration:none">1a</a><span style="font:400 11px/1.3 Inter,sans-serif;color:rgba(0,0,0,.55)">Hoy · dueña, falta la tarde</span></div>
+<div style="width:390px;height:844px;display:flex;flex-direction:column;background:var(--cv);border:1px solid var(--bd2);border-radius:26px;overflow:hidden;box-shadow:var(--sh2)">
+  <div style="flex:1;min-height:0;overflow:hidden;padding:22px 16px 0">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px">
+      <div>
+        <p style="font:600 11px/1 Inter,sans-serif;text-transform:uppercase;letter-spacing:.1em;color:var(--mu);margin:0 0 5px">Miércoles 16 de septiembre</p>
+        <p style="font:600 20px/1.1 'Inter Tight',Inter,sans-serif;letter-spacing:-.02em;color:var(--ink);margin:0">Hoy</p>
+      </div>
+      <div style="width:40px;height:40px;border-radius:12px;background:var(--chip);border:1px solid var(--bd);color:var(--in2);font:600 14px Inter,sans-serif;display:grid;place-items:center;flex:none">JM</div>
+    </div>
+
+    <section style="background:var(--cd);border:1px solid var(--bd);border-radius:16px;box-shadow:var(--sh);padding:18px 18px 16px;margin-bottom:12px">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+        <p style="font:600 11px/1 Inter,sans-serif;text-transform:uppercase;letter-spacing:.1em;color:var(--mu);margin:0">Neto del día</p>
+        <span style="font:600 11px/1 Inter,sans-serif;background:var(--accT);color:var(--acc);border-radius:7px;padding:5px 8px">Falta la tarde</span>
+      </div>
+      <p style="font:700 40px/1.05 'Inter Tight',Inter,sans-serif;letter-spacing:-.03em;font-variant-numeric:tabular-nums;color:var(--ink);margin:10px 0 0">$412.300</p>
+      <div style="display:flex;align-items:center;gap:8px;margin-top:8px">
+        <span style="display:inline-flex;align-items:center;gap:3px;font:600 12px Inter,sans-serif;color:var(--pos);background:var(--posT);border-radius:7px;padding:4px 7px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="width:11px;height:11px"><path d="M6 15l6-6 6 6"></path></svg>3,6%</span>
+        <span style="font:400 12px Inter,sans-serif;color:var(--mu)">vs. ayer <span style="font-variant-numeric:tabular-nums">$398.100</span></span>
+      </div>
+      <div style="display:flex;gap:12px;margin-top:16px;padding-top:14px;border-top:1px solid var(--bd)">
+        <div style="flex:1">
+          <p style="font:400 12px/1 Inter,sans-serif;color:var(--mu);margin:0 0 5px">Ventas</p>
+          <p style="font:600 15px/1 'Inter Tight',Inter,sans-serif;font-variant-numeric:tabular-nums;color:var(--ink);margin:0">$486.500</p>
+        </div>
+        <div style="width:1px;background:var(--bd)"></div>
+        <div style="flex:1">
+          <p style="font:400 12px/1 Inter,sans-serif;color:var(--mu);margin:0 0 5px">Proveedores</p>
+          <p style="font:600 15px/1 'Inter Tight',Inter,sans-serif;font-variant-numeric:tabular-nums;color:var(--neg);margin:0">−$74.200</p>
+        </div>
+        <div style="width:1px;background:var(--bd)"></div>
+        <div style="flex:1">
+          <p style="font:400 12px/1 Inter,sans-serif;color:var(--mu);margin:0 0 5px">Turnos</p>
+          <p style="font:600 15px/1 'Inter Tight',Inter,sans-serif;color:var(--ink);margin:0">1 de 2</p>
+        </div>
+      </div>
+    </section>
+
+    <button type="button" style="width:100%;min-height:52px;border:0;border-radius:14px;background:var(--acc);color:#fff;font:600 15px Inter,sans-serif;display:inline-flex;align-items:center;justify-content:center;gap:8px;margin-bottom:12px;cursor:pointer">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M20 14.5A8 8 0 119.5 4a6.5 6.5 0 0010.5 10.5z"></path></svg>Cerrar turno tarde
+    </button>
+
+    <section style="background:var(--cd);border:1px solid var(--bd);border-radius:16px;box-shadow:var(--sh);overflow:hidden;margin-bottom:12px">
+      <div style="padding:16px 18px 14px">
+        <div style="display:flex;align-items:baseline;justify-content:space-between;gap:10px">
+          <p style="font:500 14px/1 Inter,sans-serif;color:var(--in2);margin:0">Efectivo esperado en caja</p>
+          <span style="font:600 20px/1 'Inter Tight',Inter,sans-serif;letter-spacing:-.02em;font-variant-numeric:tabular-nums;color:var(--ink)">$164.200</span>
+        </div>
+        <p style="font:400 12px/1.4 Inter,sans-serif;color:var(--mu2);margin:6px 0 0">Fondo $40.000 + efectivo $198.400 − proveedores en efectivo $42.800</p>
+        <div style="display:flex;height:6px;border-radius:999px;overflow:hidden;margin-top:14px;gap:2px">
+          <span style="width:41%;background:#047857;border-radius:999px"></span>
+          <span style="width:44%;background:#D2232A;border-radius:999px"></span>
+          <span style="width:10%;background:#009EE3;border-radius:999px"></span>
+          <span style="width:3%;background:#E2001A;border-radius:999px"></span>
+          <span style="width:2%;background:#F47B20;border-radius:999px"></span>
+        </div>
+      </div>
+      <div style="border-top:1px solid var(--bd);display:flex;align-items:center;gap:12px;padding:12px 18px;min-height:60px">
+        <span style="width:40px;height:40px;border-radius:10px;border:1px solid var(--bd);background:var(--cd);display:grid;place-items:center;flex:none"><svg viewBox="0 0 24 24" fill="none" stroke="#047857" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:19px;height:19px"><path d="M3 7h18v10H3zM12 9.7a2.3 2.3 0 100 4.6"></path></svg></span>
+        <span style="flex:1;min-width:0;font:500 14px Inter,sans-serif;color:var(--ink)">Efectivo</span>
+        <span style="font:400 12px Inter,sans-serif;color:var(--mu2);font-variant-numeric:tabular-nums">41%</span>
+        <span style="font:600 15px 'Inter Tight',Inter,sans-serif;font-variant-numeric:tabular-nums;color:var(--ink);min-width:86px;text-align:right">$198.400</span>
+      </div>
+      <div style="border-top:1px solid var(--bd);display:flex;align-items:center;gap:12px;padding:12px 18px;min-height:60px">
+        <span style="width:40px;height:40px;border-radius:10px;border:1px solid var(--bd);background:var(--cd);display:grid;place-items:center;flex:none"><img src="v2/public/metodos/getnet.png" alt="" style="width:30px;height:30px;object-fit:contain"></span>
+        <span style="flex:1;min-width:0;font:500 14px Inter,sans-serif;color:var(--ink)">Getnet</span>
+        <span style="font:400 12px Inter,sans-serif;color:var(--mu2);font-variant-numeric:tabular-nums">44%</span>
+        <span style="font:600 15px 'Inter Tight',Inter,sans-serif;font-variant-numeric:tabular-nums;color:var(--ink);min-width:86px;text-align:right">$214.600</span>
+      </div>
+      <div style="border-top:1px solid var(--bd);display:flex;align-items:center;gap:12px;padding:12px 18px;min-height:60px">
+        <span style="width:40px;height:40px;border-radius:10px;border:1px solid var(--bd);background:var(--cd);display:grid;place-items:center;flex:none"><img src="v2/public/metodos/mercadopago.png" alt="" style="width:30px;height:30px;object-fit:contain"></span>
+        <span style="flex:1;min-width:0;font:500 14px Inter,sans-serif;color:var(--ink)">Mercado Pago</span>
+        <span style="font:400 12px Inter,sans-serif;color:var(--mu2);font-variant-numeric:tabular-nums">10%</span>
+        <span style="font:600 15px 'Inter Tight',Inter,sans-serif;font-variant-numeric:tabular-nums;color:var(--ink);min-width:86px;text-align:right">$48.200</span>
+      </div>
+      <div style="border-top:1px solid var(--bd);display:flex;align-items:center;justify-content:center;gap:6px;padding:14px;min-height:52px;font:600 13px Inter,sans-serif;color:var(--acc);cursor:pointer">Ver los 5 métodos<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px"><path d="M6 9l6 6 6-6"></path></svg></div>
+    </section>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div style="background:var(--cd);border:1px solid var(--bd);border-radius:14px;box-shadow:var(--sh);padding:14px">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:8px">
+          <span style="font:500 13px Inter,sans-serif;color:var(--in2)">Mañana</span>
+          <span style="font:600 10px/1 Inter,sans-serif;text-transform:uppercase;letter-spacing:.06em;background:var(--posT);color:var(--pos);border-radius:6px;padding:4px 6px">Cerrado</span>
+        </div>
+        <p style="font:600 20px/1 'Inter Tight',Inter,sans-serif;letter-spacing:-.02em;font-variant-numeric:tabular-nums;color:var(--ink);margin:0">$486.500</p>
+        <p style="font:400 12px Inter,sans-serif;color:var(--mu);margin:5px 0 0">Camila · 14:52</p>
+      </div>
+      <div style="background:var(--cd);border:1px dashed var(--bd2);border-radius:14px;padding:14px">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:8px">
+          <span style="font:500 13px Inter,sans-serif;color:var(--in2)">Tarde</span>
+          <span style="font:600 10px/1 Inter,sans-serif;text-transform:uppercase;letter-spacing:.06em;background:var(--chip);color:var(--mu);border-radius:6px;padding:4px 6px">Pendiente</span>
+        </div>
+        <p style="font:600 20px/1 'Inter Tight',Inter,sans-serif;color:var(--mu2);margin:0">—</p>
+        <p style="font:400 12px Inter,sans-serif;color:var(--mu);margin:5px 0 0">Sin registro</p>
+      </div>
+    </div>
+  </div>
+
+  <nav style="flex:none;position:relative;background:var(--cd);border-top:1px solid var(--bd);padding-bottom:10px">
+    <div style="display:flex;align-items:stretch">
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 0 2px;min-height:58px;color:var(--acc)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" style="width:21px;height:21px"><path d="M4 10l8-6 8 6M6 9v10h12V9"></path></svg><span style="font:600 11px Inter,sans-serif">Hoy</span></div>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 0 2px;min-height:58px;color:var(--mu)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:21px;height:21px"><path d="M4 12a8 8 0 108-8 8.2 8.2 0 00-5.7 2.3L4 8.5M4 4v4.5h4.5M12 8v4l3 2"></path></svg><span style="font:500 11px Inter,sans-serif">Historial</span></div>
+      <div style="width:76px;flex:none"></div>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 0 2px;min-height:58px;color:var(--mu)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:21px;height:21px"><path d="M5 19V9M12 19V5M19 19v-7"></path></svg><span style="font:500 11px Inter,sans-serif">Análisis</span></div>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 0 2px;min-height:58px;color:var(--mu)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:21px;height:21px"><path d="M12 15a3 3 0 100-6 3 3 0 000 6zM19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"></path></svg><span style="font:500 11px Inter,sans-serif">Ajustes</span></div>
+    </div>
+    <button type="button" aria-label="Cerrar caja" style="position:absolute;left:50%;transform:translateX(-50%);top:-22px;width:58px;height:58px;border-radius:19px;border:3px solid var(--cd);background:var(--acc);color:#fff;display:grid;place-items:center;box-shadow:0 8px 20px -6px rgba(79,70,229,.5);cursor:pointer">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" style="width:24px;height:24px"><path d="M3 7h18v10H3zM12 9.7a2.3 2.3 0 100 4.6"></path></svg>
+    </button>
+  </nav>
+</div>
+</div>
+
+<!-- ══════════ CERRAR TURNO ══════════ -->
+<div style="flex:none;display:flex;flex-direction:column;gap:9px">
+<div style="display:flex;align-items:baseline;gap:8px"><span style="font:600 10.5px ui-monospace,Menlo,monospace;background:rgba(0,0,0,.08);color:#0F1115;border-radius:5px;padding:3px 7px">1a</span><span style="font:400 11px/1.3 Inter,sans-serif;color:rgba(0,0,0,.55)">Cerrar el día · segmented controls + filas de 64 px</span></div>
+<div style="width:390px;height:844px;display:flex;flex-direction:column;background:var(--cv);border:1px solid var(--bd2);border-radius:26px;overflow:hidden;box-shadow:var(--sh2)">
+  <div style="flex:none;background:var(--cd);border-bottom:1px solid var(--bd);padding:16px 16px 14px">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+      <div style="display:flex;align-items:center;gap:8px;min-width:0">
+        <span style="width:36px;height:36px;margin-left:-6px;border-radius:10px;display:grid;place-items:center;color:var(--in2);flex:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px"><path d="M15 18l-6-6 6-6"></path></svg></span>
+        <div style="min-width:0">
+          <h1 style="font:600 20px/1.1 'Inter Tight',Inter,sans-serif;letter-spacing:-.02em;color:var(--ink);margin:0">Cerrar el día</h1>
+          <p style="font:400 12px Inter,sans-serif;color:var(--mu);margin:3px 0 0">Borrador guardado · 14:52</p>
+        </div>
+      </div>
+      <button type="button" style="flex:none;min-height:40px;display:inline-flex;align-items:center;gap:7px;padding:0 12px;border-radius:11px;background:var(--cd);border:1px solid var(--bd2);color:var(--in2);font:600 13px Inter,sans-serif;cursor:pointer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><path d="M8 2v3M16 2v3M3 8h18M5 4h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V6a2 2 0 012-2z"></path></svg>16 sept</button>
+    </div>
+  </div>
+  <div style="flex:1;min-height:0;overflow:hidden;padding:16px 16px 0">
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:3px;padding:3px;border-radius:12px;background:var(--chip);border:1px solid var(--bd);margin-bottom:18px">
+      <button type="button" style="min-height:40px;border:0;border-radius:9px;background:var(--cd);box-shadow:var(--sh);color:var(--ink);font:600 13px Inter,sans-serif;cursor:pointer">Día completo</button>
+      <button type="button" style="min-height:40px;border:0;border-radius:9px;background:transparent;color:var(--mu);font:500 13px Inter,sans-serif;cursor:pointer">Mañana</button>
+      <button type="button" style="min-height:40px;border:0;border-radius:9px;background:transparent;color:var(--mu);font:500 13px Inter,sans-serif;cursor:pointer">Tarde</button>
+    </div>
+
+    <p style="font:600 11px/1 Inter,sans-serif;text-transform:uppercase;letter-spacing:.1em;color:var(--mu);margin:0 0 9px">Quién atendió</p>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:3px;padding:3px;border-radius:12px;background:var(--chip);border:1px solid var(--bd);margin-bottom:20px">
+      <button type="button" style="min-height:40px;border:0;border-radius:9px;background:var(--cd);box-shadow:var(--sh);color:var(--ink);font:600 13px Inter,sans-serif;cursor:pointer">Camila</button>
+      <button type="button" style="min-height:40px;border:0;border-radius:9px;background:transparent;color:var(--mu);font:500 13px Inter,sans-serif;cursor:pointer">Rocío</button>
+      <button type="button" style="min-height:40px;border:0;border-radius:9px;background:transparent;color:var(--mu);font:500 13px Inter,sans-serif;cursor:pointer">Nayaret</button>
+      <button type="button" style="min-height:40px;border:0;border-radius:9px;background:transparent;color:var(--mu);font:500 13px Inter,sans-serif;cursor:pointer">Ivonne</button>
+    </div>
+
+    <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:9px">
+      <p style="font:600 11px/1 Inter,sans-serif;text-transform:uppercase;letter-spacing:.1em;color:var(--mu);margin:0">Ventas del día</p>
+      <span style="font:600 13px 'Inter Tight',Inter,sans-serif;font-variant-numeric:tabular-nums;color:var(--ink)">$486.500</span>
+    </div>
+    <div style="background:var(--cd);border:1px solid var(--bd);border-radius:16px;box-shadow:var(--sh);overflow:hidden;margin-bottom:20px">
+      <button type="button" style="width:100%;display:flex;align-items:center;gap:13px;padding:0 16px;min-height:64px;text-align:left;background:transparent;border:0;cursor:pointer;font-family:inherit">
+        <span style="width:40px;height:40px;border-radius:10px;border:1px solid var(--bd);display:grid;place-items:center;flex:none"><svg viewBox="0 0 24 24" fill="none" stroke="#047857" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:19px;height:19px"><path d="M3 7h18v10H3zM12 9.7a2.3 2.3 0 100 4.6"></path></svg></span>
+        <span style="flex:1;min-width:0"><span style="display:block;font:500 15px Inter,sans-serif;color:var(--ink)">Efectivo</span><span style="display:block;font:400 12px Inter,sans-serif;color:var(--mu);margin-top:2px">Billetes y monedas</span></span>
+        <span style="font:600 17px 'Inter Tight',Inter,sans-serif;letter-spacing:-.01em;font-variant-numeric:tabular-nums;color:var(--ink)">$198.400</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px;color:var(--mu2)"><path d="M9 18l6-6-6-6"></path></svg>
+      </button>
+      <button type="button" style="width:100%;display:flex;align-items:center;gap:13px;padding:0 16px;min-height:64px;text-align:left;background:transparent;border:0;border-top:1px solid var(--bd);cursor:pointer;font-family:inherit">
+        <span style="width:40px;height:40px;border-radius:10px;border:1px solid var(--bd);display:grid;place-items:center;flex:none"><img src="v2/public/metodos/getnet.png" alt="" style="width:30px;height:30px;object-fit:contain"></span>
+        <span style="flex:1;min-width:0"><span style="display:block;font:500 15px Inter,sans-serif;color:var(--ink)">Getnet</span><span style="display:block;font:400 12px Inter,sans-serif;color:var(--mu);margin-top:2px">Débito y crédito</span></span>
+        <span style="font:600 17px 'Inter Tight',Inter,sans-serif;letter-spacing:-.01em;font-variant-numeric:tabular-nums;color:var(--ink)">$214.600</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px;color:var(--mu2)"><path d="M9 18l6-6-6-6"></path></svg>
+      </button>
+      <button type="button" style="width:100%;display:flex;align-items:center;gap:13px;padding:0 16px;min-height:64px;text-align:left;background:transparent;border:0;border-top:1px solid var(--bd);cursor:pointer;font-family:inherit">
+        <span style="width:40px;height:40px;border-radius:10px;border:1px solid var(--bd);display:grid;place-items:center;flex:none"><img src="v2/public/metodos/mercadopago.png" alt="" style="width:30px;height:30px;object-fit:contain"></span>
+        <span style="flex:1;min-width:0"><span style="display:block;font:500 15px Inter,sans-serif;color:var(--ink)">Mercado Pago</span><span style="display:block;font:400 12px Inter,sans-serif;color:var(--mu);margin-top:2px">QR y transferencias</span></span>
+        <span style="font:600 17px 'Inter Tight',Inter,sans-serif;letter-spacing:-.01em;font-variant-numeric:tabular-nums;color:var(--ink)">$48.200</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px;color:var(--mu2)"><path d="M9 18l6-6-6-6"></path></svg>
+      </button>
+      <button type="button" style="width:100%;display:flex;align-items:center;gap:13px;padding:0 16px;min-height:64px;text-align:left;background:transparent;border:0;border-top:1px solid var(--bd);cursor:pointer;font-family:inherit">
+        <span style="width:40px;height:40px;border-radius:10px;border:1px solid var(--bd);display:grid;place-items:center;flex:none"><img src="v2/public/metodos/edenred.png" alt="" style="width:30px;height:30px;object-fit:contain"></span>
+        <span style="flex:1;min-width:0"><span style="display:block;font:500 15px Inter,sans-serif;color:var(--ink)">Edenred</span><span style="display:block;font:400 12px Inter,sans-serif;color:var(--mu);margin-top:2px">Tarjeta de alimentación</span></span>
+        <span style="font:600 17px 'Inter Tight',Inter,sans-serif;letter-spacing:-.01em;font-variant-numeric:tabular-nums;color:var(--ink)">$15.300</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px;color:var(--mu2)"><path d="M9 18l6-6-6-6"></path></svg>
+      </button>
+      <button type="button" style="width:100%;display:flex;align-items:center;gap:13px;padding:0 16px;min-height:64px;text-align:left;background:transparent;border:0;border-top:1px solid var(--bd);cursor:pointer;font-family:inherit">
+        <span style="width:40px;height:40px;border-radius:10px;border:1px solid var(--bd);display:grid;place-items:center;flex:none"><img src="v2/public/metodos/amipass.png" alt="" style="width:30px;height:30px;object-fit:contain"></span>
+        <span style="flex:1;min-width:0"><span style="display:block;font:500 15px Inter,sans-serif;color:var(--ink)">Amipass</span><span style="display:block;font:400 12px Inter,sans-serif;color:var(--mu);margin-top:2px">Total del día en la máquina</span></span>
+        <span style="font:600 17px 'Inter Tight',Inter,sans-serif;letter-spacing:-.01em;font-variant-numeric:tabular-nums;color:var(--mu2)">$0</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px;color:var(--mu2)"><path d="M9 18l6-6-6-6"></path></svg>
+      </button>
+    </div>
+
+    <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:9px">
+      <p style="font:600 11px/1 Inter,sans-serif;text-transform:uppercase;letter-spacing:.1em;color:var(--mu);margin:0">Proveedores pagados</p>
+      <span style="font:600 13px 'Inter Tight',Inter,sans-serif;font-variant-numeric:tabular-nums;color:var(--neg)">−$74.200</span>
+    </div>
+    <div style="background:var(--cd);border:1px solid var(--bd);border-radius:16px;box-shadow:var(--sh);overflow:hidden;margin-bottom:10px">
+      <button type="button" style="width:100%;display:flex;align-items:center;gap:13px;padding:0 16px;min-height:64px;text-align:left;background:transparent;border:0;cursor:pointer;font-family:inherit">
+        <span style="width:40px;height:40px;border-radius:10px;border:1px solid var(--bd);background:var(--chip);display:grid;place-items:center;flex:none;font:600 13px Inter,sans-serif;color:var(--in2)">CC</span>
+        <span style="flex:1;min-width:0"><span style="display:block;font:500 15px Inter,sans-serif;color:var(--ink)">Coca-Cola Embonor</span><span style="display:inline-flex;align-items:center;gap:4px;margin-top:4px;font:600 11px Inter,sans-serif;background:var(--posT);color:var(--pos);border-radius:6px;padding:3px 6px">Efectivo</span></span>
+        <span style="font:600 17px 'Inter Tight',Inter,sans-serif;letter-spacing:-.01em;font-variant-numeric:tabular-nums;color:var(--neg)">−$42.800</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px;color:var(--mu2)"><path d="M9 18l6-6-6-6"></path></svg>
+      </button>
+      <button type="button" style="width:100%;display:flex;align-items:center;gap:13px;padding:0 16px;min-height:64px;text-align:left;background:transparent;border:0;border-top:1px solid var(--bd);cursor:pointer;font-family:inherit">
+        <span style="width:40px;height:40px;border-radius:10px;border:1px solid var(--bd);background:var(--chip);display:grid;place-items:center;flex:none;font:600 13px Inter,sans-serif;color:var(--in2)">PS</span>
+        <span style="flex:1;min-width:0"><span style="display:block;font:500 15px Inter,sans-serif;color:var(--ink)">Panadería San José</span><span style="display:inline-flex;align-items:center;gap:4px;margin-top:4px;font:600 11px Inter,sans-serif;background:var(--accT);color:var(--acc);border-radius:6px;padding:3px 6px">Transferencia</span></span>
+        <span style="font:600 17px 'Inter Tight',Inter,sans-serif;letter-spacing:-.01em;font-variant-numeric:tabular-nums;color:var(--neg)">−$31.400</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px;color:var(--mu2)"><path d="M9 18l6-6-6-6"></path></svg>
+      </button>
+    </div>
+    <button type="button" style="width:100%;min-height:48px;border-radius:12px;border:1px solid var(--bd2);background:var(--cd);color:var(--acc);display:flex;align-items:center;justify-content:center;gap:7px;font:600 14px Inter,sans-serif;cursor:pointer;margin-bottom:20px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:17px;height:17px"><path d="M12 5v14M5 12h14"></path></svg>Agregar proveedor</button>
+
+    <p style="font:600 11px/1 Inter,sans-serif;text-transform:uppercase;letter-spacing:.1em;color:var(--mu);margin:0 0 9px">Caja</p>
+    <div style="background:var(--cd);border:1px solid var(--bd);border-radius:16px;box-shadow:var(--sh);overflow:hidden">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 16px;min-height:60px">
+        <span><span style="display:block;font:500 15px Inter,sans-serif;color:var(--ink)">Fondo inicial</span><span style="display:block;font:400 12px Inter,sans-serif;color:var(--mu);margin-top:2px">Con lo que partió la caja</span></span>
+        <span style="font:600 17px 'Inter Tight',Inter,sans-serif;font-variant-numeric:tabular-nums;color:var(--ink)">$40.000</span>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px;background:var(--chip);border-top:1px solid var(--bd);border-bottom:1px solid var(--bd)">
+        <span><span style="display:block;font:600 15px Inter,sans-serif;color:var(--ink)">Efectivo esperado</span><span style="display:block;font:400 12px Inter,sans-serif;color:var(--mu);margin-top:2px">fondo + efectivo − prov. en efectivo</span></span>
+        <span style="font:700 20px 'Inter Tight',Inter,sans-serif;letter-spacing:-.02em;font-variant-numeric:tabular-nums;color:var(--ink)">$195.600</span>
+      </div>
+      <div style="padding:14px 16px">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+          <span style="font:500 15px Inter,sans-serif;color:var(--ink)">¿Contaste la caja?</span>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:3px;padding:3px;border-radius:11px;background:var(--chip);border:1px solid var(--bd)">
+            <button type="button" style="min-height:38px;min-width:54px;border:0;border-radius:8px;background:transparent;color:var(--mu);font:500 13px Inter,sans-serif;cursor:pointer">No</button>
+            <button type="button" style="min-height:38px;min-width:54px;border:0;border-radius:8px;background:var(--cd);box-shadow:var(--sh);color:var(--ink);font:600 13px Inter,sans-serif;cursor:pointer">Sí</button>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:14px;padding-top:14px;border-top:1px solid var(--bd)">
+          <span style="font:400 13px Inter,sans-serif;color:var(--mu)">Contado <b style="font-weight:600;font-variant-numeric:tabular-nums;color:var(--ink)">$193.600</b></span>
+          <span style="font:600 12px Inter,sans-serif;background:var(--negT);color:var(--neg);border-radius:7px;padding:5px 8px;font-variant-numeric:tabular-nums">Descuadre −$2.000</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div style="flex:none;background:var(--cd);border-top:1px solid var(--bd);padding:12px 16px 14px;display:flex;align-items:center;gap:12px;box-shadow:0 -6px 20px -12px rgba(16,24,40,.18)">
+    <div style="flex:1;min-width:0">
+      <p style="font:600 10.5px/1 Inter,sans-serif;text-transform:uppercase;letter-spacing:.1em;color:var(--mu);margin:0 0 5px">Neto del día</p>
+      <p style="font:700 24px/1 'Inter Tight',Inter,sans-serif;letter-spacing:-.025em;font-variant-numeric:tabular-nums;color:var(--ink);margin:0">$412.300</p>
+      <p style="display:flex;align-items:center;gap:5px;font:400 11px Inter,sans-serif;color:var(--mu);margin:5px 0 0"><span style="width:6px;height:6px;border-radius:999px;background:var(--pos)"></span>Borrador guardado</p>
+    </div>
+    <button type="button" style="border:0;border-radius:13px;background:var(--acc);color:#fff;min-height:50px;padding:0 22px;font:600 15px Inter,sans-serif;cursor:pointer">Cerrar el día</button>
+  </div>
+</div>
+</div>
+
+<!-- ══════════ PLANILLA ══════════ -->
+<div style="flex:none;display:flex;flex-direction:column;gap:9px">
+<div style="display:flex;align-items:baseline;gap:8px"><span style="font:600 10.5px ui-monospace,Menlo,monospace;background:rgba(0,0,0,.08);color:#0F1115;border-radius:5px;padding:3px 7px">1a</span><span style="font:400 11px/1.3 Inter,sans-serif;color:rgba(0,0,0,.55)">Planilla del día · el cuaderno como tabla financiera</span></div>
+<div style="width:390px;height:844px;display:flex;flex-direction:column;background:var(--cv);border:1px solid var(--bd2);border-radius:26px;overflow:hidden;box-shadow:var(--sh2)">
+  <div style="flex:none;background:var(--cd);border-bottom:1px solid var(--bd);padding:16px">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+      <div style="display:flex;align-items:center;gap:8px;min-width:0">
+        <span style="width:36px;height:36px;margin-left:-6px;border-radius:10px;display:grid;place-items:center;color:var(--in2);flex:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px"><path d="M15 18l-6-6 6-6"></path></svg></span>
+        <div style="min-width:0">
+          <h1 style="font:600 20px/1.1 'Inter Tight',Inter,sans-serif;letter-spacing:-.02em;color:var(--ink);margin:0">Miércoles 16 sept</h1>
+          <p style="font:400 12px Inter,sans-serif;color:var(--mu);margin:3px 0 0">Planilla del día</p>
+        </div>
+      </div>
+      <div style="display:flex;gap:6px;flex:none">
+        <span style="width:38px;height:38px;border-radius:10px;background:var(--cd);border:1px solid var(--bd2);color:var(--in2);display:grid;place-items:center"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="width:17px;height:17px"><path d="M15 18l-6-6 6-6"></path></svg></span>
+        <span style="width:38px;height:38px;border-radius:10px;background:var(--cd);border:1px solid var(--bd2);color:var(--mu2);display:grid;place-items:center;opacity:.5"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="width:17px;height:17px"><path d="M9 18l6-6-6-6"></path></svg></span>
+      </div>
+    </div>
+  </div>
+  <div style="flex:1;min-height:0;overflow:hidden;padding:16px 16px 0">
+    <section style="background:var(--cd);border:1px solid var(--bd);border-radius:16px;box-shadow:var(--sh);padding:18px;margin-bottom:12px">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+        <p style="font:600 11px/1 Inter,sans-serif;text-transform:uppercase;letter-spacing:.1em;color:var(--mu);margin:0">Neto del día</p>
+        <span style="font:600 11px/1 Inter,sans-serif;background:var(--posT);color:var(--pos);border-radius:7px;padding:5px 8px">Completo</span>
+      </div>
+      <p style="font:700 36px/1.05 'Inter Tight',Inter,sans-serif;letter-spacing:-.03em;font-variant-numeric:tabular-nums;color:var(--ink);margin:10px 0 0">$412.300</p>
+      <div style="display:flex;gap:12px;margin-top:16px;padding-top:14px;border-top:1px solid var(--bd)">
+        <div style="flex:1"><p style="font:400 12px/1 Inter,sans-serif;color:var(--mu);margin:0 0 5px">Ventas</p><p style="font:600 15px/1 'Inter Tight',Inter,sans-serif;font-variant-numeric:tabular-nums;margin:0;color:var(--ink)">$486.500</p></div>
+        <div style="width:1px;background:var(--bd)"></div>
+        <div style="flex:1"><p style="font:400 12px/1 Inter,sans-serif;color:var(--mu);margin:0 0 5px">Proveedores</p><p style="font:600 15px/1 'Inter Tight',Inter,sans-serif;font-variant-numeric:tabular-nums;margin:0;color:var(--neg)">−$74.200</p></div>
+        <div style="width:1px;background:var(--bd)"></div>
+        <div style="flex:1"><p style="font:400 12px/1 Inter,sans-serif;color:var(--mu);margin:0 0 5px">En caja</p><p style="font:600 15px/1 'Inter Tight',Inter,sans-serif;font-variant-numeric:tabular-nums;margin:0;color:var(--ink)">$164.200</p></div>
+      </div>
+    </section>
+
+    <article style="background:var(--cd);border:1px solid var(--bd);border-radius:16px;box-shadow:var(--sh);overflow:hidden">
+      <div style="padding:14px 18px;border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between;gap:10px">
+        <div style="min-width:0">
+          <h2 style="font:600 15px Inter,sans-serif;color:var(--ink);margin:0">Día completo</h2>
+          <p style="font:400 12px Inter,sans-serif;color:var(--mu);margin:3px 0 0">Camila · cerrado 21:14</p>
+        </div>
+        <span style="font:600 11px/1 Inter,sans-serif;background:var(--posT);color:var(--pos);border-radius:7px;padding:5px 8px;flex:none">Cerrado</span>
+      </div>
+      <div style="padding:6px 18px 14px">
+        <p style="font:600 10.5px/1 Inter,sans-serif;text-transform:uppercase;letter-spacing:.1em;color:var(--mu2);margin:14px 0 4px">Ventas</p>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:40px;border-bottom:1px solid var(--bd)"><span style="font:400 14px Inter,sans-serif;color:var(--in2)">Efectivo</span><span style="font:500 14px Inter,sans-serif;font-variant-numeric:tabular-nums;color:var(--ink)">$198.400</span></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:40px;border-bottom:1px solid var(--bd)"><span style="font:400 14px Inter,sans-serif;color:var(--in2)">Getnet</span><span style="font:500 14px Inter,sans-serif;font-variant-numeric:tabular-nums;color:var(--ink)">$214.600</span></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:40px;border-bottom:1px solid var(--bd)"><span style="font:400 14px Inter,sans-serif;color:var(--in2)">Mercado Pago</span><span style="font:500 14px Inter,sans-serif;font-variant-numeric:tabular-nums;color:var(--ink)">$48.200</span></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:40px;border-bottom:1px solid var(--bd)"><span style="font:400 14px Inter,sans-serif;color:var(--in2)">Edenred</span><span style="font:500 14px Inter,sans-serif;font-variant-numeric:tabular-nums;color:var(--ink)">$15.300</span></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:40px;border-bottom:1px solid var(--bd)"><span style="font:400 14px Inter,sans-serif;color:var(--in2)">Amipass</span><span style="font:500 14px Inter,sans-serif;font-variant-numeric:tabular-nums;color:var(--ink)">$10.000</span></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:40px"><span style="font:600 14px Inter,sans-serif;color:var(--ink)">Total ventas</span><span style="font:600 15px 'Inter Tight',Inter,sans-serif;font-variant-numeric:tabular-nums;color:var(--ink)">$486.500</span></div>
+
+        <p style="font:600 10.5px/1 Inter,sans-serif;text-transform:uppercase;letter-spacing:.1em;color:var(--mu2);margin:14px 0 4px">Proveedores</p>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:40px;border-bottom:1px solid var(--bd)"><span style="display:flex;align-items:center;gap:7px;font:400 14px Inter,sans-serif;color:var(--in2)">Coca-Cola Embonor<span style="font:500 11px Inter,sans-serif;color:var(--mu2)">efectivo</span></span><span style="font:500 14px Inter,sans-serif;font-variant-numeric:tabular-nums;color:var(--neg)">−$42.800</span></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:40px"><span style="display:flex;align-items:center;gap:7px;font:400 14px Inter,sans-serif;color:var(--in2)">Panadería San José<span style="font:500 11px Inter,sans-serif;color:var(--mu2)">transferencia</span></span><span style="font:500 14px Inter,sans-serif;font-variant-numeric:tabular-nums;color:var(--neg)">−$31.400</span></div>
+
+        <p style="font:600 10.5px/1 Inter,sans-serif;text-transform:uppercase;letter-spacing:.1em;color:var(--mu2);margin:14px 0 4px">Caja</p>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:40px;border-bottom:1px solid var(--bd)"><span style="font:400 14px Inter,sans-serif;color:var(--in2)">Fondo inicial</span><span style="font:500 14px Inter,sans-serif;font-variant-numeric:tabular-nums;color:var(--ink)">$40.000</span></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:40px;border-bottom:1px solid var(--bd)"><span style="font:400 14px Inter,sans-serif;color:var(--in2)">Efectivo esperado</span><span style="font:500 14px Inter,sans-serif;font-variant-numeric:tabular-nums;color:var(--ink)">$164.200</span></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:40px"><span style="display:flex;align-items:center;gap:7px;font:400 14px Inter,sans-serif;color:var(--in2)">Contado<span style="font:600 11px Inter,sans-serif;background:var(--posT);color:var(--pos);border-radius:6px;padding:3px 6px">cuadra</span></span><span style="font:500 14px Inter,sans-serif;font-variant-numeric:tabular-nums;color:var(--pos)">$164.200</span></div>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 18px;background:var(--chip);border-top:1px solid var(--bd)">
+        <span style="font:600 14px Inter,sans-serif;color:var(--ink)">Neto del turno</span>
+        <span style="font:700 22px 'Inter Tight',Inter,sans-serif;letter-spacing:-.02em;font-variant-numeric:tabular-nums;color:var(--ink)">$412.300</span>
+      </div>
+      <div style="display:flex;gap:6px;padding:10px 12px;border-top:1px solid var(--bd)">
+        <span style="min-height:40px;display:inline-flex;align-items:center;gap:6px;padding:0 12px;border-radius:10px;border:1px solid var(--bd2);color:var(--in2);font:600 13px Inter,sans-serif"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 113 3L7 19l-4 1 1-4 12.5-12.5z"></path></svg>Corregir</span>
+        <span style="min-height:40px;display:inline-flex;align-items:center;gap:6px;padding:0 12px;border-radius:10px;border:1px solid var(--bd2);color:var(--in2);font:600 13px Inter,sans-serif"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px"><path d="M12 3v18M4 12h6M14 12h6M17 9l3 3-3 3M7 9l-3 3 3 3"></path></svg>Dividir</span>
+        <span style="min-height:40px;display:inline-flex;align-items:center;gap:6px;padding:0 12px;border-radius:10px;color:var(--neg);font:600 13px Inter,sans-serif;margin-left:auto"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px"><path d="M5 7h14M10 7V5h4v2M7 7l1 12h8l1-12"></path></svg>Eliminar</span>
+      </div>
+    </article>
+  </div>
+</div>
+</div>
+
+<!-- ══════════ ANALISIS MOVIL ══════════ -->
+<div style="flex:none;display:flex;flex-direction:column;gap:9px">
+<div style="display:flex;align-items:baseline;gap:8px"><span style="font:600 10.5px ui-monospace,Menlo,monospace;background:rgba(0,0,0,.08);color:#0F1115;border-radius:5px;padding:3px 7px">1a</span><span style="font:400 11px/1.3 Inter,sans-serif;color:rgba(0,0,0,.55)">Análisis · KPIs con variación y gráfico sobrio</span></div>
+<div style="width:390px;height:844px;display:flex;flex-direction:column;background:var(--cv);border:1px solid var(--bd2);border-radius:26px;overflow:hidden;box-shadow:var(--sh2)">
+  <div style="flex:1;min-height:0;overflow:hidden;padding:22px 16px 0">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px">
+      <div>
+        <p style="font:600 11px/1 Inter,sans-serif;text-transform:uppercase;letter-spacing:.1em;color:var(--mu);margin:0 0 5px">10 – 16 septiembre</p>
+        <h1 style="font:600 20px/1.1 'Inter Tight',Inter,sans-serif;letter-spacing:-.02em;color:var(--ink);margin:0">Análisis</h1>
+      </div>
+      <button type="button" style="flex:none;min-height:40px;display:inline-flex;align-items:center;gap:7px;padding:0 12px;border-radius:11px;background:var(--cd);border:1px solid var(--bd2);color:var(--in2);font:600 13px Inter,sans-serif;cursor:pointer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 21h16"></path></svg>Exportar</button>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:3px;padding:3px;border-radius:12px;background:var(--chip);border:1px solid var(--bd);margin-bottom:16px">
+      <button type="button" style="min-height:38px;border:0;border-radius:9px;background:var(--cd);box-shadow:var(--sh);color:var(--ink);font:600 13px Inter,sans-serif;cursor:pointer">7 días</button>
+      <button type="button" style="min-height:38px;border:0;border-radius:9px;background:transparent;color:var(--mu);font:500 13px Inter,sans-serif;cursor:pointer">30 días</button>
+      <button type="button" style="min-height:38px;border:0;border-radius:9px;background:transparent;color:var(--mu);font:500 13px Inter,sans-serif;cursor:pointer">Este mes</button>
+    </div>
+
+    <div style="background:var(--cd);border:1px solid var(--bd);border-radius:16px;box-shadow:var(--sh);overflow:hidden;margin-bottom:12px">
+      <div style="display:grid;grid-template-columns:1fr 1fr">
+        <div style="padding:16px;border-right:1px solid var(--bd);border-bottom:1px solid var(--bd)">
+          <p style="font:400 12px/1 Inter,sans-serif;color:var(--mu);margin:0 0 7px">Ventas</p>
+          <p style="font:600 20px/1 'Inter Tight',Inter,sans-serif;letter-spacing:-.02em;font-variant-numeric:tabular-nums;color:var(--ink);margin:0">$3.284.100</p>
+          <p style="display:inline-flex;align-items:center;gap:3px;font:600 12px Inter,sans-serif;color:var(--pos);margin:8px 0 0"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="width:11px;height:11px"><path d="M6 15l6-6 6 6"></path></svg>11%</p>
+        </div>
+        <div style="padding:16px;border-bottom:1px solid var(--bd)">
+          <p style="font:400 12px/1 Inter,sans-serif;color:var(--mu);margin:0 0 7px">Proveedores</p>
+          <p style="font:600 20px/1 'Inter Tight',Inter,sans-serif;letter-spacing:-.02em;font-variant-numeric:tabular-nums;color:var(--ink);margin:0">$612.400</p>
+          <p style="display:inline-flex;align-items:center;gap:3px;font:600 12px Inter,sans-serif;color:var(--neg);margin:8px 0 0"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="width:11px;height:11px"><path d="M6 9l6 6 6-6"></path></svg>8%</p>
+        </div>
+        <div style="padding:16px;border-right:1px solid var(--bd)">
+          <p style="font:400 12px/1 Inter,sans-serif;color:var(--mu);margin:0 0 7px">Neto</p>
+          <p style="font:600 20px/1 'Inter Tight',Inter,sans-serif;letter-spacing:-.02em;font-variant-numeric:tabular-nums;color:var(--ink);margin:0">$2.671.700</p>
+          <p style="display:inline-flex;align-items:center;gap:3px;font:600 12px Inter,sans-serif;color:var(--pos);margin:8px 0 0"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="width:11px;height:11px"><path d="M6 15l6-6 6 6"></path></svg>13%</p>
+        </div>
+        <div style="padding:16px">
+          <p style="font:400 12px/1 Inter,sans-serif;color:var(--mu);margin:0 0 7px">Efectivo neto</p>
+          <p style="font:600 20px/1 'Inter Tight',Inter,sans-serif;letter-spacing:-.02em;font-variant-numeric:tabular-nums;color:var(--ink);margin:0">$1.108.900</p>
+          <p style="font:500 12px Inter,sans-serif;color:var(--mu2);margin:8px 0 0">≈ igual</p>
+        </div>
+      </div>
+    </div>
+    <p style="font:400 12px/1.5 Inter,sans-serif;color:var(--mu);margin:0 0 12px">7 días con registro · <span style="color:var(--wrn);font-weight:600">1 con borrador</span></p>
+
+    <div style="background:var(--cd);border:1px solid var(--bd);border-radius:16px;box-shadow:var(--sh);padding:18px;margin-bottom:12px">
+      <div style="display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:16px">
+        <p style="font:500 14px Inter,sans-serif;color:var(--ink);margin:0">Neto por día</p>
+        <span style="font:400 12px Inter,sans-serif;color:var(--mu)">promedio <b style="font-weight:600;font-variant-numeric:tabular-nums;color:var(--in2)">$381.671</b></span>
+      </div>
+      <div style="height:180px;display:flex;gap:10px">
+        <div style="width:42px;flex:none;display:flex;flex-direction:column;justify-content:space-between;font:400 11px Inter,sans-serif;color:var(--mu2);text-align:right;padding-bottom:22px"><span>$600k</span><span>$400k</span><span>$200k</span><span>$0</span></div>
+        <div style="flex:1;display:flex;flex-direction:column">
+          <div style="flex:1;position:relative">
+            <div style="position:absolute;inset:0;display:flex;flex-direction:column;justify-content:space-between"><span style="border-top:1px solid var(--bd)"></span><span style="border-top:1px solid var(--bd)"></span><span style="border-top:1px solid var(--bd)"></span><span style="border-top:1px solid var(--bd2)"></span></div>
+            <div style="position:absolute;left:0;right:0;top:36%;border-top:1px dashed var(--acc);opacity:.55"></div>
+            <div style="position:absolute;inset:0;display:flex;align-items:flex-end;gap:7px">
+              <span style="flex:1;height:63%;background:var(--ink);border-radius:4px 4px 0 0"></span>
+              <span style="flex:1;height:71%;background:var(--ink);border-radius:4px 4px 0 0"></span>
+              <span style="flex:1;height:52%;background:var(--ink);border-radius:4px 4px 0 0"></span>
+              <span style="flex:1;height:78%;background:var(--ink);border-radius:4px 4px 0 0"></span>
+              <span style="flex:1;height:8%;background:var(--neg);border-radius:4px 4px 0 0"></span>
+              <span style="flex:1;height:88%;background:var(--acc);border-radius:4px 4px 0 0"></span>
+              <span style="flex:1;height:69%;background:var(--ink);border-radius:4px 4px 0 0"></span>
+            </div>
+          </div>
+          <div style="display:flex;gap:7px;padding-top:8px;font:400 11px Inter,sans-serif;color:var(--mu2)"><span style="flex:1;text-align:center">jue</span><span style="flex:1;text-align:center">vie</span><span style="flex:1;text-align:center">sáb</span><span style="flex:1;text-align:center">dom</span><span style="flex:1;text-align:center">lun</span><span style="flex:1;text-align:center;color:var(--acc);font-weight:600">mar</span><span style="flex:1;text-align:center">mié</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div style="background:var(--cd);border:1px solid var(--bd);border-radius:16px;box-shadow:var(--sh);overflow:hidden">
+      <p style="font:500 14px Inter,sans-serif;color:var(--ink);margin:0;padding:16px 18px 12px">Ventas por método</p>
+      <div style="display:flex;align-items:center;gap:13px;padding:0 18px;min-height:60px;border-top:1px solid var(--bd)">
+        <span style="width:40px;height:40px;border-radius:10px;border:1px solid var(--bd);display:grid;place-items:center;flex:none"><svg viewBox="0 0 24 24" fill="none" stroke="#047857" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:19px;height:19px"><path d="M3 7h18v10H3zM12 9.7a2.3 2.3 0 100 4.6"></path></svg></span>
+        <span style="flex:1;min-width:0"><span style="display:block;font:500 14px Inter,sans-serif;color:var(--ink)">Efectivo</span><span style="display:block;height:4px;border-radius:999px;background:var(--chip);margin-top:6px"><span style="display:block;height:100%;width:43%;border-radius:999px;background:#047857"></span></span></span>
+        <span style="text-align:right;flex:none"><span style="display:block;font:600 15px 'Inter Tight',Inter,sans-serif;font-variant-numeric:tabular-nums;color:var(--ink)">$1.402.300</span><span style="display:block;font:400 11px Inter,sans-serif;color:var(--mu2);margin-top:2px">43%</span></span>
+      </div>
+      <div style="display:flex;align-items:center;gap:13px;padding:0 18px;min-height:60px;border-top:1px solid var(--bd)">
+        <span style="width:40px;height:40px;border-radius:10px;border:1px solid var(--bd);display:grid;place-items:center;flex:none"><img src="v2/public/metodos/getnet.png" alt="" style="width:30px;height:30px;object-fit:contain"></span>
+        <span style="flex:1;min-width:0"><span style="display:block;font:500 14px Inter,sans-serif;color:var(--ink)">Getnet</span><span style="display:block;height:4px;border-radius:999px;background:var(--chip);margin-top:6px"><span style="display:block;height:100%;width:39%;border-radius:999px;background:#D2232A"></span></span></span>
+        <span style="text-align:right;flex:none"><span style="display:block;font:600 15px 'Inter Tight',Inter,sans-serif;font-variant-numeric:tabular-nums;color:var(--ink)">$1.284.600</span><span style="display:block;font:400 11px Inter,sans-serif;color:var(--mu2);margin-top:2px">39%</span></span>
+      </div>
+      <div style="display:flex;align-items:center;gap:13px;padding:0 18px;min-height:60px;border-top:1px solid var(--bd)">
+        <span style="width:40px;height:40px;border-radius:10px;border:1px solid var(--bd);display:grid;place-items:center;flex:none"><img src="v2/public/metodos/mercadopago.png" alt="" style="width:30px;height:30px;object-fit:contain"></span>
+        <span style="flex:1;min-width:0"><span style="display:block;font:500 14px Inter,sans-serif;color:var(--ink)">Mercado Pago</span><span style="display:block;height:4px;border-radius:999px;background:var(--chip);margin-top:6px"><span style="display:block;height:100%;width:13%;border-radius:999px;background:#009EE3"></span></span></span>
+        <span style="text-align:right;flex:none"><span style="display:block;font:600 15px 'Inter Tight',Inter,sans-serif;font-variant-numeric:tabular-nums;color:var(--ink)">$412.800</span><span style="display:block;font:400 11px Inter,sans-serif;color:var(--mu2);margin-top:2px">13%</span></span>
+      </div>
+    </div>
+  </div>
+  <nav style="flex:none;position:relative;background:var(--cd);border-top:1px solid var(--bd);padding-bottom:10px">
+    <div style="display:flex;align-items:stretch">
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 0 2px;min-height:58px;color:var(--mu)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:21px;height:21px"><path d="M4 10l8-6 8 6M6 9v10h12V9"></path></svg><span style="font:500 11px Inter,sans-serif">Hoy</span></div>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 0 2px;min-height:58px;color:var(--mu)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:21px;height:21px"><path d="M4 12a8 8 0 108-8 8.2 8.2 0 00-5.7 2.3L4 8.5M4 4v4.5h4.5M12 8v4l3 2"></path></svg><span style="font:500 11px Inter,sans-serif">Historial</span></div>
+      <div style="width:76px;flex:none"></div>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 0 2px;min-height:58px;color:var(--acc)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" style="width:21px;height:21px"><path d="M5 19V9M12 19V5M19 19v-7"></path></svg><span style="font:600 11px Inter,sans-serif">Análisis</span></div>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 0 2px;min-height:58px;color:var(--mu)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:21px;height:21px"><path d="M12 15a3 3 0 100-6 3 3 0 000 6zM19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"></path></svg><span style="font:500 11px Inter,sans-serif">Ajustes</span></div>
+    </div>
+    <button type="button" aria-label="Cerrar caja" style="position:absolute;left:50%;transform:translateX(-50%);top:-22px;width:58px;height:58px;border-radius:19px;border:3px solid var(--cd);background:var(--acc);color:#fff;display:grid;place-items:center;box-shadow:0 8px 20px -6px rgba(79,70,229,.5);cursor:pointer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" style="width:24px;height:24px"><path d="M3 7h18v10H3zM12 9.7a2.3 2.3 0 100 4.6"></path></svg></button>
+  </nav>
+</div>
+</div>
+
+<!-- ══════════ OSCURO ══════════ -->
+<div class="dk" style="flex:none;display:flex;flex-direction:column;gap:9px">
+<div style="display:flex;align-items:baseline;gap:8px"><span style="font:600 10.5px ui-monospace,Menlo,monospace;background:rgba(0,0,0,.08);color:#0F1115;border-radius:5px;padding:3px 7px">1a</span><span style="font:400 11px/1.3 Inter,sans-serif;color:rgba(0,0,0,.55)">Hoy en oscuro · mismos tokens, otra escala de luz</span></div>
+<div style="width:390px;height:844px;display:flex;flex-direction:column;background:var(--cv);border:1px solid var(--bd2);border-radius:26px;overflow:hidden;box-shadow:var(--sh2)">
+  <div style="flex:1;min-height:0;overflow:hidden;padding:22px 16px 0">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px">
+      <div>
+        <p style="font:600 11px/1 Inter,sans-serif;text-transform:uppercase;letter-spacing:.1em;color:var(--mu);margin:0 0 5px">Miércoles 16 de septiembre</p>
+        <p style="font:600 20px/1.1 'Inter Tight',Inter,sans-serif;letter-spacing:-.02em;color:var(--ink);margin:0">Hoy</p>
+      </div>
+      <div style="width:40px;height:40px;border-radius:12px;background:var(--chip);border:1px solid var(--bd);color:var(--in2);font:600 14px Inter,sans-serif;display:grid;place-items:center;flex:none">JM</div>
+    </div>
+    <section style="background:var(--cd);border:1px solid var(--bd);border-radius:16px;box-shadow:var(--sh);padding:18px 18px 16px;margin-bottom:12px">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+        <p style="font:600 11px/1 Inter,sans-serif;text-transform:uppercase;letter-spacing:.1em;color:var(--mu);margin:0">Neto del día</p>
+        <span style="font:600 11px/1 Inter,sans-serif;background:var(--accT);color:var(--acc);border-radius:7px;padding:5px 8px">Falta la tarde</span>
+      </div>
+      <p style="font:700 40px/1.05 'Inter Tight',Inter,sans-serif;letter-spacing:-.03em;font-variant-numeric:tabular-nums;color:var(--ink);margin:10px 0 0">$412.300</p>
+      <div style="display:flex;align-items:center;gap:8px;margin-top:8px">
+        <span style="display:inline-flex;align-items:center;gap:3px;font:600 12px Inter,sans-serif;color:var(--pos);background:var(--posT);border-radius:7px;padding:4px 7px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="width:11px;height:11px"><path d="M6 15l6-6 6 6"></path></svg>3,6%</span>
+        <span style="font:400 12px Inter,sans-serif;color:var(--mu)">vs. ayer <span style="font-variant-numeric:tabular-nums">$398.100</span></span>
+      </div>
+      <div style="display:flex;gap:12px;margin-top:16px;padding-top:14px;border-top:1px solid var(--bd)">
+        <div style="flex:1"><p style="font:400 12px/1 Inter,sans-serif;color:var(--mu);margin:0 0 5px">Ventas</p><p style="font:600 15px/1 'Inter Tight',Inter,sans-serif;font-variant-numeric:tabular-nums;color:var(--ink);margin:0">$486.500</p></div>
+        <div style="width:1px;background:var(--bd)"></div>
+        <div style="flex:1"><p style="font:400 12px/1 Inter,sans-serif;color:var(--mu);margin:0 0 5px">Proveedores</p><p style="font:600 15px/1 'Inter Tight',Inter,sans-serif;font-variant-numeric:tabular-nums;color:var(--neg);margin:0">−$74.200</p></div>
+        <div style="width:1px;background:var(--bd)"></div>
+        <div style="flex:1"><p style="font:400 12px/1 Inter,sans-serif;color:var(--mu);margin:0 0 5px">Turnos</p><p style="font:600 15px/1 'Inter Tight',Inter,sans-serif;color:var(--ink);margin:0">1 de 2</p></div>
+      </div>
+    </section>
+    <button type="button" style="width:100%;min-height:52px;border:0;border-radius:14px;background:var(--acc);color:#0B0D10;font:600 15px Inter,sans-serif;display:inline-flex;align-items:center;justify-content:center;gap:8px;margin-bottom:12px;cursor:pointer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M20 14.5A8 8 0 119.5 4a6.5 6.5 0 0010.5 10.5z"></path></svg>Cerrar turno tarde</button>
+    <section style="background:var(--cd);border:1px solid var(--bd);border-radius:16px;box-shadow:var(--sh);overflow:hidden;margin-bottom:12px">
+      <div style="padding:16px 18px 14px">
+        <div style="display:flex;align-items:baseline;justify-content:space-between;gap:10px">
+          <p style="font:500 14px/1 Inter,sans-serif;color:var(--in2);margin:0">Efectivo esperado en caja</p>
+          <span style="font:600 20px/1 'Inter Tight',Inter,sans-serif;letter-spacing:-.02em;font-variant-numeric:tabular-nums;color:var(--ink)">$164.200</span>
+        </div>
+        <p style="font:400 12px/1.4 Inter,sans-serif;color:var(--mu2);margin:6px 0 0">Fondo $40.000 + efectivo $198.400 − proveedores en efectivo $42.800</p>
+        <div style="display:flex;height:6px;border-radius:999px;overflow:hidden;margin-top:14px;gap:2px">
+          <span style="width:41%;background:#34D399;border-radius:999px"></span>
+          <span style="width:44%;background:#F26A70;border-radius:999px"></span>
+          <span style="width:10%;background:#4FB8E8;border-radius:999px"></span>
+          <span style="width:3%;background:#F07A7A;border-radius:999px"></span>
+          <span style="width:2%;background:#F7A863;border-radius:999px"></span>
+        </div>
+      </div>
+      <div style="border-top:1px solid var(--bd);display:flex;align-items:center;gap:12px;padding:12px 18px;min-height:60px">
+        <span style="width:40px;height:40px;border-radius:10px;border:1px solid var(--bd);background:var(--chip);display:grid;place-items:center;flex:none"><svg viewBox="0 0 24 24" fill="none" stroke="#34D399" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:19px;height:19px"><path d="M3 7h18v10H3zM12 9.7a2.3 2.3 0 100 4.6"></path></svg></span>
+        <span style="flex:1;min-width:0;font:500 14px Inter,sans-serif;color:var(--ink)">Efectivo</span>
+        <span style="font:400 12px Inter,sans-serif;color:var(--mu2);font-variant-numeric:tabular-nums">41%</span>
+        <span style="font:600 15px 'Inter Tight',Inter,sans-serif;font-variant-numeric:tabular-nums;color:var(--ink);min-width:86px;text-align:right">$198.400</span>
+      </div>
+      <div style="border-top:1px solid var(--bd);display:flex;align-items:center;gap:12px;padding:12px 18px;min-height:60px">
+        <span style="width:40px;height:40px;border-radius:10px;border:1px solid var(--bd);background:#F3F4F6;display:grid;place-items:center;flex:none"><img src="v2/public/metodos/getnet.png" alt="" style="width:30px;height:30px;object-fit:contain"></span>
+        <span style="flex:1;min-width:0;font:500 14px Inter,sans-serif;color:var(--ink)">Getnet</span>
+        <span style="font:400 12px Inter,sans-serif;color:var(--mu2);font-variant-numeric:tabular-nums">44%</span>
+        <span style="font:600 15px 'Inter Tight',Inter,sans-serif;font-variant-numeric:tabular-nums;color:var(--ink);min-width:86px;text-align:right">$214.600</span>
+      </div>
+      <div style="border-top:1px solid var(--bd);display:flex;align-items:center;gap:12px;padding:12px 18px;min-height:60px">
+        <span style="width:40px;height:40px;border-radius:10px;border:1px solid var(--bd);background:#F3F4F6;display:grid;place-items:center;flex:none"><img src="v2/public/metodos/mercadopago.png" alt="" style="width:30px;height:30px;object-fit:contain"></span>
+        <span style="flex:1;min-width:0;font:500 14px Inter,sans-serif;color:var(--ink)">Mercado Pago</span>
+        <span style="font:400 12px Inter,sans-serif;color:var(--mu2);font-variant-numeric:tabular-nums">10%</span>
+        <span style="font:600 15px 'Inter Tight',Inter,sans-serif;font-variant-numeric:tabular-nums;color:var(--ink);min-width:86px;text-align:right">$48.200</span>
+      </div>
+    </section>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div style="background:var(--cd);border:1px solid var(--bd);border-radius:14px;box-shadow:var(--sh);padding:14px">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:8px"><span style="font:500 13px Inter,sans-serif;color:var(--in2)">Mañana</span><span style="font:600 10px/1 Inter,sans-serif;text-transform:uppercase;letter-spacing:.06em;background:var(--posT);color:var(--pos);border-radius:6px;padding:4px 6px">Cerrado</span></div>
+        <p style="font:600 20px/1 'Inter Tight',Inter,sans-serif;letter-spacing:-.02em;font-variant-numeric:tabular-nums;color:var(--ink);margin:0">$486.500</p>
+        <p style="font:400 12px Inter,sans-serif;color:var(--mu);margin:5px 0 0">Camila · 14:52</p>
+      </div>
+      <div style="background:var(--cd);border:1px dashed var(--bd2);border-radius:14px;padding:14px">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:8px"><span style="font:500 13px Inter,sans-serif;color:var(--in2)">Tarde</span><span style="font:600 10px/1 Inter,sans-serif;text-transform:uppercase;letter-spacing:.06em;background:var(--chip);color:var(--mu);border-radius:6px;padding:4px 6px">Pendiente</span></div>
+        <p style="font:600 20px/1 'Inter Tight',Inter,sans-serif;color:var(--mu2);margin:0">—</p>
+        <p style="font:400 12px Inter,sans-serif;color:var(--mu);margin:5px 0 0">Sin registro</p>
+      </div>
+    </div>
+  </div>
+  <nav style="flex:none;position:relative;background:var(--cd);border-top:1px solid var(--bd);padding-bottom:10px">
+    <div style="display:flex;align-items:stretch">
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 0 2px;min-height:58px;color:var(--acc)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" style="width:21px;height:21px"><path d="M4 10l8-6 8 6M6 9v10h12V9"></path></svg><span style="font:600 11px Inter,sans-serif">Hoy</span></div>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 0 2px;min-height:58px;color:var(--mu)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:21px;height:21px"><path d="M4 12a8 8 0 108-8 8.2 8.2 0 00-5.7 2.3L4 8.5M4 4v4.5h4.5M12 8v4l3 2"></path></svg><span style="font:500 11px Inter,sans-serif">Historial</span></div>
+      <div style="width:76px;flex:none"></div>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 0 2px;min-height:58px;color:var(--mu)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:21px;height:21px"><path d="M5 19V9M12 19V5M19 19v-7"></path></svg><span style="font:500 11px Inter,sans-serif">Análisis</span></div>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 0 2px;min-height:58px;color:var(--mu)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:21px;height:21px"><path d="M12 15a3 3 0 100-6 3 3 0 000 6zM19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"></path></svg><span style="font:500 11px Inter,sans-serif">Ajustes</span></div>
+    </div>
+    <button type="button" aria-label="Cerrar caja" style="position:absolute;left:50%;transform:translateX(-50%);top:-22px;width:58px;height:58px;border-radius:19px;border:3px solid var(--cd);background:var(--acc);color:#0B0D10;display:grid;place-items:center;box-shadow:0 8px 20px -8px rgba(0,0,0,.8);cursor:pointer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" style="width:24px;height:24px"><path d="M3 7h18v10H3zM12 9.7a2.3 2.3 0 100 4.6"></path></svg></button>
+  </nav>
+</div>
+</div>
+
+<!-- ══════════ HISTORIAL ══════════ -->
+<div style="flex:none;display:flex;flex-direction:column;gap:9px">
+<div style="display:flex;align-items:baseline;gap:8px"><span style="font:600 10.5px ui-monospace,Menlo,monospace;background:rgba(0,0,0,.08);color:#0F1115;border-radius:5px;padding:3px 7px">1a</span><span style="font:400 11px/1.3 Inter,sans-serif;color:rgba(0,0,0,.55)">Historial · v_resumen_dia agrupado por mes</span></div>
+<div style="width:390px;height:844px;display:flex;flex-direction:column;background:var(--cv);border:1px solid var(--bd2);border-radius:26px;overflow:hidden;box-shadow:var(--sh2)">
+  <div style="flex:none;background:var(--cd);border-bottom:1px solid var(--bd);padding:20px 16px 14px">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px">
+      <div>
+        <p style="font:600 11px/1 Inter,sans-serif;text-transform:uppercase;letter-spacing:.1em;color:var(--mu);margin:0 0 5px">Últimos 30 días</p>
+        <h1 style="font:600 20px/1.1 'Inter Tight',Inter,sans-serif;letter-spacing:-.02em;color:var(--ink);margin:0">Historial</h1>
+      </div>
+      <button type="button" style="flex:none;width:40px;height:40px;border-radius:11px;background:var(--cd);border:1px solid var(--bd2);color:var(--in2);display:grid;place-items:center;cursor:pointer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="width:17px;height:17px"><path d="M11 4a7 7 0 100 14 7 7 0 000-14zM21 21l-4.35-4.35"></path></svg></button>
+    </div>
+    <div style="display:flex;gap:6px;overflow:hidden">
+      <button type="button" style="flex:none;min-height:34px;padding:0 13px;border-radius:9px;background:var(--ink);border:1px solid var(--ink);color:var(--cd);font:600 13px Inter,sans-serif;cursor:pointer">Todos</button>
+      <button type="button" style="flex:none;min-height:34px;padding:0 13px;border-radius:9px;background:var(--cd);border:1px solid var(--bd2);color:var(--in2);font:500 13px Inter,sans-serif;cursor:pointer">Borradores</button>
+      <button type="button" style="flex:none;min-height:34px;padding:0 13px;border-radius:9px;background:var(--cd);border:1px solid var(--bd2);color:var(--in2);font:500 13px Inter,sans-serif;cursor:pointer">Falta tarde</button>
+      <button type="button" style="flex:none;min-height:34px;padding:0 13px;border-radius:9px;background:var(--cd);border:1px solid var(--bd2);color:var(--in2);font:500 13px Inter,sans-serif;cursor:pointer">Descuadres</button>
+    </div>
+  </div>
+  <div style="flex:1;min-height:0;overflow:hidden;padding:0 16px">
+    <p style="font:600 11px/1 Inter,sans-serif;text-transform:uppercase;letter-spacing:.1em;color:var(--mu);margin:0;padding:16px 2px 9px">Septiembre de 2026</p>
+    <div style="background:var(--cd);border:1px solid var(--bd);border-radius:16px;box-shadow:var(--sh);overflow:hidden">
+      <div style="display:flex;align-items:center;gap:13px;padding:0 16px;min-height:72px">
+        <span style="width:46px;flex:none;text-align:center;padding:7px 0;border-radius:10px;background:var(--chip);border:1px solid var(--bd)"><span style="display:block;font:600 10px Inter,sans-serif;text-transform:uppercase;letter-spacing:.06em;color:var(--mu)">mié</span><span style="display:block;font:600 18px/1.1 'Inter Tight',Inter,sans-serif;font-variant-numeric:tabular-nums;color:var(--ink);margin-top:2px">16</span></span>
+        <span style="flex:1;min-width:0">
+          <span style="display:inline-flex;font:600 11px/1 Inter,sans-serif;background:var(--accT);color:var(--acc);border-radius:6px;padding:4px 7px">Falta la tarde</span>
+          <span style="display:block;font:400 12px Inter,sans-serif;color:var(--mu);margin-top:6px;font-variant-numeric:tabular-nums">$486.500 ventas · $74.200 prov.</span>
+        </span>
+        <span style="text-align:right;flex:none"><span style="display:block;font:600 17px 'Inter Tight',Inter,sans-serif;letter-spacing:-.015em;font-variant-numeric:tabular-nums;color:var(--ink)">$412.300</span><span style="display:block;font:400 11px Inter,sans-serif;color:var(--mu);margin-top:2px">neto</span></span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px;color:var(--mu2);flex:none"><path d="M9 18l6-6-6-6"></path></svg>
+      </div>
+      <div style="display:flex;align-items:center;gap:13px;padding:0 16px;min-height:72px;border-top:1px solid var(--bd)">
+        <span style="width:46px;flex:none;text-align:center;padding:7px 0;border-radius:10px;background:var(--chip);border:1px solid var(--bd)"><span style="display:block;font:600 10px Inter,sans-serif;text-transform:uppercase;letter-spacing:.06em;color:var(--mu)">mar</span><span style="display:block;font:600 18px/1.1 'Inter Tight',Inter,sans-serif;font-variant-numeric:tabular-nums;color:var(--ink);margin-top:2px">15</span></span>
+        <span style="flex:1;min-width:0">
+          <span style="display:inline-flex;gap:5px"><span style="font:600 11px/1 Inter,sans-serif;background:var(--posT);color:var(--pos);border-radius:6px;padding:4px 7px">Completo</span><span style="font:600 11px/1 Inter,sans-serif;background:var(--negT);color:var(--neg);border-radius:6px;padding:4px 7px">Descuadre</span></span>
+          <span style="display:block;font:400 12px Inter,sans-serif;color:var(--mu);margin-top:6px;font-variant-numeric:tabular-nums">$612.900 ventas · $98.400 prov.</span>
+        </span>
+        <span style="text-align:right;flex:none"><span style="display:block;font:600 17px 'Inter Tight',Inter,sans-serif;letter-spacing:-.015em;font-variant-numeric:tabular-nums;color:var(--ink)">$514.500</span><span style="display:block;font:400 11px Inter,sans-serif;color:var(--mu);margin-top:2px">neto</span></span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px;color:var(--mu2);flex:none"><path d="M9 18l6-6-6-6"></path></svg>
+      </div>
+      <div style="display:flex;align-items:center;gap:13px;padding:0 16px;min-height:72px;border-top:1px solid var(--bd)">
+        <span style="width:46px;flex:none;text-align:center;padding:7px 0;border-radius:10px;background:var(--wrnT);border:1px solid var(--bd)"><span style="display:block;font:600 10px Inter,sans-serif;text-transform:uppercase;letter-spacing:.06em;color:var(--wrn)">lun</span><span style="display:block;font:600 18px/1.1 'Inter Tight',Inter,sans-serif;font-variant-numeric:tabular-nums;color:var(--ink);margin-top:2px">14</span></span>
+        <span style="flex:1;min-width:0">
+          <span style="display:inline-flex;font:600 11px/1 Inter,sans-serif;background:var(--wrnT);color:var(--wrn);border-radius:6px;padding:4px 7px">Borrador sin cerrar</span>
+          <span style="display:block;font:400 12px Inter,sans-serif;color:var(--mu);margin-top:6px;font-variant-numeric:tabular-nums">$38.900 ventas · $6.200 prov.</span>
+        </span>
+        <span style="text-align:right;flex:none"><span style="display:block;font:600 17px 'Inter Tight',Inter,sans-serif;letter-spacing:-.015em;font-variant-numeric:tabular-nums;color:var(--ink)">$32.700</span><span style="display:block;font:400 11px Inter,sans-serif;color:var(--mu);margin-top:2px">neto</span></span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px;color:var(--mu2);flex:none"><path d="M9 18l6-6-6-6"></path></svg>
+      </div>
+      <div style="display:flex;align-items:center;gap:13px;padding:0 16px;min-height:72px;border-top:1px solid var(--bd)">
+        <span style="width:46px;flex:none;text-align:center;padding:7px 0;border-radius:10px;background:var(--chip);border:1px solid var(--bd)"><span style="display:block;font:600 10px Inter,sans-serif;text-transform:uppercase;letter-spacing:.06em;color:var(--mu)">dom</span><span style="display:block;font:600 18px/1.1 'Inter Tight',Inter,sans-serif;font-variant-numeric:tabular-nums;color:var(--ink);margin-top:2px">13</span></span>
+        <span style="flex:1;min-width:0">
+          <span style="display:inline-flex;gap:5px"><span style="font:600 11px/1 Inter,sans-serif;background:var(--posT);color:var(--pos);border-radius:6px;padding:4px 7px">Completo</span><span style="font:600 11px/1 Inter,sans-serif;background:var(--accT);color:var(--acc);border-radius:6px;padding:4px 7px">Corregido</span></span>
+          <span style="display:block;font:400 12px Inter,sans-serif;color:var(--mu);margin-top:6px;font-variant-numeric:tabular-nums">$702.100 ventas · $121.600 prov.</span>
+        </span>
+        <span style="text-align:right;flex:none"><span style="display:block;font:600 17px 'Inter Tight',Inter,sans-serif;letter-spacing:-.015em;font-variant-numeric:tabular-nums;color:var(--ink)">$580.500</span><span style="display:block;font:400 11px Inter,sans-serif;color:var(--mu);margin-top:2px">neto</span></span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px;color:var(--mu2);flex:none"><path d="M9 18l6-6-6-6"></path></svg>
+      </div>
+      <div style="display:flex;align-items:center;gap:13px;padding:0 16px;min-height:72px;border-top:1px solid var(--bd)">
+        <span style="width:46px;flex:none;text-align:center;padding:7px 0;border-radius:10px;background:var(--chip);border:1px solid var(--bd)"><span style="display:block;font:600 10px Inter,sans-serif;text-transform:uppercase;letter-spacing:.06em;color:var(--mu)">sáb</span><span style="display:block;font:600 18px/1.1 'Inter Tight',Inter,sans-serif;font-variant-numeric:tabular-nums;color:var(--ink);margin-top:2px">12</span></span>
+        <span style="flex:1;min-width:0">
+          <span style="display:inline-flex;font:600 11px/1 Inter,sans-serif;background:var(--posT);color:var(--pos);border-radius:6px;padding:4px 7px">Completo</span>
+          <span style="display:block;font:400 12px Inter,sans-serif;color:var(--mu);margin-top:6px;font-variant-numeric:tabular-nums">$458.200 ventas · $64.800 prov.</span>
+        </span>
+        <span style="text-align:right;flex:none"><span style="display:block;font:600 17px 'Inter Tight',Inter,sans-serif;letter-spacing:-.015em;font-variant-numeric:tabular-nums;color:var(--ink)">$393.400</span><span style="display:block;font:400 11px Inter,sans-serif;color:var(--mu);margin-top:2px">neto</span></span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px;color:var(--mu2);flex:none"><path d="M9 18l6-6-6-6"></path></svg>
+      </div>
+    </div>
+    <button type="button" style="width:100%;min-height:46px;margin-top:12px;border-radius:12px;border:1px solid var(--bd2);background:var(--cd);color:var(--in2);font:600 14px Inter,sans-serif;cursor:pointer">Ver más días</button>
+  </div>
+  <nav style="flex:none;position:relative;background:var(--cd);border-top:1px solid var(--bd);padding-bottom:10px">
+    <div style="display:flex;align-items:stretch">
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 0 2px;min-height:58px;color:var(--mu)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:21px;height:21px"><path d="M4 10l8-6 8 6M6 9v10h12V9"></path></svg><span style="font:500 11px Inter,sans-serif">Hoy</span></div>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 0 2px;min-height:58px;color:var(--acc)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" style="width:21px;height:21px"><path d="M4 12a8 8 0 108-8 8.2 8.2 0 00-5.7 2.3L4 8.5M4 4v4.5h4.5M12 8v4l3 2"></path></svg><span style="font:600 11px Inter,sans-serif">Historial</span></div>
+      <div style="width:76px;flex:none"></div>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 0 2px;min-height:58px;color:var(--mu)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:21px;height:21px"><path d="M5 19V9M12 19V5M19 19v-7"></path></svg><span style="font:500 11px Inter,sans-serif">Análisis</span></div>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 0 2px;min-height:58px;color:var(--mu)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:21px;height:21px"><path d="M12 15a3 3 0 100-6 3 3 0 000 6zM19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"></path></svg><span style="font:500 11px Inter,sans-serif">Ajustes</span></div>
+    </div>
+    <button type="button" aria-label="Cerrar caja" style="position:absolute;left:50%;transform:translateX(-50%);top:-22px;width:58px;height:58px;border-radius:19px;border:3px solid var(--cd);background:var(--acc);color:#fff;display:grid;place-items:center;box-shadow:0 8px 20px -6px rgba(79,70,229,.5);cursor:pointer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" style="width:24px;height:24px"><path d="M3 7h18v10H3zM12 9.7a2.3 2.3 0 100 4.6"></path></svg></button>
+  </nav>
+</div>
+</div>
+
+<!-- ══════════ PROVEEDORES ══════════ -->
+<div style="flex:none;display:flex;flex-direction:column;gap:9px">
+<div style="display:flex;align-items:baseline;gap:8px"><span style="font:600 10.5px ui-monospace,Menlo,monospace;background:rgba(0,0,0,.08);color:#0F1115;border-radius:5px;padding:3px 7px">1a</span><span style="font:400 11px/1.3 Inter,sans-serif;color:rgba(0,0,0,.55)">Proveedores · catálogo con aviso de duplicados</span></div>
+<div style="width:390px;height:844px;display:flex;flex-direction:column;background:var(--cv);border:1px solid var(--bd2);border-radius:26px;overflow:hidden;box-shadow:var(--sh2)">
+  <div style="flex:none;background:var(--cd);border-bottom:1px solid var(--bd);padding:20px 16px 14px">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px">
+      <div>
+        <p style="font:600 11px/1 Inter,sans-serif;text-transform:uppercase;letter-spacing:.1em;color:var(--mu);margin:0 0 5px">Catálogo · 24 activos</p>
+        <h1 style="font:600 20px/1.1 'Inter Tight',Inter,sans-serif;letter-spacing:-.02em;color:var(--ink);margin:0">Proveedores</h1>
+      </div>
+      <button type="button" style="flex:none;min-height:40px;display:inline-flex;align-items:center;gap:6px;padding:0 14px;border-radius:11px;background:var(--acc);border:0;color:#fff;font:600 13px Inter,sans-serif;cursor:pointer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><path d="M12 5v14M5 12h14"></path></svg>Nuevo</button>
+    </div>
+    <div style="position:relative">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="width:17px;height:17px;color:var(--mu);position:absolute;left:13px;top:50%;transform:translateY(-50%)"><path d="M11 4a7 7 0 100 14 7 7 0 000-14zM21 21l-4.35-4.35"></path></svg>
+      <div style="min-height:44px;display:flex;align-items:center;padding:0 14px 0 38px;border-radius:12px;background:var(--chip);border:1px solid var(--bd);font:400 15px Inter,sans-serif;color:var(--mu)">Buscar proveedor</div>
+    </div>
+  </div>
+  <div style="flex:1;min-height:0;overflow:hidden;padding:14px 16px 0">
+    <div style="display:flex;align-items:center;gap:9px;min-height:40px;margin-bottom:12px">
+      <span style="width:20px;height:20px;border-radius:5px;border:1px solid var(--bd2);background:var(--cd);flex:none"></span>
+      <span style="font:400 13px Inter,sans-serif;color:var(--in2)">Mostrar inactivos</span>
+    </div>
+    <div style="background:var(--wrnT);border:1px solid var(--bd);border-radius:14px;padding:14px 16px;margin-bottom:14px;display:flex;gap:11px">
+      <span style="width:30px;height:30px;border-radius:9px;background:rgba(180,83,9,.14);display:grid;place-items:center;flex:none"><svg viewBox="0 0 24 24" fill="none" stroke="var(--wrn)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><path d="M12 4l8 15H4l8-15zM12 9v4M12 16h.01"></path></svg></span>
+      <div style="min-width:0">
+        <p style="font:600 13px Inter,sans-serif;color:var(--wrn);margin:0">2 posibles duplicados</p>
+        <p style="font:400 12px/1.5 Inter,sans-serif;color:var(--in2);margin:5px 0 0">Coca-Cola Embonor · Embonor Coca Cola<br>Panadería San José · Panaderia San Jose</p>
+        <p style="font:600 12px Inter,sans-serif;color:var(--wrn);margin:7px 0 0">Ábrelos y usa “Fusionar con…”</p>
+      </div>
+    </div>
+    <div style="background:var(--cd);border:1px solid var(--bd);border-radius:16px;box-shadow:var(--sh);overflow:hidden">
+      <div style="display:flex;align-items:center;gap:13px;padding:0 16px;min-height:64px">
+        <span style="width:40px;height:40px;border-radius:10px;background:#8B5D39;color:#fff;display:grid;place-items:center;flex:none;font:600 15px Inter,sans-serif">C</span>
+        <span style="flex:1;min-width:0"><span style="display:block;font:500 15px Inter,sans-serif;color:var(--ink)">Coca-Cola Embonor</span><span style="display:block;font:400 12px Inter,sans-serif;color:var(--mu);margin-top:2px">18 compras recientes</span></span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px;color:var(--mu2);flex:none"><path d="M9 18l6-6-6-6"></path></svg>
+      </div>
+      <div style="display:flex;align-items:center;gap:13px;padding:0 16px;min-height:64px;border-top:1px solid var(--bd)">
+        <span style="width:40px;height:40px;border-radius:10px;background:#1E7A4F;color:#fff;display:grid;place-items:center;flex:none;font:600 15px Inter,sans-serif">P</span>
+        <span style="flex:1;min-width:0"><span style="display:block;font:500 15px Inter,sans-serif;color:var(--ink)">Panadería San José</span><span style="display:block;font:400 12px Inter,sans-serif;color:var(--mu);margin-top:2px">14 compras recientes</span></span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px;color:var(--mu2);flex:none"><path d="M9 18l6-6-6-6"></path></svg>
+      </div>
+      <div style="display:flex;align-items:center;gap:13px;padding:0 16px;min-height:64px;border-top:1px solid var(--bd)">
+        <span style="width:40px;height:40px;border-radius:10px;background:#33518C;color:#fff;display:grid;place-items:center;flex:none;font:600 15px Inter,sans-serif">D</span>
+        <span style="flex:1;min-width:0"><span style="display:block;font:500 15px Inter,sans-serif;color:var(--ink)">Distribuidora Lo Valledor</span><span style="display:block;font:400 12px Inter,sans-serif;color:var(--mu);margin-top:2px">9 compras recientes</span></span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px;color:var(--mu2);flex:none"><path d="M9 18l6-6-6-6"></path></svg>
+      </div>
+      <div style="display:flex;align-items:center;gap:13px;padding:0 16px;min-height:64px;border-top:1px solid var(--bd)">
+        <span style="width:40px;height:40px;border-radius:10px;background:#B45309;color:#fff;display:grid;place-items:center;flex:none;font:600 15px Inter,sans-serif">L</span>
+        <span style="flex:1;min-width:0"><span style="display:block;font:500 15px Inter,sans-serif;color:var(--ink)">Lácteos Colún</span><span style="display:block;font:400 12px Inter,sans-serif;color:var(--mu);margin-top:2px">6 compras recientes</span></span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px;color:var(--mu2);flex:none"><path d="M9 18l6-6-6-6"></path></svg>
+      </div>
+      <div style="display:flex;align-items:center;gap:13px;padding:0 16px;min-height:64px;border-top:1px solid var(--bd)">
+        <span style="width:40px;height:40px;border-radius:10px;background:#0F766E;color:#fff;display:grid;place-items:center;flex:none;font:600 15px Inter,sans-serif">C</span>
+        <span style="flex:1;min-width:0"><span style="display:block;font:500 15px Inter,sans-serif;color:var(--ink)">Carnes Del Sur</span><span style="display:block;font:400 12px Inter,sans-serif;color:var(--mu);margin-top:2px">4 compras recientes</span></span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px;color:var(--mu2);flex:none"><path d="M9 18l6-6-6-6"></path></svg>
+      </div>
+      <div style="display:flex;align-items:center;gap:13px;padding:0 16px;min-height:64px;border-top:1px solid var(--bd);opacity:.55">
+        <span style="width:40px;height:40px;border-radius:10px;background:#BE185D;color:#fff;display:grid;place-items:center;flex:none;font:600 15px Inter,sans-serif">H</span>
+        <span style="flex:1;min-width:0"><span style="display:block;font:500 15px Inter,sans-serif;color:var(--ink)">Helados Bresler</span><span style="display:block;font:400 12px Inter,sans-serif;color:var(--mu);margin-top:2px">Sin compras recientes · inactivo</span></span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px;color:var(--mu2);flex:none"><path d="M9 18l6-6-6-6"></path></svg>
+      </div>
+    </div>
+  </div>
+  <nav style="flex:none;position:relative;background:var(--cd);border-top:1px solid var(--bd);padding-bottom:10px">
+    <div style="display:flex;align-items:stretch">
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 0 2px;min-height:58px;color:var(--mu)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:21px;height:21px"><path d="M4 10l8-6 8 6M6 9v10h12V9"></path></svg><span style="font:500 11px Inter,sans-serif">Hoy</span></div>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 0 2px;min-height:58px;color:var(--mu)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:21px;height:21px"><path d="M4 12a8 8 0 108-8 8.2 8.2 0 00-5.7 2.3L4 8.5M4 4v4.5h4.5M12 8v4l3 2"></path></svg><span style="font:500 11px Inter,sans-serif">Historial</span></div>
+      <div style="width:76px;flex:none"></div>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 0 2px;min-height:58px;color:var(--mu)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:21px;height:21px"><path d="M5 19V9M12 19V5M19 19v-7"></path></svg><span style="font:500 11px Inter,sans-serif">Análisis</span></div>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 0 2px;min-height:58px;color:var(--mu)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:21px;height:21px"><path d="M12 15a3 3 0 100-6 3 3 0 000 6zM19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"></path></svg><span style="font:500 11px Inter,sans-serif">Ajustes</span></div>
+    </div>
+    <button type="button" aria-label="Cerrar caja" style="position:absolute;left:50%;transform:translateX(-50%);top:-22px;width:58px;height:58px;border-radius:19px;border:3px solid var(--cd);background:var(--acc);color:#fff;display:grid;place-items:center;box-shadow:0 8px 20px -6px rgba(79,70,229,.5);cursor:pointer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" style="width:24px;height:24px"><path d="M3 7h18v10H3zM12 9.7a2.3 2.3 0 100 4.6"></path></svg></button>
+  </nav>
+</div>
+</div>
+
+<!-- ══════════ AJUSTES ══════════ -->
+<div style="flex:none;display:flex;flex-direction:column;gap:9px">
+<div style="display:flex;align-items:baseline;gap:8px"><span style="font:600 10.5px ui-monospace,Menlo,monospace;background:rgba(0,0,0,.08);color:#0F1115;border-radius:5px;padding:3px 7px">1a</span><span style="font:400 11px/1.3 Inter,sans-serif;color:rgba(0,0,0,.55)">Ajustes · sección General</span></div>
+<div style="width:390px;height:844px;display:flex;flex-direction:column;background:var(--cv);border:1px solid var(--bd2);border-radius:26px;overflow:hidden;box-shadow:var(--sh2)">
+  <div style="flex:none;background:var(--cd);border-bottom:1px solid var(--bd);padding:20px 16px 14px">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px">
+      <div>
+        <p style="font:600 11px/1 Inter,sans-serif;text-transform:uppercase;letter-spacing:.1em;color:var(--mu);margin:0 0 5px">Minimarket Fryt</p>
+        <h1 style="font:600 20px/1.1 'Inter Tight',Inter,sans-serif;letter-spacing:-.02em;color:var(--ink);margin:0">Ajustes</h1>
+      </div>
+      <button type="button" style="flex:none;min-height:40px;display:inline-flex;align-items:center;gap:7px;padding:0 12px;border-radius:11px;background:var(--cd);border:1px solid var(--bd2);color:var(--in2);font:600 13px Inter,sans-serif;cursor:pointer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><path d="M10 17l5-5-5-5M15 12H3M14 4h5a2 2 0 012 2v12a2 2 0 01-2 2h-5"></path></svg>Salir</button>
+    </div>
+    <div style="display:flex;gap:6px;overflow:hidden">
+      <button type="button" style="flex:none;min-height:34px;padding:0 13px;border-radius:9px;background:var(--ink);border:1px solid var(--ink);color:var(--cd);font:600 13px Inter,sans-serif;cursor:pointer">General</button>
+      <button type="button" style="flex:none;min-height:34px;padding:0 13px;border-radius:9px;background:var(--cd);border:1px solid var(--bd2);color:var(--in2);font:500 13px Inter,sans-serif;cursor:pointer">Trabajadores</button>
+      <button type="button" style="flex:none;min-height:34px;padding:0 13px;border-radius:9px;background:var(--cd);border:1px solid var(--bd2);color:var(--in2);font:500 13px Inter,sans-serif;cursor:pointer">Métodos</button>
+      <button type="button" style="flex:none;min-height:34px;padding:0 13px;border-radius:9px;background:var(--cd);border:1px solid var(--bd2);color:var(--in2);font:500 13px Inter,sans-serif;cursor:pointer">Papelera</button>
+    </div>
+  </div>
+  <div style="flex:1;min-height:0;overflow:hidden;padding:14px 16px 0">
+    <div style="background:var(--cd);border:1px solid var(--bd);border-radius:14px;box-shadow:var(--sh);display:flex;align-items:center;gap:12px;padding:14px 16px;margin-bottom:14px">
+      <span style="width:40px;height:40px;border-radius:11px;background:var(--accT);color:var(--acc);display:grid;place-items:center;flex:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:19px;height:19px"><path d="M2 8h12v10H2V8zM14 11h4l3 4v3h-7V11zM6 18a2 2 0 100-4 2 2 0 000 4zM17 18a2 2 0 100-4 2 2 0 000 4z"></path></svg></span>
+      <span style="flex:1;min-width:0"><span style="display:block;font:600 15px Inter,sans-serif;color:var(--ink)">Proveedores</span><span style="display:block;font:400 12px Inter,sans-serif;color:var(--mu);margin-top:2px">Catálogo, fusionar duplicados, logos</span></span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px;color:var(--mu2);flex:none"><path d="M9 18l6-6-6-6"></path></svg>
+    </div>
+
+    <p style="font:600 11px/1 Inter,sans-serif;text-transform:uppercase;letter-spacing:.1em;color:var(--mu);margin:0 0 9px">Operación</p>
+    <div style="background:var(--cd);border:1px solid var(--bd);border-radius:16px;box-shadow:var(--sh);overflow:hidden;margin-bottom:14px">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 16px;min-height:60px">
+        <span style="font:500 15px Inter,sans-serif;color:var(--ink)">Nombre del local</span>
+        <span style="min-height:38px;display:flex;align-items:center;justify-content:flex-end;padding:0 12px;border-radius:10px;background:var(--chip);border:1px solid var(--bd);font:500 15px Inter,sans-serif;color:var(--ink);min-width:132px">Fryt</span>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px;min-height:60px;border-top:1px solid var(--bd)">
+        <span><span style="display:block;font:500 15px Inter,sans-serif;color:var(--ink)">Fondo de caja</span><span style="display:block;font:400 12px Inter,sans-serif;color:var(--mu);margin-top:2px">Con lo que parte cada turno</span></span>
+        <span style="min-height:38px;display:flex;align-items:center;justify-content:flex-end;padding:0 12px;border-radius:10px;background:var(--chip);border:1px solid var(--bd);font:600 15px 'Inter Tight',Inter,sans-serif;font-variant-numeric:tabular-nums;color:var(--ink);min-width:110px">$40.000</span>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px;min-height:60px;border-top:1px solid var(--bd)">
+        <span><span style="display:block;font:500 15px Inter,sans-serif;color:var(--ink)">Corte de la mañana</span><span style="display:block;font:400 12px Inter,sans-serif;color:var(--mu);margin-top:2px">Hora en que termina el turno mañana</span></span>
+        <span style="min-height:38px;display:flex;align-items:center;justify-content:flex-end;padding:0 12px;border-radius:10px;background:var(--chip);border:1px solid var(--bd);font:600 15px 'Inter Tight',Inter,sans-serif;font-variant-numeric:tabular-nums;color:var(--ink);min-width:78px">14:00</span>
+      </div>
+      <div style="padding:14px 16px;border-top:1px solid var(--bd)">
+        <p style="font:500 15px Inter,sans-serif;color:var(--ink);margin:0">Días de un solo turno</p>
+        <p style="font:400 12px Inter,sans-serif;color:var(--mu);margin:3px 0 11px">Esos días se registran siempre como día completo</p>
+        <div style="display:flex;gap:5px">
+          <span style="flex:1;min-height:38px;display:grid;place-items:center;border-radius:9px;background:var(--ink);color:var(--cd);font:600 13px Inter,sans-serif">Dom</span>
+          <span style="flex:1;min-height:38px;display:grid;place-items:center;border-radius:9px;background:var(--cd);border:1px solid var(--bd2);color:var(--in2);font:500 13px Inter,sans-serif">Lun</span>
+          <span style="flex:1;min-height:38px;display:grid;place-items:center;border-radius:9px;background:var(--cd);border:1px solid var(--bd2);color:var(--in2);font:500 13px Inter,sans-serif">Mar</span>
+          <span style="flex:1;min-height:38px;display:grid;place-items:center;border-radius:9px;background:var(--cd);border:1px solid var(--bd2);color:var(--in2);font:500 13px Inter,sans-serif">Mié</span>
+          <span style="flex:1;min-height:38px;display:grid;place-items:center;border-radius:9px;background:var(--cd);border:1px solid var(--bd2);color:var(--in2);font:500 13px Inter,sans-serif">Jue</span>
+          <span style="flex:1;min-height:38px;display:grid;place-items:center;border-radius:9px;background:var(--cd);border:1px solid var(--bd2);color:var(--in2);font:500 13px Inter,sans-serif">Vie</span>
+          <span style="flex:1;min-height:38px;display:grid;place-items:center;border-radius:9px;background:var(--cd);border:1px solid var(--bd2);color:var(--in2);font:500 13px Inter,sans-serif">Sáb</span>
+        </div>
+      </div>
+    </div>
+
+    <p style="font:600 11px/1 Inter,sans-serif;text-transform:uppercase;letter-spacing:.1em;color:var(--mu);margin:0 0 9px">Aplicación</p>
+    <div style="background:var(--cd);border:1px solid var(--bd);border-radius:16px;box-shadow:var(--sh);overflow:hidden">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px;min-height:60px">
+        <span style="font:500 15px Inter,sans-serif;color:var(--ink)">Apariencia</span>
+        <div style="display:flex;gap:3px;padding:3px;border-radius:11px;background:var(--chip);border:1px solid var(--bd)">
+          <span style="min-height:36px;padding:0 11px;display:grid;place-items:center;border-radius:8px;background:var(--cd);box-shadow:var(--sh);color:var(--ink);font:600 13px Inter,sans-serif">Sistema</span>
+          <span style="min-height:36px;padding:0 11px;display:grid;place-items:center;border-radius:8px;color:var(--mu);font:500 13px Inter,sans-serif">Claro</span>
+          <span style="min-height:36px;padding:0 11px;display:grid;place-items:center;border-radius:8px;color:var(--mu);font:500 13px Inter,sans-serif">Oscuro</span>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px;min-height:60px;border-top:1px solid var(--bd)">
+        <span><span style="display:block;font:500 15px Inter,sans-serif;color:var(--ink)">Tiempo de cierre</span><span style="display:block;font:400 12px Inter,sans-serif;color:var(--mu);margin-top:2px">8 cierres medidos · promedio 2 min 14 s</span></span>
+        <span style="font:400 12px Inter,sans-serif;color:var(--mu);text-align:right;font-variant-numeric:tabular-nums">mié 16 · 1:58<br>mar 15 · 2:21</span>
+      </div>
+    </div>
+  </div>
+  <nav style="flex:none;position:relative;background:var(--cd);border-top:1px solid var(--bd);padding-bottom:10px">
+    <div style="display:flex;align-items:stretch">
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 0 2px;min-height:58px;color:var(--mu)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:21px;height:21px"><path d="M4 10l8-6 8 6M6 9v10h12V9"></path></svg><span style="font:500 11px Inter,sans-serif">Hoy</span></div>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 0 2px;min-height:58px;color:var(--mu)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:21px;height:21px"><path d="M4 12a8 8 0 108-8 8.2 8.2 0 00-5.7 2.3L4 8.5M4 4v4.5h4.5M12 8v4l3 2"></path></svg><span style="font:500 11px Inter,sans-serif">Historial</span></div>
+      <div style="width:76px;flex:none"></div>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 0 2px;min-height:58px;color:var(--mu)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:21px;height:21px"><path d="M5 19V9M12 19V5M19 19v-7"></path></svg><span style="font:500 11px Inter,sans-serif">Análisis</span></div>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 0 2px;min-height:58px;color:var(--acc)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" style="width:21px;height:21px"><path d="M12 15a3 3 0 100-6 3 3 0 000 6zM19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"></path></svg><span style="font:600 11px Inter,sans-serif">Ajustes</span></div>
+    </div>
+    <button type="button" aria-label="Cerrar caja" style="position:absolute;left:50%;transform:translateX(-50%);top:-22px;width:58px;height:58px;border-radius:19px;border:3px solid var(--cd);background:var(--acc);color:#fff;display:grid;place-items:center;box-shadow:0 8px 20px -6px rgba(79,70,229,.5);cursor:pointer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" style="width:24px;height:24px"><path d="M3 7h18v10H3zM12 9.7a2.3 2.3 0 100 4.6"></path></svg></button>
+  </nav>
+</div>
+</div>
+
+<!-- ══════════ AJUSTES · MÉTODOS ══════════ -->
+<div style="flex:none;display:flex;flex-direction:column;gap:9px">
+<div style="display:flex;align-items:baseline;gap:8px"><span style="font:600 10.5px ui-monospace,Menlo,monospace;background:rgba(0,0,0,.08);color:#0F1115;border-radius:5px;padding:3px 7px">1a</span><span style="font:400 11px/1.3 Inter,sans-serif;color:rgba(0,0,0,.55)">Ajustes · Métodos de pago y Papelera</span></div>
+<div style="width:390px;height:844px;display:flex;flex-direction:column;background:var(--cv);border:1px solid var(--bd2);border-radius:26px;overflow:hidden;box-shadow:var(--sh2)">
+  <div style="flex:none;background:var(--cd);border-bottom:1px solid var(--bd);padding:20px 16px 14px">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px">
+      <div>
+        <p style="font:600 11px/1 Inter,sans-serif;text-transform:uppercase;letter-spacing:.1em;color:var(--mu);margin:0 0 5px">Minimarket Fryt</p>
+        <h1 style="font:600 20px/1.1 'Inter Tight',Inter,sans-serif;letter-spacing:-.02em;color:var(--ink);margin:0">Ajustes</h1>
+      </div>
+      <button type="button" style="flex:none;min-height:40px;display:inline-flex;align-items:center;gap:7px;padding:0 12px;border-radius:11px;background:var(--cd);border:1px solid var(--bd2);color:var(--in2);font:600 13px Inter,sans-serif;cursor:pointer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><path d="M10 17l5-5-5-5M15 12H3M14 4h5a2 2 0 012 2v12a2 2 0 01-2 2h-5"></path></svg>Salir</button>
+    </div>
+    <div style="display:flex;gap:6px;overflow:hidden">
+      <button type="button" style="flex:none;min-height:34px;padding:0 13px;border-radius:9px;background:var(--cd);border:1px solid var(--bd2);color:var(--in2);font:500 13px Inter,sans-serif;cursor:pointer">General</button>
+      <button type="button" style="flex:none;min-height:34px;padding:0 13px;border-radius:9px;background:var(--cd);border:1px solid var(--bd2);color:var(--in2);font:500 13px Inter,sans-serif;cursor:pointer">Trabajadores</button>
+      <button type="button" style="flex:none;min-height:34px;padding:0 13px;border-radius:9px;background:var(--ink);border:1px solid var(--ink);color:var(--cd);font:600 13px Inter,sans-serif;cursor:pointer">Métodos</button>
+      <button type="button" style="flex:none;min-height:34px;padding:0 13px;border-radius:9px;background:var(--cd);border:1px solid var(--bd2);color:var(--in2);font:500 13px Inter,sans-serif;cursor:pointer">Papelera</button>
+    </div>
+  </div>
+  <div style="flex:1;min-height:0;overflow:hidden;padding:14px 16px 0">
+    <p style="font:400 13px/1.55 Inter,sans-serif;color:var(--mu);margin:0 0 12px">Los inactivos no aparecen al cerrar el turno. “Total del día” es para máquinas que no cierran por turno: al cerrar la tarde se escribe el total y la app resta la mañana.</p>
+    <div style="background:var(--cd);border:1px solid var(--bd);border-radius:16px;box-shadow:var(--sh);overflow:hidden;margin-bottom:18px">
+      <div style="display:flex;align-items:center;gap:12px;padding:12px 16px;min-height:68px">
+        <span style="width:40px;height:40px;border-radius:10px;border:1px solid var(--bd);display:grid;place-items:center;flex:none"><svg viewBox="0 0 24 24" fill="none" stroke="#047857" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:19px;height:19px"><path d="M3 7h18v10H3zM12 9.7a2.3 2.3 0 100 4.6"></path></svg></span>
+        <span style="flex:1;min-width:0"><span style="display:block;font:500 15px Inter,sans-serif;color:var(--ink)">Efectivo</span><span style="display:block;font:400 12px Inter,sans-serif;color:var(--mu);margin-top:2px">Billetes y monedas</span></span>
+        <span style="display:flex;gap:5px;flex:none">
+          <span style="min-height:34px;padding:0 10px;display:grid;place-items:center;border-radius:9px;border:1px solid var(--bd2);color:var(--mu);font:500 12px Inter,sans-serif">Total del día</span>
+          <span style="min-height:34px;padding:0 10px;display:grid;place-items:center;border-radius:9px;background:var(--posT);color:var(--pos);font:600 12px Inter,sans-serif">Activo</span>
+        </span>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;padding:12px 16px;min-height:68px;border-top:1px solid var(--bd)">
+        <span style="width:40px;height:40px;border-radius:10px;border:1px solid var(--bd);display:grid;place-items:center;flex:none"><img src="v2/public/metodos/getnet.png" alt="" style="width:30px;height:30px;object-fit:contain"></span>
+        <span style="flex:1;min-width:0"><span style="display:block;font:500 15px Inter,sans-serif;color:var(--ink)">Getnet</span><span style="display:block;font:400 12px Inter,sans-serif;color:var(--mu);margin-top:2px">Débito y crédito</span></span>
+        <span style="display:flex;gap:5px;flex:none">
+          <span style="min-height:34px;padding:0 10px;display:grid;place-items:center;border-radius:9px;border:1px solid var(--bd2);color:var(--mu);font:500 12px Inter,sans-serif">Total del día</span>
+          <span style="min-height:34px;padding:0 10px;display:grid;place-items:center;border-radius:9px;background:var(--posT);color:var(--pos);font:600 12px Inter,sans-serif">Activo</span>
+        </span>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;padding:12px 16px;min-height:68px;border-top:1px solid var(--bd)">
+        <span style="width:40px;height:40px;border-radius:10px;border:1px solid var(--bd);display:grid;place-items:center;flex:none"><img src="v2/public/metodos/amipass.png" alt="" style="width:30px;height:30px;object-fit:contain"></span>
+        <span style="flex:1;min-width:0"><span style="display:block;font:500 15px Inter,sans-serif;color:var(--ink)">Amipass</span><span style="display:block;font:400 12px Inter,sans-serif;color:var(--mu);margin-top:2px">La máquina muestra el total del día</span></span>
+        <span style="display:flex;gap:5px;flex:none">
+          <span style="min-height:34px;padding:0 10px;display:grid;place-items:center;border-radius:9px;background:var(--accT);color:var(--acc);font:600 12px Inter,sans-serif">Total del día</span>
+          <span style="min-height:34px;padding:0 10px;display:grid;place-items:center;border-radius:9px;background:var(--posT);color:var(--pos);font:600 12px Inter,sans-serif">Activo</span>
+        </span>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;padding:12px 16px;min-height:68px;border-top:1px solid var(--bd)">
+        <span style="width:40px;height:40px;border-radius:10px;border:1px solid var(--bd);display:grid;place-items:center;flex:none;opacity:.5"><img src="v2/public/metodos/edenred.png" alt="" style="width:30px;height:30px;object-fit:contain"></span>
+        <span style="flex:1;min-width:0"><span style="display:block;font:500 15px Inter,sans-serif;color:var(--mu)">Edenred</span><span style="display:block;font:400 12px Inter,sans-serif;color:var(--mu);margin-top:2px">Tarjeta de alimentación</span></span>
+        <span style="display:flex;gap:5px;flex:none">
+          <span style="min-height:34px;padding:0 10px;display:grid;place-items:center;border-radius:9px;border:1px solid var(--bd2);color:var(--mu);font:500 12px Inter,sans-serif">Total del día</span>
+          <span style="min-height:34px;padding:0 10px;display:grid;place-items:center;border-radius:9px;background:var(--negT);color:var(--neg);font:600 12px Inter,sans-serif">Inactivo</span>
+        </span>
+      </div>
+    </div>
+
+    <p style="font:600 11px/1 Inter,sans-serif;text-transform:uppercase;letter-spacing:.1em;color:var(--mu);margin:0 0 9px">Papelera</p>
+    <div style="background:var(--cd);border:1px solid var(--bd);border-radius:16px;box-shadow:var(--sh);overflow:hidden">
+      <div style="display:flex;align-items:center;gap:12px;padding:12px 16px;min-height:68px">
+        <span style="flex:1;min-width:0"><span style="display:block;font:500 15px Inter,sans-serif;color:var(--ink)">sáb 12 sept · Tarde</span><span style="display:block;font:400 12px Inter,sans-serif;color:var(--mu);margin-top:2px;font-variant-numeric:tabular-nums">ventas $128.400 · eliminado 13 sept 09:12</span></span>
+        <span style="display:flex;gap:5px;flex:none">
+          <span style="min-height:34px;padding:0 10px;display:inline-flex;align-items:center;gap:5px;border-radius:9px;border:1px solid var(--bd2);color:var(--in2);font:600 12px Inter,sans-serif"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px"><path d="M9 14L4 9l5-5M4 9h11a5 5 0 010 10h-3"></path></svg>Restaurar</span>
+          <span style="width:34px;height:34px;display:grid;place-items:center;border-radius:9px;color:var(--neg)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px"><path d="M5 7h14M10 7V5h4v2M7 7l1 12h8l1-12"></path></svg></span>
+        </span>
+      </div>
+      <div style="padding:16px;border-top:1px solid var(--bd);text-align:center;font:400 13px Inter,sans-serif;color:var(--mu)">No hay más turnos eliminados</div>
+    </div>
+  </div>
+  <nav style="flex:none;position:relative;background:var(--cd);border-top:1px solid var(--bd);padding-bottom:10px">
+    <div style="display:flex;align-items:stretch">
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 0 2px;min-height:58px;color:var(--mu)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:21px;height:21px"><path d="M4 10l8-6 8 6M6 9v10h12V9"></path></svg><span style="font:500 11px Inter,sans-serif">Hoy</span></div>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 0 2px;min-height:58px;color:var(--mu)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:21px;height:21px"><path d="M4 12a8 8 0 108-8 8.2 8.2 0 00-5.7 2.3L4 8.5M4 4v4.5h4.5M12 8v4l3 2"></path></svg><span style="font:500 11px Inter,sans-serif">Historial</span></div>
+      <div style="width:76px;flex:none"></div>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 0 2px;min-height:58px;color:var(--mu)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:21px;height:21px"><path d="M5 19V9M12 19V5M19 19v-7"></path></svg><span style="font:500 11px Inter,sans-serif">Análisis</span></div>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 0 2px;min-height:58px;color:var(--acc)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" style="width:21px;height:21px"><path d="M12 15a3 3 0 100-6 3 3 0 000 6zM19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"></path></svg><span style="font:600 11px Inter,sans-serif">Ajustes</span></div>
+    </div>
+    <button type="button" aria-label="Cerrar caja" style="position:absolute;left:50%;transform:translateX(-50%);top:-22px;width:58px;height:58px;border-radius:19px;border:3px solid var(--cd);background:var(--acc);color:#fff;display:grid;place-items:center;box-shadow:0 8px 20px -6px rgba(79,70,229,.5);cursor:pointer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" style="width:24px;height:24px"><path d="M3 7h18v10H3zM12 9.7a2.3 2.3 0 100 4.6"></path></svg></button>
+  </nav>
+</div>
+</div>
+
+<!-- ══════════ HOJA: MONTO / TECLADO ══════════ -->
+<div style="flex:none;display:flex;flex-direction:column;gap:9px">
+<div style="display:flex;align-items:baseline;gap:8px"><span style="font:600 10.5px ui-monospace,Menlo,monospace;background:rgba(0,0,0,.08);color:#0F1115;border-radius:5px;padding:3px 7px">1a</span><span style="font:400 11px/1.3 Inter,sans-serif;color:rgba(0,0,0,.55)">Hoja de monto · teclado encadenado (2 de 5)</span></div>
+<div style="width:390px;height:844px;position:relative;background:var(--cv);border:1px solid var(--bd2);border-radius:26px;overflow:hidden;box-shadow:var(--sh2)">
+  <div style="padding:20px 16px;filter:blur(1px);opacity:.6">
+    <p style="font:600 11px/1 Inter,sans-serif;text-transform:uppercase;letter-spacing:.1em;color:var(--mu);margin:0 0 5px">Hoy</p>
+    <p style="font:600 20px/1.1 'Inter Tight',Inter,sans-serif;letter-spacing:-.02em;color:var(--ink);margin:0 0 18px">Cerrar el día</p>
+    <div style="background:var(--cd);border:1px solid var(--bd);border-radius:16px;height:200px"></div>
+  </div>
+  <div style="position:absolute;inset:0;background:rgba(0,0,0,.38)"></div>
+  <div style="position:absolute;left:0;right:0;bottom:0;background:var(--cd);border-top:1px solid var(--bd);border-radius:28px 28px 0 0;padding:8px 20px 20px;box-shadow:0 -22px 55px -22px rgba(0,0,0,.45)">
+    <div style="display:flex;justify-content:center;padding:4px 0 10px"><span style="width:40px;height:4px;border-radius:999px;background:var(--bd2)"></span></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px">
+      <h3 style="font:600 17px 'Inter Tight',Inter,sans-serif;letter-spacing:-.015em;color:var(--ink);margin:0">Getnet</h3>
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font:600 12px Inter,sans-serif;color:var(--mu);font-variant-numeric:tabular-nums">2 de 5</span>
+        <span style="width:34px;height:34px;border-radius:999px;background:var(--chip);color:var(--in2);display:grid;place-items:center"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px"><path d="M6 6l12 12M18 6L6 18"></path></svg></span>
+      </div>
+    </div>
+    <div style="background:var(--chip);border:1px solid var(--bd);border-radius:14px;padding:14px 16px;margin-bottom:14px">
+      <p style="font:600 11px/1 Inter,sans-serif;text-transform:uppercase;letter-spacing:.1em;color:var(--mu);margin:0 0 8px">Débito y crédito</p>
+      <p style="font:700 40px/1 'Inter Tight',Inter,sans-serif;letter-spacing:-.03em;font-variant-numeric:tabular-nums;color:var(--ink);margin:0">$214.600</p>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">
+      <button type="button" style="height:54px;border-radius:15px;background:var(--cd);border:1px solid var(--bd2);color:var(--ink);font:600 24px 'Inter Tight',Inter,sans-serif;font-variant-numeric:tabular-nums;cursor:pointer">7</button>
+      <button type="button" style="height:54px;border-radius:15px;background:var(--cd);border:1px solid var(--bd2);color:var(--ink);font:600 24px 'Inter Tight',Inter,sans-serif;font-variant-numeric:tabular-nums;cursor:pointer">8</button>
+      <button type="button" style="height:54px;border-radius:15px;background:var(--cd);border:1px solid var(--bd2);color:var(--ink);font:600 24px 'Inter Tight',Inter,sans-serif;font-variant-numeric:tabular-nums;cursor:pointer">9</button>
+      <button type="button" style="height:54px;border-radius:15px;background:var(--cd);border:1px solid var(--bd2);color:var(--ink);font:600 24px 'Inter Tight',Inter,sans-serif;font-variant-numeric:tabular-nums;cursor:pointer">4</button>
+      <button type="button" style="height:54px;border-radius:15px;background:var(--cd);border:1px solid var(--bd2);color:var(--ink);font:600 24px 'Inter Tight',Inter,sans-serif;font-variant-numeric:tabular-nums;cursor:pointer">5</button>
+      <button type="button" style="height:54px;border-radius:15px;background:var(--cd);border:1px solid var(--bd2);color:var(--ink);font:600 24px 'Inter Tight',Inter,sans-serif;font-variant-numeric:tabular-nums;cursor:pointer">6</button>
+      <button type="button" style="height:54px;border-radius:15px;background:var(--cd);border:1px solid var(--bd2);color:var(--ink);font:600 24px 'Inter Tight',Inter,sans-serif;font-variant-numeric:tabular-nums;cursor:pointer">1</button>
+      <button type="button" style="height:54px;border-radius:15px;background:var(--cd);border:1px solid var(--bd2);color:var(--ink);font:600 24px 'Inter Tight',Inter,sans-serif;font-variant-numeric:tabular-nums;cursor:pointer">2</button>
+      <button type="button" style="height:54px;border-radius:15px;background:var(--cd);border:1px solid var(--bd2);color:var(--ink);font:600 24px 'Inter Tight',Inter,sans-serif;font-variant-numeric:tabular-nums;cursor:pointer">3</button>
+      <button type="button" style="height:54px;border-radius:15px;background:var(--cd);border:1px solid var(--bd2);color:var(--in2);font:600 17px Inter,sans-serif;font-variant-numeric:tabular-nums;cursor:pointer">000</button>
+      <button type="button" style="height:54px;border-radius:15px;background:var(--cd);border:1px solid var(--bd2);color:var(--ink);font:600 24px 'Inter Tight',Inter,sans-serif;font-variant-numeric:tabular-nums;cursor:pointer">0</button>
+      <button type="button" aria-label="Borrar" style="height:54px;border-radius:15px;background:var(--chip);border:1px solid var(--bd);color:var(--in2);display:grid;place-items:center;cursor:pointer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:23px;height:23px"><path d="M20 6H9l-5 6 5 6h11a1 1 0 001-1V7a1 1 0 00-1-1zM15 10l-4 4M11 10l4 4"></path></svg></button>
+    </div>
+    <button type="button" style="width:100%;height:50px;margin-top:14px;border:0;border-radius:14px;background:var(--acc);color:#fff;font:600 15px Inter,sans-serif;display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M5 12.5l4.5 4.5L19 7"></path></svg>Siguiente: Mercado Pago</button>
+    <button type="button" style="width:100%;min-height:40px;margin-top:6px;border:0;background:transparent;color:var(--in2);font:600 13px Inter,sans-serif;display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px"><path d="M5 12.5l4.5 4.5L19 7"></path></svg>Guardar y volver</button>
+  </div>
+</div>
+</div>
+
+<!-- ══════════ HOJA: CONTEO DE CAJA ══════════ -->
+<div style="flex:none;display:flex;flex-direction:column;gap:9px">
+<div style="display:flex;align-items:baseline;gap:8px"><span style="font:600 10.5px ui-monospace,Menlo,monospace;background:rgba(0,0,0,.08);color:#0F1115;border-radius:5px;padding:3px 7px">1a</span><span style="font:400 11px/1.3 Inter,sans-serif;color:rgba(0,0,0,.55)">Conteo de caja · billete por billete, suma en vivo</span></div>
+<div style="width:390px;height:844px;position:relative;background:var(--cv);border:1px solid var(--bd2);border-radius:26px;overflow:hidden;box-shadow:var(--sh2)">
+  <div style="padding:20px 16px;filter:blur(1px);opacity:.6">
+    <p style="font:600 11px/1 Inter,sans-serif;text-transform:uppercase;letter-spacing:.1em;color:var(--mu);margin:0 0 5px">Hoy</p>
+    <p style="font:600 20px/1.1 'Inter Tight',Inter,sans-serif;letter-spacing:-.02em;color:var(--ink);margin:0">Cerrar el día</p>
+  </div>
+  <div style="position:absolute;inset:0;background:rgba(0,0,0,.38)"></div>
+  <div style="position:absolute;left:0;right:0;bottom:0;top:36px;display:flex;flex-direction:column;background:var(--cd);border-top:1px solid var(--bd);border-radius:28px 28px 0 0;padding:8px 20px 18px;box-shadow:0 -22px 55px -22px rgba(0,0,0,.45)">
+    <div style="display:flex;justify-content:center;padding:4px 0 10px;flex:none"><span style="width:40px;height:4px;border-radius:999px;background:var(--bd2)"></span></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px;flex:none">
+      <h3 style="font:600 17px 'Inter Tight',Inter,sans-serif;letter-spacing:-.015em;color:var(--ink);margin:0">Conteo de caja</h3>
+      <span style="width:34px;height:34px;border-radius:999px;background:var(--chip);color:var(--in2);display:grid;place-items:center"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px"><path d="M6 6l12 12M18 6L6 18"></path></svg></span>
+    </div>
+    <div style="flex:none;background:var(--chip);border:1px solid var(--bd);border-radius:14px;padding:14px 16px;margin-bottom:12px">
+      <p style="font:600 11px/1 Inter,sans-serif;text-transform:uppercase;letter-spacing:.1em;color:var(--mu);margin:0 0 8px">Contado</p>
+      <p style="font:700 36px/1 'Inter Tight',Inter,sans-serif;letter-spacing:-.03em;font-variant-numeric:tabular-nums;color:var(--ink);margin:0">$193.600</p>
+      <p style="font:400 13px Inter,sans-serif;color:var(--mu);margin:9px 0 0;font-variant-numeric:tabular-nums">Esperado <b style="font-weight:600;color:var(--ink)">$195.600</b> · <b style="font-weight:600;color:var(--neg)">diferencia −$2.000</b></p>
+    </div>
+    <div style="flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column;gap:6px">
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="width:66px;flex:none;font:600 14px 'Inter Tight',Inter,sans-serif;font-variant-numeric:tabular-nums;color:var(--ink)">$20.000</span>
+        <span style="width:42px;height:42px;flex:none;border-radius:11px;background:var(--chip);border:1px solid var(--bd);color:var(--in2);display:grid;place-items:center"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px"><path d="M5 12h14"></path></svg></span>
+        <span style="width:54px;height:42px;flex:none;border-radius:11px;background:var(--cd);border:1px solid var(--bd2);display:grid;place-items:center;font:600 15px Inter,sans-serif;font-variant-numeric:tabular-nums;color:var(--ink)">6</span>
+        <span style="width:42px;height:42px;flex:none;border-radius:11px;background:var(--chip);border:1px solid var(--bd);color:var(--in2);display:grid;place-items:center"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px"><path d="M12 5v14M5 12h14"></path></svg></span>
+        <span style="flex:1;text-align:right;font:600 13px Inter,sans-serif;font-variant-numeric:tabular-nums;color:var(--in2)">$120.000</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="width:66px;flex:none;font:600 14px 'Inter Tight',Inter,sans-serif;font-variant-numeric:tabular-nums;color:var(--ink)">$10.000</span>
+        <span style="width:42px;height:42px;flex:none;border-radius:11px;background:var(--chip);border:1px solid var(--bd);color:var(--in2);display:grid;place-items:center"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px"><path d="M5 12h14"></path></svg></span>
+        <span style="width:54px;height:42px;flex:none;border-radius:11px;background:var(--cd);border:1px solid var(--bd2);display:grid;place-items:center;font:600 15px Inter,sans-serif;font-variant-numeric:tabular-nums;color:var(--ink)">5</span>
+        <span style="width:42px;height:42px;flex:none;border-radius:11px;background:var(--chip);border:1px solid var(--bd);color:var(--in2);display:grid;place-items:center"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px"><path d="M12 5v14M5 12h14"></path></svg></span>
+        <span style="flex:1;text-align:right;font:600 13px Inter,sans-serif;font-variant-numeric:tabular-nums;color:var(--in2)">$50.000</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="width:66px;flex:none;font:600 14px 'Inter Tight',Inter,sans-serif;font-variant-numeric:tabular-nums;color:var(--ink)">$5.000</span>
+        <span style="width:42px;height:42px;flex:none;border-radius:11px;background:var(--chip);border:1px solid var(--bd);color:var(--in2);display:grid;place-items:center"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px"><path d="M5 12h14"></path></svg></span>
+        <span style="width:54px;height:42px;flex:none;border-radius:11px;background:var(--cd);border:1px solid var(--bd2);display:grid;place-items:center;font:600 15px Inter,sans-serif;font-variant-numeric:tabular-nums;color:var(--ink)">3</span>
+        <span style="width:42px;height:42px;flex:none;border-radius:11px;background:var(--chip);border:1px solid var(--bd);color:var(--in2);display:grid;place-items:center"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px"><path d="M12 5v14M5 12h14"></path></svg></span>
+        <span style="flex:1;text-align:right;font:600 13px Inter,sans-serif;font-variant-numeric:tabular-nums;color:var(--in2)">$15.000</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="width:66px;flex:none;font:600 14px 'Inter Tight',Inter,sans-serif;font-variant-numeric:tabular-nums;color:var(--ink)">$2.000</span>
+        <span style="width:42px;height:42px;flex:none;border-radius:11px;background:var(--chip);border:1px solid var(--bd);color:var(--mu2);display:grid;place-items:center;opacity:.5"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px"><path d="M5 12h14"></path></svg></span>
+        <span style="width:54px;height:42px;flex:none;border-radius:11px;background:var(--cd);border:1px solid var(--bd2);display:grid;place-items:center;font:600 15px Inter,sans-serif;font-variant-numeric:tabular-nums;color:var(--mu2)">0</span>
+        <span style="width:42px;height:42px;flex:none;border-radius:11px;background:var(--chip);border:1px solid var(--bd);color:var(--in2);display:grid;place-items:center"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px"><path d="M12 5v14M5 12h14"></path></svg></span>
+        <span style="flex:1;text-align:right;font:600 13px Inter,sans-serif;font-variant-numeric:tabular-nums;color:var(--mu2)">$0</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="width:66px;flex:none;font:600 14px 'Inter Tight',Inter,sans-serif;font-variant-numeric:tabular-nums;color:var(--ink)">$1.000</span>
+        <span style="width:42px;height:42px;flex:none;border-radius:11px;background:var(--chip);border:1px solid var(--bd);color:var(--in2);display:grid;place-items:center"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px"><path d="M5 12h14"></path></svg></span>
+        <span style="width:54px;height:42px;flex:none;border-radius:11px;background:var(--cd);border:1px solid var(--bd2);display:grid;place-items:center;font:600 15px Inter,sans-serif;font-variant-numeric:tabular-nums;color:var(--ink)">7</span>
+        <span style="width:42px;height:42px;flex:none;border-radius:11px;background:var(--chip);border:1px solid var(--bd);color:var(--in2);display:grid;place-items:center"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px"><path d="M12 5v14M5 12h14"></path></svg></span>
+        <span style="flex:1;text-align:right;font:600 13px Inter,sans-serif;font-variant-numeric:tabular-nums;color:var(--in2)">$7.000</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="width:66px;flex:none;font:600 14px 'Inter Tight',Inter,sans-serif;font-variant-numeric:tabular-nums;color:var(--ink)">$500</span>
+        <span style="width:42px;height:42px;flex:none;border-radius:11px;background:var(--chip);border:1px solid var(--bd);color:var(--in2);display:grid;place-items:center"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px"><path d="M5 12h14"></path></svg></span>
+        <span style="width:54px;height:42px;flex:none;border-radius:11px;background:var(--cd);border:1px solid var(--bd2);display:grid;place-items:center;font:600 15px Inter,sans-serif;font-variant-numeric:tabular-nums;color:var(--ink)">2</span>
+        <span style="width:42px;height:42px;flex:none;border-radius:11px;background:var(--chip);border:1px solid var(--bd);color:var(--in2);display:grid;place-items:center"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px"><path d="M12 5v14M5 12h14"></path></svg></span>
+        <span style="flex:1;text-align:right;font:600 13px Inter,sans-serif;font-variant-numeric:tabular-nums;color:var(--in2)">$1.000</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="width:66px;flex:none;font:600 14px 'Inter Tight',Inter,sans-serif;font-variant-numeric:tabular-nums;color:var(--ink)">$100</span>
+        <span style="width:42px;height:42px;flex:none;border-radius:11px;background:var(--chip);border:1px solid var(--bd);color:var(--in2);display:grid;place-items:center"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px"><path d="M5 12h14"></path></svg></span>
+        <span style="width:54px;height:42px;flex:none;border-radius:11px;background:var(--cd);border:1px solid var(--bd2);display:grid;place-items:center;font:600 15px Inter,sans-serif;font-variant-numeric:tabular-nums;color:var(--ink)">6</span>
+        <span style="width:42px;height:42px;flex:none;border-radius:11px;background:var(--chip);border:1px solid var(--bd);color:var(--in2);display:grid;place-items:center"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px"><path d="M12 5v14M5 12h14"></path></svg></span>
+        <span style="flex:1;text-align:right;font:600 13px Inter,sans-serif;font-variant-numeric:tabular-nums;color:var(--in2)">$600</span>
+      </div>
+      <p style="font:400 12px Inter,sans-serif;color:var(--mu);margin:2px 0 0;text-align:center">$50 y $10 más abajo</p>
+    </div>
+    <div style="flex:none;padding-top:12px;margin-top:10px;border-top:1px solid var(--bd)">
+      <button type="button" style="width:100%;height:50px;border:0;border-radius:14px;background:var(--acc);color:#fff;font:600 15px Inter,sans-serif;display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M5 12.5l4.5 4.5L19 7"></path></svg>Registrar conteo</button>
+      <div style="display:flex;justify-content:space-between;gap:8px;margin-top:8px">
+        <span style="min-height:40px;display:inline-flex;align-items:center;padding:0 10px;border-radius:10px;font:600 13px Inter,sans-serif;color:var(--in2)">Escribir el total a mano</span>
+        <span style="min-height:40px;display:inline-flex;align-items:center;padding:0 10px;border-radius:10px;font:600 13px Inter,sans-serif;color:var(--neg)">Empezar de nuevo</span>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ══════════ HOJA: REVISIÓN PREVIA ══════════ -->
+<div style="flex:none;display:flex;flex-direction:column;gap:9px">
+<div style="display:flex;align-items:baseline;gap:8px"><span style="font:600 10.5px ui-monospace,Menlo,monospace;background:rgba(0,0,0,.08);color:#0F1115;border-radius:5px;padding:3px 7px">1a</span><span style="font:400 11px/1.3 Inter,sans-serif;color:rgba(0,0,0,.55)">Revisión previa · avisos de revision.ts + resumen</span></div>
+<div style="width:390px;height:844px;position:relative;background:var(--cv);border:1px solid var(--bd2);border-radius:26px;overflow:hidden;box-shadow:var(--sh2)">
+  <div style="padding:20px 16px;filter:blur(1px);opacity:.6">
+    <p style="font:600 11px/1 Inter,sans-serif;text-transform:uppercase;letter-spacing:.1em;color:var(--mu);margin:0 0 5px">Hoy</p>
+    <p style="font:600 20px/1.1 'Inter Tight',Inter,sans-serif;letter-spacing:-.02em;color:var(--ink);margin:0">Cerrar el día</p>
+  </div>
+  <div style="position:absolute;inset:0;background:rgba(0,0,0,.38)"></div>
+  <div style="position:absolute;left:0;right:0;bottom:0;top:30px;display:flex;flex-direction:column;background:var(--cd);border-top:1px solid var(--bd);border-radius:28px 28px 0 0;padding:8px 20px 18px;box-shadow:0 -22px 55px -22px rgba(0,0,0,.45)">
+    <div style="display:flex;justify-content:center;padding:4px 0 10px;flex:none"><span style="width:40px;height:4px;border-radius:999px;background:var(--bd2)"></span></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px;flex:none">
+      <h3 style="font:600 17px 'Inter Tight',Inter,sans-serif;letter-spacing:-.015em;color:var(--ink);margin:0">Revisar antes de cerrar</h3>
+      <span style="width:34px;height:34px;border-radius:999px;background:var(--chip);color:var(--in2);display:grid;place-items:center;flex:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px"><path d="M6 6l12 12M18 6L6 18"></path></svg></span>
+    </div>
+    <div style="flex:1;min-height:0;overflow:hidden">
+      <div style="display:flex;flex-direction:column;gap:7px;margin-bottom:16px">
+        <div style="display:flex;align-items:flex-start;gap:9px;border-radius:12px;background:var(--negT);border:1px solid var(--bd);padding:11px 14px">
+          <svg viewBox="0 0 24 24" fill="none" stroke="var(--neg)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:17px;height:17px;flex:none;margin-top:1px"><path d="M12 4l8 15H4l8-15zM12 9v4M12 16h.01"></path></svg>
+          <span style="font:500 13px/1.45 Inter,sans-serif;color:var(--neg)">La caja no cuadra: faltan $2.000.</span>
+        </div>
+        <div style="display:flex;align-items:flex-start;gap:9px;border-radius:12px;background:var(--wrnT);border:1px solid var(--bd);padding:11px 14px">
+          <svg viewBox="0 0 24 24" fill="none" stroke="var(--wrn)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:17px;height:17px;flex:none;margin-top:1px"><path d="M12 4l8 15H4l8-15zM12 9v4M12 16h.01"></path></svg>
+          <span style="font:500 13px/1.45 Inter,sans-serif;color:var(--wrn)">No elegiste quién atendió.</span>
+        </div>
+      </div>
+      <p style="font:600 10.5px/1 Inter,sans-serif;text-transform:uppercase;letter-spacing:.1em;color:var(--mu2);margin:0 0 4px">Resumen del día</p>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:38px;border-bottom:1px solid var(--bd)"><span style="font:400 14px Inter,sans-serif;color:var(--in2)">Atendió</span><span style="font:500 13px Inter,sans-serif;color:var(--mu)">sin registrar</span></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:38px;border-bottom:1px solid var(--bd)"><span style="font:400 14px Inter,sans-serif;color:var(--in2)">Efectivo</span><span style="font:500 14px Inter,sans-serif;font-variant-numeric:tabular-nums;color:var(--ink)">$198.400</span></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:38px;border-bottom:1px solid var(--bd)"><span style="font:400 14px Inter,sans-serif;color:var(--in2)">Getnet</span><span style="font:500 14px Inter,sans-serif;font-variant-numeric:tabular-nums;color:var(--ink)">$214.600</span></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:38px;border-bottom:1px solid var(--bd)"><span style="font:400 14px Inter,sans-serif;color:var(--in2)">Mercado Pago</span><span style="font:500 14px Inter,sans-serif;font-variant-numeric:tabular-nums;color:var(--ink)">$48.200</span></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:38px"><span style="font:600 14px Inter,sans-serif;color:var(--ink)">Total ventas</span><span style="font:600 15px 'Inter Tight',Inter,sans-serif;font-variant-numeric:tabular-nums;color:var(--ink)">$486.500</span></div>
+      <p style="font:600 10.5px/1 Inter,sans-serif;text-transform:uppercase;letter-spacing:.1em;color:var(--mu2);margin:12px 0 4px">Proveedores</p>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:38px;border-bottom:1px solid var(--bd)"><span style="display:flex;align-items:center;gap:7px;font:400 14px Inter,sans-serif;color:var(--in2)"><span style="width:7px;height:7px;border-radius:999px;background:var(--pos)"></span>Coca-Cola Embonor<span style="font:500 11px Inter,sans-serif;color:var(--mu)">efectivo</span></span><span style="font:500 14px Inter,sans-serif;font-variant-numeric:tabular-nums;color:var(--neg)">−$42.800</span></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:38px"><span style="display:flex;align-items:center;gap:7px;font:400 14px Inter,sans-serif;color:var(--in2)"><span style="width:7px;height:7px;border-radius:999px;background:var(--acc)"></span>Panadería San José<span style="font:500 11px Inter,sans-serif;color:var(--mu)">transf.</span></span><span style="font:500 14px Inter,sans-serif;font-variant-numeric:tabular-nums;color:var(--neg)">−$31.400</span></div>
+      <p style="font:600 10.5px/1 Inter,sans-serif;text-transform:uppercase;letter-spacing:.1em;color:var(--mu2);margin:12px 0 4px">Caja</p>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:38px;border-bottom:1px solid var(--bd)"><span style="font:400 14px Inter,sans-serif;color:var(--in2)">Fondo inicial</span><span style="font:500 14px Inter,sans-serif;font-variant-numeric:tabular-nums;color:var(--ink)">$40.000</span></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:38px;border-bottom:1px solid var(--bd)"><span style="font:400 14px Inter,sans-serif;color:var(--in2)">Efectivo esperado</span><span style="font:500 14px Inter,sans-serif;font-variant-numeric:tabular-nums;color:var(--ink)">$195.600</span></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:38px"><span style="display:flex;align-items:center;gap:7px;font:400 14px Inter,sans-serif;color:var(--in2)">Contado<span style="font:600 11px Inter,sans-serif;background:var(--negT);color:var(--neg);border-radius:6px;padding:3px 6px;font-variant-numeric:tabular-nums">−$2.000</span></span><span style="font:500 14px Inter,sans-serif;font-variant-numeric:tabular-nums;color:var(--neg)">$193.600</span></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;margin-top:12px;border-radius:12px;background:var(--chip);border:1px solid var(--bd)"><span style="font:600 14px Inter,sans-serif;color:var(--ink)">Neto del día</span><span style="font:700 22px 'Inter Tight',Inter,sans-serif;letter-spacing:-.02em;font-variant-numeric:tabular-nums;color:var(--ink)">$412.300</span></div>
+    </div>
+    <div style="flex:none;display:flex;gap:8px;padding-top:12px;margin-top:10px;border-top:1px solid var(--bd)">
+      <button type="button" style="flex:1;height:50px;border-radius:14px;background:var(--cd);border:1px solid var(--bd2);color:var(--in2);font:600 15px Inter,sans-serif;cursor:pointer">Revisar</button>
+      <button type="button" style="flex:2;height:50px;border:0;border-radius:14px;background:var(--acc);color:#fff;font:600 15px Inter,sans-serif;cursor:pointer">Cerrar el día</button>
+    </div>
+  </div>
+</div>
+</div>
+
+</div>
+
+<!-- ══════════ ESCRITORIO ══════════ -->
+<div style="margin-top:34px;display:flex;flex-direction:column;gap:9px">
+<div style="display:flex;align-items:baseline;gap:8px"><span style="font:600 10.5px ui-monospace,Menlo,monospace;background:rgba(0,0,0,.08);color:#0F1115;border-radius:5px;padding:3px 7px">1a</span><span style="font:400 11px/1.3 Inter,sans-serif;color:rgba(0,0,0,.55)">Escritorio · misma sidebar de Layout.tsx, repintada, para revisar reportes</span></div>
+<div style="width:1280px;height:760px;display:flex;background:var(--cv);border:1px solid var(--bd2);border-radius:14px;overflow:hidden;box-shadow:var(--sh2)">
+  <aside style="width:236px;flex:none;background:var(--cd);border-right:1px solid var(--bd);display:flex;flex-direction:column">
+    <div style="padding:20px 18px 16px;border-bottom:1px solid var(--bd)">
+      <p style="font:600 14px/1.2 'Inter Tight',Inter,sans-serif;letter-spacing:-.01em;color:var(--ink);margin:0">FrytControl</p>
+      <p style="font:400 12px Inter,sans-serif;color:var(--mu);margin:3px 0 0">Minimarket Fryt</p>
+    </div>
+    <nav style="flex:1;padding:12px 10px;display:flex;flex-direction:column;gap:2px">
+      <span style="display:flex;align-items:center;gap:10px;padding:9px 11px;border-radius:10px;font:500 14px Inter,sans-serif;color:var(--in2)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M4 10l8-6 8 6M6 9v10h12V9"></path></svg>Hoy</span>
+      <span style="display:flex;align-items:center;gap:10px;padding:9px 11px;border-radius:10px;font:500 14px Inter,sans-serif;color:var(--in2)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M12 5v14M5 12h14"></path></svg>Cerrar turno</span>
+      <span style="display:flex;align-items:center;gap:10px;padding:9px 11px;border-radius:10px;font:500 14px Inter,sans-serif;color:var(--in2)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M4 12a8 8 0 108-8 8.2 8.2 0 00-5.7 2.3L4 8.5M4 4v4.5h4.5M12 8v4l3 2"></path></svg>Historial</span>
+      <span style="display:flex;align-items:center;gap:10px;padding:9px 11px;border-radius:10px;font:600 14px Inter,sans-serif;background:var(--accT);color:var(--acc)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M5 19V9M12 19V5M19 19v-7"></path></svg>Análisis</span>
+      <span style="display:flex;align-items:center;gap:10px;padding:9px 11px;border-radius:10px;font:500 14px Inter,sans-serif;color:var(--in2)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M2 8h12v10H2V8zM14 11h4l3 4v3h-7V11zM6 18a2 2 0 100-4 2 2 0 000 4zM17 18a2 2 0 100-4 2 2 0 000 4z"></path></svg>Proveedores</span>
+      <span style="display:flex;align-items:center;gap:10px;padding:9px 11px;border-radius:10px;font:500 14px Inter,sans-serif;color:var(--in2)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M12 15a3 3 0 100-6 3 3 0 000 6zM19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"></path></svg>Ajustes</span>
+    </nav>
+    <div style="padding:12px 10px;border-top:1px solid var(--bd);display:flex;align-items:center;gap:10px">
+      <span style="width:34px;height:34px;border-radius:10px;background:var(--chip);border:1px solid var(--bd);display:grid;place-items:center;font:600 13px Inter,sans-serif;color:var(--in2)">JM</span>
+      <span style="flex:1;min-width:0"><span style="display:block;font:600 13px Inter,sans-serif;color:var(--ink)">Jonathan</span><span style="display:block;font:400 11px Inter,sans-serif;color:var(--mu)">dueña</span></span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;color:var(--mu2)"><path d="M9 18l6-6-6-6"></path></svg>
+    </div>
+  </aside>
+  <main style="flex:1;min-width:0;overflow:hidden;padding:26px 30px">
+    <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:20px">
+      <div>
+        <p style="font:600 11px/1 Inter,sans-serif;text-transform:uppercase;letter-spacing:.1em;color:var(--mu);margin:0 0 6px">10 – 16 septiembre 2026 · 7 días con registro</p>
+        <h1 style="font:600 26px/1.1 'Inter Tight',Inter,sans-serif;letter-spacing:-.025em;color:var(--ink);margin:0">Análisis del período</h1>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <div style="display:flex;gap:3px;padding:3px;border-radius:11px;background:var(--chip);border:1px solid var(--bd)">
+          <button type="button" style="min-height:36px;padding:0 14px;border:0;border-radius:8px;background:var(--cd);box-shadow:var(--sh);color:var(--ink);font:600 13px Inter,sans-serif;cursor:pointer">7 días</button>
+          <button type="button" style="min-height:36px;padding:0 14px;border:0;border-radius:8px;background:transparent;color:var(--mu);font:500 13px Inter,sans-serif;cursor:pointer">30 días</button>
+          <button type="button" style="min-height:36px;padding:0 14px;border:0;border-radius:8px;background:transparent;color:var(--mu);font:500 13px Inter,sans-serif;cursor:pointer">Este mes</button>
+        </div>
+        <button type="button" style="min-height:42px;display:inline-flex;align-items:center;gap:7px;padding:0 14px;border-radius:11px;background:var(--acc);border:0;color:#fff;font:600 13px Inter,sans-serif;cursor:pointer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 21h16"></path></svg>Exportar</button>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:16px">
+      <div style="background:var(--cd);border:1px solid var(--bd);border-radius:14px;box-shadow:var(--sh);padding:16px 18px">
+        <p style="font:400 12px/1 Inter,sans-serif;color:var(--mu);margin:0 0 9px">Ventas</p>
+        <p style="font:600 24px/1 'Inter Tight',Inter,sans-serif;letter-spacing:-.025em;font-variant-numeric:tabular-nums;color:var(--ink);margin:0">$3.284.100</p>
+        <p style="display:inline-flex;align-items:center;gap:3px;font:600 12px Inter,sans-serif;color:var(--pos);margin:10px 0 0"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="width:11px;height:11px"><path d="M6 15l6-6 6 6"></path></svg>11% <span style="font-weight:400;color:var(--mu)">vs. período anterior</span></p>
+      </div>
+      <div style="background:var(--cd);border:1px solid var(--bd);border-radius:14px;box-shadow:var(--sh);padding:16px 18px">
+        <p style="font:400 12px/1 Inter,sans-serif;color:var(--mu);margin:0 0 9px">Proveedores</p>
+        <p style="font:600 24px/1 'Inter Tight',Inter,sans-serif;letter-spacing:-.025em;font-variant-numeric:tabular-nums;color:var(--ink);margin:0">$612.400</p>
+        <p style="display:inline-flex;align-items:center;gap:3px;font:600 12px Inter,sans-serif;color:var(--neg);margin:10px 0 0"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="width:11px;height:11px"><path d="M6 9l6 6 6-6"></path></svg>8% <span style="font-weight:400;color:var(--mu)">más gasto</span></p>
+      </div>
+      <div style="background:var(--cd);border:1px solid var(--bd2);border-radius:14px;box-shadow:var(--sh);padding:16px 18px;position:relative;overflow:hidden">
+        <span style="position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--acc)"></span>
+        <p style="font:400 12px/1 Inter,sans-serif;color:var(--mu);margin:0 0 9px">Neto</p>
+        <p style="font:700 24px/1 'Inter Tight',Inter,sans-serif;letter-spacing:-.025em;font-variant-numeric:tabular-nums;color:var(--ink);margin:0">$2.671.700</p>
+        <p style="display:inline-flex;align-items:center;gap:3px;font:600 12px Inter,sans-serif;color:var(--pos);margin:10px 0 0"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="width:11px;height:11px"><path d="M6 15l6-6 6 6"></path></svg>13% <span style="font-weight:400;color:var(--mu)">vs. período anterior</span></p>
+      </div>
+      <div style="background:var(--cd);border:1px solid var(--bd);border-radius:14px;box-shadow:var(--sh);padding:16px 18px">
+        <p style="font:400 12px/1 Inter,sans-serif;color:var(--mu);margin:0 0 9px">Efectivo neto</p>
+        <p style="font:600 24px/1 'Inter Tight',Inter,sans-serif;letter-spacing:-.025em;font-variant-numeric:tabular-nums;color:var(--ink);margin:0">$1.108.900</p>
+        <p style="font:500 12px Inter,sans-serif;color:var(--mu2);margin:10px 0 0">≈ igual</p>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1.55fr 1fr;gap:14px;align-items:start">
+      <div style="background:var(--cd);border:1px solid var(--bd);border-radius:14px;box-shadow:var(--sh);padding:18px 20px">
+        <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:18px">
+          <p style="font:500 14px Inter,sans-serif;color:var(--ink);margin:0">Neto por día</p>
+          <div style="display:flex;gap:14px;font:400 12px Inter,sans-serif;color:var(--mu)">
+            <span style="display:inline-flex;align-items:center;gap:5px"><span style="width:9px;height:9px;border-radius:2px;background:var(--ink)"></span>día cerrado</span>
+            <span style="display:inline-flex;align-items:center;gap:5px"><span style="width:9px;height:9px;border-radius:2px;background:var(--wrn)"></span>con borrador</span>
+            <span style="display:inline-flex;align-items:center;gap:5px"><span style="width:14px;border-top:1px dashed var(--acc)"></span>promedio</span>
+          </div>
+        </div>
+        <div style="height:250px;display:flex;gap:12px">
+          <div style="width:52px;flex:none;display:flex;flex-direction:column;justify-content:space-between;font:400 11px Inter,sans-serif;color:var(--mu2);text-align:right;padding-bottom:24px"><span>$600k</span><span>$450k</span><span>$300k</span><span>$150k</span><span>$0</span></div>
+          <div style="flex:1;display:flex;flex-direction:column">
+            <div style="flex:1;position:relative">
+              <div style="position:absolute;inset:0;display:flex;flex-direction:column;justify-content:space-between"><span style="border-top:1px solid var(--bd)"></span><span style="border-top:1px solid var(--bd)"></span><span style="border-top:1px solid var(--bd)"></span><span style="border-top:1px solid var(--bd)"></span><span style="border-top:1px solid var(--bd2)"></span></div>
+              <div style="position:absolute;left:0;right:0;top:36%;border-top:1px dashed var(--acc);opacity:.6"></div>
+              <div style="position:absolute;inset:0;display:flex;align-items:flex-end;gap:22px;padding:0 4px">
+                <span style="flex:1;height:63%;background:var(--ink);border-radius:5px 5px 0 0"></span>
+                <span style="flex:1;height:71%;background:var(--ink);border-radius:5px 5px 0 0"></span>
+                <span style="flex:1;height:52%;background:var(--ink);border-radius:5px 5px 0 0"></span>
+                <span style="flex:1;height:78%;background:var(--ink);border-radius:5px 5px 0 0"></span>
+                <span style="flex:1;height:8%;background:var(--wrn);border-radius:5px 5px 0 0"></span>
+                <span style="flex:1;height:88%;background:var(--ink);border-radius:5px 5px 0 0"></span>
+                <span style="flex:1;height:69%;background:var(--ink);border-radius:5px 5px 0 0"></span>
+              </div>
+            </div>
+            <div style="display:flex;gap:22px;padding:8px 4px 0;font:400 11px Inter,sans-serif;color:var(--mu2)"><span style="flex:1;text-align:center">jue 10</span><span style="flex:1;text-align:center">vie 11</span><span style="flex:1;text-align:center">sáb 12</span><span style="flex:1;text-align:center">dom 13</span><span style="flex:1;text-align:center">lun 14</span><span style="flex:1;text-align:center">mar 15</span><span style="flex:1;text-align:center">mié 16</span></div>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <div style="background:var(--cd);border:1px solid var(--bd);border-radius:14px;box-shadow:var(--sh);overflow:hidden">
+          <p style="font:500 14px Inter,sans-serif;color:var(--ink);margin:0;padding:16px 18px 12px">Ventas por método</p>
+          <div style="display:flex;align-items:center;gap:12px;padding:0 18px;min-height:54px;border-top:1px solid var(--bd)">
+            <span style="width:36px;height:36px;border-radius:9px;border:1px solid var(--bd);display:grid;place-items:center;flex:none"><svg viewBox="0 0 24 24" fill="none" stroke="#047857" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:17px;height:17px"><path d="M3 7h18v10H3zM12 9.7a2.3 2.3 0 100 4.6"></path></svg></span>
+            <span style="flex:1;font:500 13px Inter,sans-serif;color:var(--ink)">Efectivo</span>
+            <span style="font:400 12px Inter,sans-serif;color:var(--mu2)">43%</span>
+            <span style="font:600 14px 'Inter Tight',Inter,sans-serif;font-variant-numeric:tabular-nums;color:var(--ink);min-width:92px;text-align:right">$1.402.300</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;padding:0 18px;min-height:54px;border-top:1px solid var(--bd)">
+            <span style="width:36px;height:36px;border-radius:9px;border:1px solid var(--bd);display:grid;place-items:center;flex:none"><img src="v2/public/metodos/getnet.png" alt="" style="width:27px;height:27px;object-fit:contain"></span>
+            <span style="flex:1;font:500 13px Inter,sans-serif;color:var(--ink)">Getnet</span>
+            <span style="font:400 12px Inter,sans-serif;color:var(--mu2)">39%</span>
+            <span style="font:600 14px 'Inter Tight',Inter,sans-serif;font-variant-numeric:tabular-nums;color:var(--ink);min-width:92px;text-align:right">$1.284.600</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;padding:0 18px;min-height:54px;border-top:1px solid var(--bd)">
+            <span style="width:36px;height:36px;border-radius:9px;border:1px solid var(--bd);display:grid;place-items:center;flex:none"><img src="v2/public/metodos/mercadopago.png" alt="" style="width:27px;height:27px;object-fit:contain"></span>
+            <span style="flex:1;font:500 13px Inter,sans-serif;color:var(--ink)">Mercado Pago</span>
+            <span style="font:400 12px Inter,sans-serif;color:var(--mu2)">13%</span>
+            <span style="font:600 14px 'Inter Tight',Inter,sans-serif;font-variant-numeric:tabular-nums;color:var(--ink);min-width:92px;text-align:right">$412.800</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;padding:0 18px;min-height:54px;border-top:1px solid var(--bd)">
+            <span style="width:36px;height:36px;border-radius:9px;border:1px solid var(--bd);display:grid;place-items:center;flex:none"><img src="v2/public/metodos/edenred.png" alt="" style="width:27px;height:27px;object-fit:contain"></span>
+            <span style="flex:1;font:500 13px Inter,sans-serif;color:var(--ink)">Edenred</span>
+            <span style="font:400 12px Inter,sans-serif;color:var(--mu2)">4%</span>
+            <span style="font:600 14px 'Inter Tight',Inter,sans-serif;font-variant-numeric:tabular-nums;color:var(--ink);min-width:92px;text-align:right">$128.400</span>
+          </div>
+        </div>
+        <div style="background:var(--cd);border:1px solid var(--bd);border-radius:14px;box-shadow:var(--sh);overflow:hidden">
+          <p style="font:500 14px Inter,sans-serif;color:var(--ink);margin:0;padding:16px 18px 12px">Top proveedores</p>
+          <div style="display:flex;align-items:center;gap:12px;padding:0 18px;min-height:54px;border-top:1px solid var(--bd)">
+            <span style="width:36px;height:36px;border-radius:9px;background:var(--chip);border:1px solid var(--bd);display:grid;place-items:center;flex:none;font:600 12px Inter,sans-serif;color:var(--in2)">CC</span>
+            <span style="flex:1;min-width:0"><span style="display:block;font:500 13px Inter,sans-serif;color:var(--ink)">Coca-Cola Embonor</span><span style="display:block;font:400 11px Inter,sans-serif;color:var(--mu);margin-top:2px">5 compras</span></span>
+            <span style="font:600 14px 'Inter Tight',Inter,sans-serif;font-variant-numeric:tabular-nums;color:var(--neg)">−$214.000</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;padding:0 18px;min-height:54px;border-top:1px solid var(--bd)">
+            <span style="width:36px;height:36px;border-radius:9px;background:var(--chip);border:1px solid var(--bd);display:grid;place-items:center;flex:none;font:600 12px Inter,sans-serif;color:var(--in2)">PS</span>
+            <span style="flex:1;min-width:0"><span style="display:block;font:500 13px Inter,sans-serif;color:var(--ink)">Panadería San José</span><span style="display:block;font:400 11px Inter,sans-serif;color:var(--mu);margin-top:2px">7 compras</span></span>
+            <span style="font:600 14px 'Inter Tight',Inter,sans-serif;font-variant-numeric:tabular-nums;color:var(--neg)">−$183.900</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;padding:0 18px;min-height:54px;border-top:1px solid var(--bd)">
+            <span style="width:36px;height:36px;border-radius:9px;background:var(--chip);border:1px solid var(--bd);display:grid;place-items:center;flex:none;font:600 12px Inter,sans-serif;color:var(--in2)">DL</span>
+            <span style="flex:1;min-width:0"><span style="display:block;font:500 13px Inter,sans-serif;color:var(--ink)">Distribuidora Lo Valledor</span><span style="display:block;font:400 11px Inter,sans-serif;color:var(--mu);margin-top:2px">3 compras</span></span>
+            <span style="font:600 14px 'Inter Tight',Inter,sans-serif;font-variant-numeric:tabular-nums;color:var(--neg)">−$96.500</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+</div>
+
+<!-- ══════════ VARIANTES ══════════ -->
+<sc-if value="{{ mostrarVariantes }}" hint-placeholder-val="{{ true }}">
+<div style="margin-top:44px;padding-top:34px;border-top:1px solid rgba(0,0,0,.1)">
+<p style="font:600 11px/1.2 Inter,sans-serif;text-transform:uppercase;letter-spacing:.1em;color:#667085;margin:0 0 8px">Variantes para elegir</p>
+<h2 style="font:600 24px/1.15 'Inter Tight',Inter,sans-serif;letter-spacing:-.02em;margin:0 0 26px;color:#0F1115">Cuatro decisiones abiertas</h2>
+
+<div style="display:flex;flex-wrap:wrap;gap:28px;align-items:flex-start">
+
+<div id="1b" style="flex:none;display:flex;flex-direction:column;gap:10px;scroll-margin-top:16px">
+  <div style="display:flex;align-items:baseline;gap:8px"><a href="#1b" style="font:600 10.5px ui-monospace,Menlo,monospace;background:rgba(0,0,0,.08);color:#0F1115;border-radius:5px;padding:3px 7px;text-decoration:none">1b</a><span style="font:400 11px/1.3 Inter,sans-serif;color:rgba(0,0,0,.55)">Tarjetas: borde / sombra / hundida</span></div>
+  <div style="width:340px;background:var(--cv);border:1px solid var(--bd2);border-radius:16px;padding:18px;display:flex;flex-direction:column;gap:14px">
+    <div style="background:#fff;border:1px solid var(--bd2);border-radius:14px;padding:16px">
+      <p style="font:400 11px Inter,sans-serif;color:var(--mu2);margin:0 0 10px">1px de borde, sin sombra — la más “dato”</p>
+      <div style="display:flex;align-items:baseline;justify-content:space-between"><span style="font:500 14px Inter,sans-serif;color:var(--in2)">Efectivo esperado</span><span style="font:600 20px 'Inter Tight',Inter,sans-serif;font-variant-numeric:tabular-nums">$164.200</span></div>
+    </div>
+    <div style="background:#fff;border:1px solid var(--bd);border-radius:14px;box-shadow:0 4px 14px -6px rgba(16,24,40,.16);padding:16px">
+      <p style="font:400 11px Inter,sans-serif;color:var(--mu2);margin:0 0 10px">Sombra suave — la de <a href="#1a">1a</a>, más “app”</p>
+      <div style="display:flex;align-items:baseline;justify-content:space-between"><span style="font:500 14px Inter,sans-serif;color:var(--in2)">Efectivo esperado</span><span style="font:600 20px 'Inter Tight',Inter,sans-serif;font-variant-numeric:tabular-nums">$164.200</span></div>
+    </div>
+    <div style="background:var(--chip);border:1px solid var(--bd);border-radius:14px;padding:16px">
+      <p style="font:400 11px Inter,sans-serif;color:var(--mu2);margin:0 0 10px">Superficie hundida — para bloques de apoyo</p>
+      <div style="display:flex;align-items:baseline;justify-content:space-between"><span style="font:500 14px Inter,sans-serif;color:var(--in2)">Efectivo esperado</span><span style="font:600 20px 'Inter Tight',Inter,sans-serif;font-variant-numeric:tabular-nums">$164.200</span></div>
+    </div>
+  </div>
+</div>
+
+<div id="1c" style="flex:none;display:flex;flex-direction:column;gap:10px;scroll-margin-top:16px">
+  <div style="display:flex;align-items:baseline;gap:8px"><a href="#1c" style="font:600 10.5px ui-monospace,Menlo,monospace;background:rgba(0,0,0,.08);color:#0F1115;border-radius:5px;padding:3px 7px;text-decoration:none">1c</a><span style="font:400 11px/1.3 Inter,sans-serif;color:rgba(0,0,0,.55)">Jerarquía de Hoy: neto solo / neto + caja</span></div>
+  <div style="width:340px;background:var(--cv);border:1px solid var(--bd2);border-radius:16px;padding:18px;display:flex;flex-direction:column;gap:14px">
+    <div style="background:#fff;border:1px solid var(--bd);border-radius:14px;box-shadow:var(--sh);padding:16px">
+      <p style="font:600 10.5px Inter,sans-serif;text-transform:uppercase;letter-spacing:.1em;color:var(--mu);margin:0 0 8px">Opción 1 · como <a href="#1a">1a</a></p>
+      <p style="font:400 11px Inter,sans-serif;color:var(--mu2);margin:0 0 12px">El neto manda; la caja vive en su tarjeta.</p>
+      <p style="font:700 34px/1 'Inter Tight',Inter,sans-serif;letter-spacing:-.03em;font-variant-numeric:tabular-nums;margin:0">$412.300</p>
+      <p style="font:400 12px Inter,sans-serif;color:var(--mu);margin:8px 0 0">neto del día</p>
+    </div>
+    <div style="background:#fff;border:1px solid var(--bd);border-radius:14px;box-shadow:var(--sh);padding:16px">
+      <p style="font:600 10.5px Inter,sans-serif;text-transform:uppercase;letter-spacing:.1em;color:var(--mu);margin:0 0 8px">Opción 2 · par equilibrado</p>
+      <p style="font:400 11px Inter,sans-serif;color:var(--mu2);margin:0 0 12px">Para quien cierra: el neto y lo que debe haber en el cajón, juntos.</p>
+      <div style="display:flex;gap:14px">
+        <div style="flex:1"><p style="font:700 24px/1 'Inter Tight',Inter,sans-serif;letter-spacing:-.025em;font-variant-numeric:tabular-nums;margin:0">$412.300</p><p style="font:400 11px Inter,sans-serif;color:var(--mu);margin:6px 0 0">neto</p></div>
+        <div style="width:1px;background:var(--bd)"></div>
+        <div style="flex:1"><p style="font:700 24px/1 'Inter Tight',Inter,sans-serif;letter-spacing:-.025em;font-variant-numeric:tabular-nums;margin:0;color:var(--acc)">$164.200</p><p style="font:400 11px Inter,sans-serif;color:var(--mu);margin:6px 0 0">en caja</p></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="1d" style="flex:none;display:flex;flex-direction:column;gap:10px;scroll-margin-top:16px">
+  <div style="display:flex;align-items:baseline;gap:8px"><a href="#1d" style="font:600 10.5px ui-monospace,Menlo,monospace;background:rgba(0,0,0,.08);color:#0F1115;border-radius:5px;padding:3px 7px;text-decoration:none">1d</a><span style="font:400 11px/1.3 Inter,sans-serif;color:rgba(0,0,0,.55)">Nav y FAB: cuadrado / redondo con etiqueta / píldora</span></div>
+  <div style="width:390px;background:var(--cv);border:1px solid var(--bd2);border-radius:16px;padding:18px;display:flex;flex-direction:column;gap:18px">
+    <div>
+      <p style="font:400 11px Inter,sans-serif;color:var(--mu2);margin:0 0 8px">FAB cuadrado 19px de radio, sin etiqueta — la de <a href="#1a">1a</a></p>
+      <nav style="position:relative;margin-top:28px;background:#fff;border:1px solid var(--bd);border-radius:14px;padding:0 0 8px">
+        <div style="display:flex">
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 0 2px;color:var(--acc)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px"><path d="M4 10l8-6 8 6M6 9v10h12V9"></path></svg><span style="font:600 11px Inter,sans-serif">Hoy</span></div>
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 0 2px;color:var(--mu)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px"><path d="M4 12a8 8 0 108-8 8.2 8.2 0 00-5.7 2.3L4 8.5M4 4v4.5h4.5M12 8v4l3 2"></path></svg><span style="font:500 11px Inter,sans-serif">Historial</span></div>
+          <div style="width:70px;flex:none"></div>
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 0 2px;color:var(--mu)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px"><path d="M5 19V9M12 19V5M19 19v-7"></path></svg><span style="font:500 11px Inter,sans-serif">Análisis</span></div>
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 0 2px;color:var(--mu)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px"><path d="M12 15a3 3 0 100-6 3 3 0 000 6zM19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"></path></svg><span style="font:500 11px Inter,sans-serif">Ajustes</span></div>
+        </div>
+        <span style="position:absolute;left:50%;transform:translateX(-50%);top:-20px;width:54px;height:54px;border-radius:18px;border:3px solid #fff;background:var(--acc);color:#fff;display:grid;place-items:center;box-shadow:0 8px 20px -6px rgba(79,70,229,.5)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" style="width:22px;height:22px"><path d="M3 7h18v10H3zM12 9.7a2.3 2.3 0 100 4.6"></path></svg></span>
+      </nav>
+    </div>
+    <div>
+      <p style="font:400 11px Inter,sans-serif;color:var(--mu2);margin:0 0 8px">Redondo con etiqueta “Cerrar caja” — más explícito, como hoy</p>
+      <nav style="position:relative;margin-top:34px;background:#fff;border:1px solid var(--bd);border-radius:14px;padding:0 0 14px">
+        <div style="display:flex">
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 0 2px;color:var(--acc)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px"><path d="M4 10l8-6 8 6M6 9v10h12V9"></path></svg><span style="font:600 11px Inter,sans-serif">Hoy</span></div>
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 0 2px;color:var(--mu)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px"><path d="M4 12a8 8 0 108-8 8.2 8.2 0 00-5.7 2.3L4 8.5M4 4v4.5h4.5M12 8v4l3 2"></path></svg><span style="font:500 11px Inter,sans-serif">Historial</span></div>
+          <div style="width:74px;flex:none"></div>
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 0 2px;color:var(--mu)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px"><path d="M5 19V9M12 19V5M19 19v-7"></path></svg><span style="font:500 11px Inter,sans-serif">Análisis</span></div>
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 0 2px;color:var(--mu)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px"><path d="M12 15a3 3 0 100-6 3 3 0 000 6zM19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"></path></svg><span style="font:500 11px Inter,sans-serif">Ajustes</span></div>
+        </div>
+        <span style="position:absolute;left:50%;transform:translateX(-50%);top:-20px;display:flex;flex-direction:column;align-items:center;gap:3px">
+          <span style="width:52px;height:52px;border-radius:999px;border:3px solid #fff;background:var(--ink);color:#fff;display:grid;place-items:center;box-shadow:0 8px 20px -8px rgba(16,24,40,.5)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" style="width:22px;height:22px"><path d="M12 5v14M5 12h14"></path></svg></span>
+          <span style="font:600 10.5px Inter,sans-serif;color:var(--ink)">Cerrar caja</span>
+        </span>
+      </nav>
+    </div>
+    <div>
+      <p style="font:400 11px Inter,sans-serif;color:var(--mu2);margin:0 0 8px">Sin FAB: botón píldora ancho sobre la barra — el pulgar no viaja al centro</p>
+      <div style="background:#fff;border:1px solid var(--bd);border-radius:14px;overflow:hidden">
+        <div style="padding:10px 12px"><button type="button" style="width:100%;min-height:46px;border:0;border-radius:12px;background:var(--acc);color:#fff;font:600 14px Inter,sans-serif;display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:17px;height:17px"><path d="M3 7h18v10H3zM12 9.7a2.3 2.3 0 100 4.6"></path></svg>Cerrar caja</button></div>
+        <div style="display:flex;border-top:1px solid var(--bd)">
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:9px 0 10px;color:var(--acc)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px"><path d="M4 10l8-6 8 6M6 9v10h12V9"></path></svg><span style="font:600 11px Inter,sans-serif">Hoy</span></div>
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:9px 0 10px;color:var(--mu)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px"><path d="M4 12a8 8 0 108-8 8.2 8.2 0 00-5.7 2.3L4 8.5M4 4v4.5h4.5M12 8v4l3 2"></path></svg><span style="font:500 11px Inter,sans-serif">Historial</span></div>
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:9px 0 10px;color:var(--mu)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px"><path d="M5 19V9M12 19V5M19 19v-7"></path></svg><span style="font:500 11px Inter,sans-serif">Análisis</span></div>
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:9px 0 10px;color:var(--mu)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px"><path d="M12 15a3 3 0 100-6 3 3 0 000 6zM19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"></path></svg><span style="font:500 11px Inter,sans-serif">Ajustes</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="1e" style="flex:none;display:flex;flex-direction:column;gap:10px;scroll-margin-top:16px">
+  <div style="display:flex;align-items:baseline;gap:8px"><a href="#1e" style="font:600 10.5px ui-monospace,Menlo,monospace;background:rgba(0,0,0,.08);color:#0F1115;border-radius:5px;padding:3px 7px;text-decoration:none">1e</a><span style="font:400 11px/1.3 Inter,sans-serif;color:rgba(0,0,0,.55)">Gráfico: barras tinta / área verde / barras apiladas por método</span></div>
+  <div style="width:400px;background:var(--cv);border:1px solid var(--bd2);border-radius:16px;padding:18px;display:flex;flex-direction:column;gap:14px">
+    <div style="background:#fff;border:1px solid var(--bd);border-radius:14px;box-shadow:var(--sh);padding:16px">
+      <p style="font:400 11px Inter,sans-serif;color:var(--mu2);margin:0 0 12px">Barras tinta — neutral, el color se reserva para alertas (la de <a href="#1a">1a</a>)</p>
+      <div style="height:96px;display:flex;align-items:flex-end;gap:8px;border-bottom:1px solid var(--bd2)">
+        <span style="flex:1;height:63%;background:var(--ink);border-radius:4px 4px 0 0"></span><span style="flex:1;height:71%;background:var(--ink);border-radius:4px 4px 0 0"></span><span style="flex:1;height:52%;background:var(--ink);border-radius:4px 4px 0 0"></span><span style="flex:1;height:78%;background:var(--ink);border-radius:4px 4px 0 0"></span><span style="flex:1;height:8%;background:var(--wrn);border-radius:4px 4px 0 0"></span><span style="flex:1;height:88%;background:var(--ink);border-radius:4px 4px 0 0"></span><span style="flex:1;height:69%;background:var(--ink);border-radius:4px 4px 0 0"></span>
+      </div>
+    </div>
+    <div style="background:#fff;border:1px solid var(--bd);border-radius:14px;box-shadow:var(--sh);padding:16px">
+      <p style="font:400 11px Inter,sans-serif;color:var(--mu2);margin:0 0 12px">Área verde con puntos — lee tendencia antes que valores</p>
+      <div style="height:96px;position:relative;border-bottom:1px solid var(--bd2)">
+        <svg viewBox="0 0 280 96" preserveAspectRatio="none" style="width:100%;height:100%;display:block">
+          <polygon points="0,36 47,26 93,44 140,20 187,88 233,10 280,30 280,96 0,96" fill="#047857" opacity=".12"></polygon>
+          <polyline points="0,36 47,26 93,44 140,20 187,88 233,10 280,30" fill="none" stroke="#047857" stroke-width="2" stroke-linejoin="round"></polyline>
+          <circle cx="187" cy="88" r="4" fill="#DC2626"></circle>
+          <circle cx="233" cy="10" r="4" fill="#047857"></circle>
+        </svg>
+      </div>
+    </div>
+    <div style="background:#fff;border:1px solid var(--bd);border-radius:14px;box-shadow:var(--sh);padding:16px">
+      <p style="font:400 11px Inter,sans-serif;color:var(--mu2);margin:0 0 12px">Apiladas por método — muestra la mezcla de pago día a día</p>
+      <div style="height:96px;display:flex;align-items:flex-end;gap:8px;border-bottom:1px solid var(--bd2)">
+        <span style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;height:63%;border-radius:4px 4px 0 0;overflow:hidden"><span style="height:12%;background:#009EE3"></span><span style="height:44%;background:#D2232A"></span><span style="height:44%;background:#047857"></span></span>
+        <span style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;height:71%;border-radius:4px 4px 0 0;overflow:hidden"><span style="height:16%;background:#009EE3"></span><span style="height:40%;background:#D2232A"></span><span style="height:44%;background:#047857"></span></span>
+        <span style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;height:52%;border-radius:4px 4px 0 0;overflow:hidden"><span style="height:10%;background:#009EE3"></span><span style="height:46%;background:#D2232A"></span><span style="height:44%;background:#047857"></span></span>
+        <span style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;height:78%;border-radius:4px 4px 0 0;overflow:hidden"><span style="height:14%;background:#009EE3"></span><span style="height:36%;background:#D2232A"></span><span style="height:50%;background:#047857"></span></span>
+        <span style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;height:20%;border-radius:4px 4px 0 0;overflow:hidden"><span style="height:20%;background:#009EE3"></span><span style="height:40%;background:#D2232A"></span><span style="height:40%;background:#047857"></span></span>
+        <span style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;height:88%;border-radius:4px 4px 0 0;overflow:hidden"><span style="height:12%;background:#009EE3"></span><span style="height:42%;background:#D2232A"></span><span style="height:46%;background:#047857"></span></span>
+        <span style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;height:69%;border-radius:4px 4px 0 0;overflow:hidden"><span style="height:15%;background:#009EE3"></span><span style="height:38%;background:#D2232A"></span><span style="height:47%;background:#047857"></span></span>
+      </div>
+      <div style="display:flex;gap:14px;margin-top:12px;font:400 11px Inter,sans-serif;color:var(--mu)">
+        <span style="display:inline-flex;align-items:center;gap:5px"><span style="width:9px;height:9px;border-radius:2px;background:#047857"></span>Efectivo</span>
+        <span style="display:inline-flex;align-items:center;gap:5px"><span style="width:9px;height:9px;border-radius:2px;background:#D2232A"></span>Getnet</span>
+        <span style="display:inline-flex;align-items:center;gap:5px"><span style="width:9px;height:9px;border-radius:2px;background:#009EE3"></span>Mercado Pago</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>
+<p style="margin:26px 0 0;font:400 13px/1.6 Inter,sans-serif;color:rgba(0,0,0,.55)">Para seguir: “quedémonos con <a href="#1b">1b</a> hundida en las tarjetas de apoyo” · “Hoy como la opción 2 de <a href="#1c">1c</a>” · “el FAB con etiqueta de <a href="#1d">1d</a>” · “el gráfico apilado de <a href="#1e">1e</a> en escritorio y barras tinta en móvil” · “ahora Historial, Proveedores y Ajustes con esta piel”</p>
+</div>
+</sc-if>
+
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;mostrarVariantes&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Contenido&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    return { mostrarVariantes: this.props.mostrarVariantes ?? true }
+  }
+}
+</script>
+</body>
+</html>
