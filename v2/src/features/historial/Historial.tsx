@@ -95,10 +95,10 @@ function FilaDia({ d }: { d: VResumenDia }) {
           {d.corregido && <span className="badge bg-brand-tint text-brand">Corregido</span>}
           {d.con_descuadre && <span className="badge bg-neg-tint text-neg">Descuadre</span>}
         </div>
-        {/* En 320 px ventas y proveedores no caben en una línea: se parten sin cortar cifras. */}
-        <p className="text-xs text-muted tabular-nums mt-1.5 flex flex-wrap gap-x-1">
+        {/* Bajo 390 px "proveedores" invade la columna del neto: se abrevia. */}
+        <p className="text-xs text-muted tabular-nums mt-1.5 flex flex-col">
           <span className="whitespace-nowrap">{clp(d.total_ventas)} ventas</span>
-          <span className="whitespace-nowrap"><span className="max-[389px]:hidden" aria-hidden="true">· </span>{clp(d.total_proveedores)} prov.</span>
+          <span className="whitespace-nowrap">{clp(d.total_proveedores)} <span className="max-[389px]:hidden">proveedores</span><span className="min-[390px]:hidden">prov.</span></span>
         </p>
       </div>
       <p className="text-right shrink-0">
