@@ -87,7 +87,7 @@ export default function CerrarTurno() {
     // Turno ya cerrado sin cambios: no se registra una corrección vacía.
     if (state.cerrado && !state.sucio) {
       toast.show({ message: 'No hay cambios que guardar' })
-      void navigate({ to: '/dia', search: { fecha } })
+      void navigate({ to: '/dia', search: { fecha }, replace: true })
       return
     }
     setSheet(null)

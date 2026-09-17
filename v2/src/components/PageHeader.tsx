@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { Link } from '@tanstack/react-router'
+import { Link, useCanGoBack, useRouter } from '@tanstack/react-router'
 import Icon from './Icon'
 
 interface Props {
@@ -10,6 +10,12 @@ interface Props {
   action?: ReactNode
   /** Ruta del botón "volver" (flecha a la izquierda). */
   back?: string
+  /**
+   * Con `true`, la flecha vuelve a la pantalla anterior de la app (con su
+   * filtro y su scroll) y `back` queda solo para cuando no hay de dónde
+   * volver: enlace directo o recarga.
+   */
+  volverAtras?: boolean
   children?: ReactNode
 }
 
@@ -17,12 +23,16 @@ interface Props {
  * En el celular es una barra superior blanca a todo el ancho (anula el
  * padding de `main`); desde `md`, con la barra lateral, un encabezado simple.
  */
-export default function PageHeader({ eyebrow, title, subtitle, action, back, children }: Props) {
+export default function PageHeader({ eyebrow, title, subtitle, action, back, volverAtras, children }: Props) {
+  const router = useRouter()
+  const puedeVolver = useCanGoBack()
   return (
     <header className="flex items-center justify-between gap-3 -mx-4 sm:-mx-6 -mt-5 mb-4 px-4 sm:px-6 py-4 bg-card border-b border-hairline md:m-0 md:mb-5 md:p-0 md:bg-transparent md:border-0 md:items-end">
       <div className="min-w-0 flex-1 flex items-center gap-2">
         {back && (
-          <Link to={back} aria-label="Volver" className="hit -ml-1.5 w-9 h-9 rounded-[10px] grid place-items-center text-ink2 hover:bg-soft shrink-0">
+          <Link to={back} aria-label="Volver"
+            onClick={(e) => { if (volverAtras && puedeVolver) { e.preventDefault(); router.history.back() } }}
+            className="hit -ml-1.5 w-9 h-9 rounded-[10px] grid place-items-center text-ink2 hover:bg-soft shrink-0">
             <Icon name="chevL" className="w-5 h-5" stroke={2} />
           </Link>
         )}

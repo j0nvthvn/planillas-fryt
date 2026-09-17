@@ -36,7 +36,7 @@ export default function Login() {
     // antes volvía a quedar activo y la pantalla parecía no responder.
     // Solo rutas internas ("/x", nunca "//dominio").
     const destino = volver && /^\/(?!\/)/.test(volver) && volver !== '/login' ? volver : '/hoy'
-    await navigate({ to: destino as '/hoy' }).finally(() => setLoading(false))
+    await navigate({ to: destino as '/hoy', replace: true }).finally(() => setLoading(false))
   }
 
   return (

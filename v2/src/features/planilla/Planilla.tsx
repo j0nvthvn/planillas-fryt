@@ -64,11 +64,11 @@ export default function Planilla() {
 
   return (
     <div className="max-w-3xl mx-auto">
-      <PageHeader title={fechaSinAnio(fecha, true)} subtitle={`Planilla del día${fecha.slice(0, 4) === hoy().slice(0, 4) ? '' : ` · ${fecha.slice(0, 4)}`}`} back={esDueno ? '/historial' : '/hoy'}
+      <PageHeader title={fechaSinAnio(fecha, true)} subtitle={`Planilla del día${fecha.slice(0, 4) === hoy().slice(0, 4) ? '' : ` · ${fecha.slice(0, 4)}`}`} back={esDueno ? '/historial' : '/hoy'} volverAtras
         action={
           <div className="flex gap-1.5">
-            <Link to="/dia" search={{ fecha: sumarDias(fecha, -1) }} className={FLECHA} aria-label="Día anterior"><Icon name="chevL" className="w-[17px] h-[17px]" stroke={1.9} /></Link>
-            <Link to="/dia" search={{ fecha: sumarDias(fecha, 1) }} disabled={fecha >= hoy()} className={`${FLECHA} ${fecha >= hoy() ? 'opacity-50 pointer-events-none' : ''}`} aria-label="Día siguiente"><Icon name="chevR" className="w-[17px] h-[17px]" stroke={1.9} /></Link>
+            <Link to="/dia" search={{ fecha: sumarDias(fecha, -1) }} replace className={FLECHA} aria-label="Día anterior"><Icon name="chevL" className="w-[17px] h-[17px]" stroke={1.9} /></Link>
+            <Link to="/dia" search={{ fecha: sumarDias(fecha, 1) }} replace disabled={fecha >= hoy()} className={`${FLECHA} ${fecha >= hoy() ? 'opacity-50 pointer-events-none' : ''}`} aria-label="Día siguiente"><Icon name="chevR" className="w-[17px] h-[17px]" stroke={1.9} /></Link>
           </div>
         }
       />

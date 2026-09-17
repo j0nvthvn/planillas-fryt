@@ -148,6 +148,9 @@ export const router = createRouter({
   routeTree,
   defaultPreload: 'intent',
   scrollRestoration: true,
+  // En el celular el scroll vive en `main`: una pantalla nueva parte arriba
+  // y al volver recupera su posición.
+  scrollToTopSelectors: ['#contenido'],
   defaultPendingComponent: EsqueletoPagina,
 })
 

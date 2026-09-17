@@ -31,6 +31,17 @@ function activo(pathname: string, to: string) {
   return to === '/hoy' ? pathname === '/hoy' || pathname === '/' : pathname === to || pathname.startsWith(to + '/')
 }
 
+/** `page` solo en la pantalla misma; en la sección que la contiene, `true`. */
+function ariaActual(on: boolean, pathname: string, to: string): 'page' | true | undefined {
+  if (!on) return undefined
+  return activo(pathname, to) ? 'page' : true
+}
+
+/** Pestaña que se marca: la Planilla del día cuelga del Historial (o de Hoy, en el local). */
+function seccion(pathname: string, esDueno: boolean) {
+  return pathname === '/dia' ? (esDueno ? '/historial' : '/hoy') : pathname
+}
+
 function ActualizacionBanner() {
   const { needRefresh: [needRefresh], updateServiceWorker } = useRegisterSW()
   // El contenedor queda montado para que el aviso se anuncie al aparecer.
@@ -50,6 +61,7 @@ export default function Layout({ children }: { children: ReactNode }) {
   const { esDueno } = useUsuario()
   const online = useOnline()
   const pathname = useRouterState({ select: (s) => s.location.pathname })
+  const marcada = seccion(pathname, esDueno)
   const items = ITEMS.filter((i) => !i.dueno || esDueno)
   const tabsMovil = items.filter((i) => (esDueno ? TABS_MOVIL_DUENO : TABS_MOVIL_LOCAL).includes(i.to))
   const mitad = Math.ceil(tabsMovil.length / 2)
@@ -95,9 +107,9 @@ export default function Layout({ children }: { children: ReactNode }) {
           </div>
           <nav className="flex-1 space-y-0.5 px-3 pb-4" aria-label="Navegación principal">
             {items.map((i) => {
-              const on = activo(pathname, i.to)
+              const on = activo(marcada, i.to)
               return (
-                <Link key={i.to} to={i.to} aria-current={on ? 'page' : undefined}
+                <Link key={i.to} to={i.to} aria-current={ariaActual(on, pathname, i.to)}
                   className={`flex w-full items-center gap-3 rounded-[10px] px-[11px] py-[9px] text-md transition-colors ${on ? 'bg-brand-tint text-brand font-semibold' : 'text-ink2 font-medium hover:bg-soft hover:text-ink'}`}>
                   <Icon name={i.icon} className="w-5 h-5 shrink-0" stroke={on ? 2.1 : 1.8} />{i.label}
                 </Link>
@@ -109,7 +121,7 @@ export default function Layout({ children }: { children: ReactNode }) {
           </div>
         </aside>
 
-        <main id="contenido" ref={mainRef} tabIndex={-1} className="focus:outline-none flex-1 min-h-0 min-w-0 px-4 sm:px-6 md:px-8 pt-5 pb-nav md:pb-8 overflow-y-auto overflow-x-hidden md:overflow-visible">
+        <main id="contenido" data-scroll-restoration-id="contenido" ref={mainRef} tabIndex={-1} className="focus:outline-none flex-1 min-h-0 min-w-0 px-4 sm:px-6 md:px-8 pt-5 pb-nav md:pb-8 overflow-y-auto overflow-x-hidden md:overflow-visible">
           {children}
         </main>
       </div>
@@ -117,9 +129,9 @@ export default function Layout({ children }: { children: ReactNode }) {
       {!enfoque && <nav aria-label="Navegación principal" className="md:hidden shrink-0 relative bg-card border-t border-hairline"
         style={{ paddingBottom: 'max(10px, env(safe-area-inset-bottom))' }}>
         <div className="flex items-stretch">
-          <div className="flex-1 flex items-stretch">{izq.map((i) => <Tab key={i.to} item={i} on={activo(pathname, i.to)} />)}</div>
+          <div className="flex-1 flex items-stretch">{izq.map((i) => <Tab key={i.to} item={i} on={activo(marcada, i.to)} actual={ariaActual(activo(marcada, i.to), pathname, i.to)} />)}</div>
           <div className="w-[76px] shrink-0" aria-hidden="true" />
-          <div className="flex-1 flex items-stretch">{der.map((i) => <Tab key={i.to} item={i} on={activo(pathname, i.to)} />)}</div>
+          <div className="flex-1 flex items-stretch">{der.map((i) => <Tab key={i.to} item={i} on={activo(marcada, i.to)} actual={ariaActual(activo(marcada, i.to), pathname, i.to)} />)}</div>
         </div>
         <Link to={fab.to} aria-label={fab.label}
           className="absolute left-1/2 -translate-x-1/2 -top-[22px] z-40 grid place-items-center w-[58px] h-[58px] rounded-[19px] border-[3px] border-card bg-brand text-on-solid shadow-fab hover:bg-brand-hover transition-colors">
@@ -130,9 +142,9 @@ export default function Layout({ children }: { children: ReactNode }) {
   )
 }
 
-function Tab({ item, on }: { item: Item; on: boolean }) {
+function Tab({ item, on, actual }: { item: Item; on: boolean; actual: 'page' | true | undefined }) {
   return (
-    <Link to={item.to} aria-current={on ? 'page' : undefined}
+    <Link to={item.to} aria-current={actual}
       className={`flex-1 flex flex-col items-center justify-center gap-1 pt-2.5 pb-0.5 min-h-[58px] text-[11px] ${on ? 'text-brand font-semibold' : 'text-muted font-medium'}`}>
       <Icon name={item.icon} className="w-[21px] h-[21px]" stroke={on ? 2.1 : 1.8} />
       <span>{item.label}</span>

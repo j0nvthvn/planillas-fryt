@@ -58,7 +58,7 @@ export default function ProveedorDetalle() {
 
   return (
     <div className="max-w-2xl mx-auto">
-      <PageHeader eyebrow="Proveedor" title={prov.nombre} back="/proveedores" />
+      <PageHeader eyebrow="Proveedor" title={prov.nombre} back="/proveedores" volverAtras />
       <div className="card flex items-center gap-4 mb-4">
         <button type="button" onClick={() => fileRef.current?.click()} className="relative" aria-label="Cambiar logo">
           <ProveedorAvatar nombre={prov.nombre} imagenUrl={prov.imagen_url} size="lg" />

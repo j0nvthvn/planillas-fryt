@@ -181,6 +181,21 @@ Detalle, tabla de contraste y pendientes en `docs/auditoria-ui.md`.
 - **Utilitarios nuevos:** `btn-lg`, `btn-bar`, `aviso` y `badge-sm`.
 - **Pruebas:** axe en `e2e/a11y.spec.ts` (0 violaciones; antes, 15 de contraste).
 
+### Navegación de la Planilla del día (17 de septiembre de 2026)
+
+- **La barra inferior se queda:** la Planilla es una ficha de consulta, no
+  una tarea como Cerrar turno. En el celular se marca Historial (Hoy, en el
+  local) con `aria-current="true"`.
+- **La flecha vuelve al origen:** `PageHeader volverAtras` retrocede en el
+  historial si hay de dónde, conservando el filtro del Historial. Sin origen
+  (enlace directo o recarga) va a `back`. También en el detalle de proveedor.
+- **Flechas de día con `replace`:** "atrás" sale de la Planilla de una vez.
+  Lo mismo al llegar desde Cerrar turno sin cambios y tras el login.
+- **Scroll:** `main` tiene `data-scroll-restoration-id` y está en
+  `scrollToTopSelectors`. Una pantalla nueva parte arriba (antes heredaba el
+  scroll de la anterior) y al volver se recupera la posición.
+- **Pruebas:** `e2e/navegacion.spec.ts`.
+
 ## Pendiente
 
 - Revisar en un celular real (Safari de iOS, con su barra inferior) la altura
