@@ -80,7 +80,7 @@ Credenciales y dónde están (nunca en el repo, salvo anon keys):
 ### Fase 2 — App v2: **hecha** (2026-09-16/17; ajustes móviles 2026-09-16)
 - `v2/`: Vite 7, React 19, TS estricto, TanStack Router + Query (persistencia IndexedDB), Tailwind v4, PWA. Pantallas: Login, Hoy, Cerrar turno, Planilla del día, Historial, Análisis, Proveedores, Ajustes.
 - Diseño inicial decidido con la dueña/Jonathan: identidad café cálida (reemplazada por el rediseño Fintech, ver abajo), móvil primero, camino "A" (cifra al frente) + teclado encadenado + planilla en cuaderno. Exploraciones: https://claude.ai/artifact/VibHvxrnP7PXgWvAVUifqa
-- Verificación: `pnpm lint`, `pnpm typecheck`, `pnpm test` (81 unitarios), `pnpm build`, `pnpm e2e` (Playwright contra staging) y 6 tests de integración contra staging (`src/test/integracion.staging.test.ts`, requiere `SMOKE_PASSWORD`).
+- Verificación: `pnpm lint`, `pnpm typecheck`, `pnpm test` (90 unitarios), `pnpm build`, `pnpm e2e` (Playwright contra staging) y 6 tests de integración contra staging (`src/test/integracion.staging.test.ts`, requiere `SMOKE_PASSWORD`).
 - **Mejoras del 2026-09-17** (detalle y pendientes en `docs/mejoras-ux.md`): hoja de revisión antes de cerrar y conteo de caja por billetes —las dos atacan lo medido en prod: 25 % de cierres son correcciones y no hay ningún conteo registrado—, aviso de proveedor parecido, base accesible (foco visible, `prefers-reduced-motion`, hojas como `<dialog>`, nada bajo 12 px, contrastes), escala tipográfica en tokens y fuentes alojadas en el repo.
 - **Exportación** (detalle en `docs/mejoras-ux.md`): Análisis → Exportar ofrece un Excel con varias hojas, un CSV por turno (igual al de la app actual), un CSV de compras a proveedores y un reporte imprimible o PDF (`/analisis/reporte`). En el celular el archivo se comparte. Corrige el CSV por día anterior, que duplicaba el fondo en "Efectivo esperado" y omitía métodos inactivos.
 - **Ingeniería:** ESLint (flat config con reglas de tipos), GitHub Actions (`.github/workflows/v2.yml`: lint + tipos + tests + build en cada push/PR) y Playwright (`v2/e2e/`, el cierre completo y la exportación contra staging; requiere `pnpm exec playwright install chromium`).
@@ -95,6 +95,18 @@ Credenciales y dónde están (nunca en el repo, salvo anon keys):
   - Utilitarios compartidos.
   - axe en `v2/e2e/a11y.spec.ts`: 0 violaciones (antes, 15).
   - Migración `20260919000000_colores_metodos_fintech.sql` aplicada en staging y en prod (2026-09-17, vía MCP, versión registrada con el nombre del archivo).
+- **Encabezado al estilo Mercado Pago** (commit `c180116`, 2026-09-17, en producción):
+  - Hoy lleva logo, "Hola, <nombre>" y fecha sobre una banda índigo con borde diagonal (`SaludoHeader` + `Banda`; el contenedor necesita `relative isolate`). La cuenta del local cierra sesión desde ahí.
+  - Ajustes es un menú agrupado (`features/ajustes/secciones.ts`): en el celular cada sección abre su pantalla y en escritorio va al lado. Apariencia tiene su propia sección. Se eliminó `AvatarMenu`.
+  - Los encabezados con "volver" quedan fijos en el celular, y `theme-color` sigue la pantalla y el tema (`useColorBarra`; iOS instalada lo ignora).
+  - La etiqueta "Cerrar turno" va bajo el botón flotante (`f798e97`).
+- **Análisis e Historial al estilo de Hoy** (commit `96a966f`, 2026-09-17, en producción). Solo detalles, sin banda ni cambios de estructura:
+  - **Análisis, indicadores:** el delta de Proveedores estaba al revés (▲ 24 % en verde cuando el gasto bajaba). Ahora `calcularDelta(…, menosEsMejor)` (`components/delta.ts`, con tests) hace que la flecha siga la cifra y el color diga si es buena noticia. También en el reporte. Los KPI llevan la píldora de Hoy y "vs. $X".
+  - **Análisis, gráfico:** barras índigo, promedio en el encabezado, eje X parejo y eje Y con una sola unidad (`clpEje`). En el celular, tocar una barra deja el detalle fijo con "Ver día" (fuera del orden de tabulación, porque el gráfico es `aria-hidden`). En escritorio, el clic abre el día.
+  - **Análisis, listas:** ventas por método ordenadas, sin los métodos en cero y con la barra apilada compartida (`BarraMetodos`). Top proveedores con total, % y enlace a la lista.
+  - **Historial:** sin el chip "Completo", proveedores con signo, "N días · neto" por mes (solo si el mes está cargado entero), barrita del neto relativa al mejor día del mes, hoy destacado y pista de scroll en los filtros.
+  - La opción activa de los selectores de opciones ya no se hunde en tema oscuro.
+- **Hoy sin "Efectivo esperado" del día** (commit `772c928`, 2026-09-17, en producción): la tarjeta pasa a ser "Ventas por método" (sin la fórmula en texto) y cada tarjeta de turno muestra "En caja" con su esperado y, si se contó, "Cuadró" o "Descuadre −$X". Motivo: ver la trampa del efectivo esperado por día en la sección 6.
 - **Pendiente:** revisar en un celular real (Safari de iOS con su barra inferior): altura de las hojas y encabezado pegajoso del Historial.
 
 ### Fase 3 — Piloto en paralelo: **hecha** (2026-09-16/17; semanas B y C abreviadas a pedido del usuario)
@@ -153,6 +165,9 @@ SMOKE_EMAIL=duena@test.local SMOKE_PASSWORD=<.env.staging.local> pnpm vitest run
 - PWA: sin `modulepreload` (choca con el service worker). Tras cada deploy, la app avisa "Hay una versión nueva".
 - `proveedores_frecuentes`: al sanear quedó "Rio Maipo" (sin tilde) por ser la grafía más usada; la dueña puede renombrarlo desde la v2.
 - 93 turnos cerrados antes de julio de 2026 no tienen fila en `turno_cierres` (se cerraron por migración antes de que existiera la auditoría).
+- **`v_resumen_dia.efectivo_esperado` no es una caja real** en los días con mañana y tarde: suma los dos turnos, y cada tarde trae su propio fondo ($20.000 en prod). Por eso no se muestra en Hoy; el esperado se muestra por turno (`v_turnos`). Por día, el dato con sentido es `efectivo_neto`, como ya hace la exportación.
+- Para capturar Hoy con datos sin escribir en staging, en Playwright se reescribe `fecha=eq.<hoy>` a otra fecha con `page.route`. Conviene un contexto nuevo por escena, porque la caché de TanStack Query se guarda en IndexedDB.
+- `pnpm e2e` reutiliza un `pnpm dev --mode staging` que ya esté en el puerto 5173. No conviene levantar otro servidor de la v2 en paralelo, porque comparten `.vite`.
 - `docs/superpowers/` no es parte de este trabajo; no tocarlo sin preguntar.
 
 ## 7. Decisiones tomadas por el usuario (no volver a preguntar)
@@ -163,4 +178,5 @@ SMOKE_EMAIL=duena@test.local SMOKE_PASSWORD=<.env.staging.local> pnpm vitest run
 - Conexión del local estable: borrador local + reintento, sin offline-first.
 - Correos: con dominio propio (`frytspa.cl`), activos desde el 2026-09-17.
 - Diseño: rediseño Fintech (gris/blanco/indigo, Inter) acordado con la dueña el 2026-09-16, reemplaza al café cálido; priorizar el celular, camino A con préstamos de B y C.
+- Hoy no muestra el efectivo esperado del día: la caja va en cada tarjeta de turno (2026-09-17). En Análisis, tocar una barra en el celular deja el detalle fijo con "Ver día"; en Historial solo se marcan las excepciones, no "Completo".
 - Fase 4 adelantada (2026-09-17): la app va en `app.frytspa.cl`, la migración se hace con `pg_dump` conservando las contraseñas y la app antigua se retira al migrar (redirige; no se reconfigura contra la base nueva).
