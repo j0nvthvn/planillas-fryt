@@ -190,7 +190,7 @@ export default function Hoy() {
   )
 }
 
-function Dato({ label, className = 'text-ink', children }: { label: string; className?: string; children: ReactNode }) {
+export function Dato({ label, className = 'text-ink', children }: { label: string; className?: string; children: ReactNode }) {
   return (
     <div className="flex-1 min-w-0">
       <p className="text-xs leading-none text-muted mb-[5px]">{label}</p>

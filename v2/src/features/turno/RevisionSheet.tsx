@@ -73,7 +73,7 @@ export function RevisionSheet({
         {proveedores.length === 0
           ? <LedgerLine label="Sin proveedores pagados" value={0} muted />
           : proveedores.map((p) => (
-            <LedgerLine key={p.key} label={p.nombre} value={p.monto} dot={p.forma_pago === 'efectivo' ? 'pos' : 'info'}
+            <LedgerLine key={p.key} label={p.nombre} value={-p.monto} color="var(--neg)" dot={p.forma_pago === 'efectivo' ? 'pos' : 'info'}
               hint={p.forma_pago === 'efectivo' ? 'efectivo' : 'transf.'} />
           ))}
         <LedgerTotal label="Total proveedores" value={totales.total_proveedores} size="sm" />

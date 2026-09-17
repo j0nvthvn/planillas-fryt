@@ -29,11 +29,11 @@ export function LedgerLine({ label, hint, hintTone, value, color, muted, onClick
   return (
     <Tag type={onClick ? 'button' : undefined} onClick={onClick} data-ledger-fila=""
       className={`w-full flex items-center justify-between gap-3 py-1.5 min-h-[40px] text-sm text-left ${FILA} ${onClick ? 'hover:bg-soft/60 active:bg-soft' : ''}`}>
-      <span className="min-w-0 flex items-center gap-[7px] text-ink2">
-        {dot && <span className={`w-[7px] h-[7px] rounded-full shrink-0 ${dot === 'pos' ? 'bg-pos' : 'bg-brand'}`} />}
+      <span className="min-w-0 flex items-baseline gap-[7px] text-ink2">
+        {dot && <span className={`w-[7px] h-[7px] rounded-full shrink-0 self-center ${dot === 'pos' ? 'bg-pos' : 'bg-brand'}`} />}
         <span className="truncate">{label}</span>
         {hint && (hintTone
-          ? <span className={`badge shrink-0 ${hintTone === 'neg' ? 'bg-neg-tint text-neg' : 'bg-pos-tint text-pos'}`}>{hint}</span>
+          ? <span className={`badge shrink-0 self-center ${hintTone === 'neg' ? 'bg-neg-tint text-neg' : 'bg-pos-tint text-pos'}`}>{hint}</span>
           : <span className="text-[11px] font-medium text-muted shrink-0">{hint}</span>)}
       </span>
       <span className={`tabular-nums shrink-0 ${muted ? 'text-muted2' : 'font-medium text-ink'}`} style={color ? { color } : undefined}>{value == null ? '—' : clp(value)}</span>
