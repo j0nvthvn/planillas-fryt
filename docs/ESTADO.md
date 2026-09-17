@@ -115,6 +115,8 @@ Credenciales y dónde están (nunca en el repo, salvo anon keys):
   - **El correo semanal y el mensual avisan de los días sin registrar**, que hasta ahora no aparecían en ninguna parte.
   - La leyenda del gráfico decía "día cerrado" para los días **con** registro; ahora dice "día con registro".
   - Verificación: pgTAP 151/151 (`supabase/tests/dias_cerrados.test.sql`, 31 casos), 109 unitarios, `pnpm e2e` 12/12 con axe en 0 violaciones, y revisión con capturas en Pixel 7 contra staging.
+  - **En producción** (2026-09-17): migración aplicada en staging y prod (huella de `jornadas` idéntica antes y después, `verificar_integridad()` sin errores), `enviar-resumen-periodico` redesplegada —lleva `_shared/correo/` adentro— y la app en `app.frytspa.cl` con el commit `cd7a303`. El aviso nuevo de integridad ya detecta el domingo 6 de septiembre sin registro ni marca.
+  - **Pendiente con la dueña:** marcar las 7 fechas históricas (7, 21 y 28 de junio, 12 y 16 de julio, 6 de septiembre, y el 1 de enero con su jornada vacía) desde la app, para que queden en `auditoria` con su autor y su motivo.
 - **Pendiente:** revisar en un celular real (Safari de iOS con su barra inferior): altura de las hojas y encabezado pegajoso del Historial.
 
 ### Fase 3 — Piloto en paralelo: **hecha** (2026-09-16/17; semanas B y C abreviadas a pedido del usuario)
