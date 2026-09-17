@@ -44,6 +44,12 @@ export function fechaLegible(fecha: string | null | undefined): string {
   return mayusculaInicial(fechaLocal(fecha).toLocaleDateString('es-CL', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }))
 }
 
+/** Sin año: "Miércoles 16 de septiembre"; `corta`: "Miércoles 16 sept". */
+export function fechaSinAnio(fecha: string | null | undefined, corta = false): string {
+  if (!fecha) return ''
+  return mayusculaInicial(fechaLocal(fecha).toLocaleDateString('es-CL', { weekday: 'long', day: 'numeric', month: corta ? 'short' : 'long' }).replace(',', ''))
+}
+
 export function fechaCorta(fecha: string | null | undefined): string {
   if (!fecha) return ''
   return fechaLocal(fecha).toLocaleDateString('es-CL', { day: '2-digit', month: '2-digit', year: 'numeric' })
