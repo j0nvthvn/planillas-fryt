@@ -127,10 +127,48 @@ archivo se comparte (WhatsApp, correo, Drive) con `navigator.share` y, si no
 se puede, se descarga (`lib/archivo.ts`). El CSV neutraliza los textos que
 empiezan con `= + - @`.
 
+### Rediseño Fintech (16 de septiembre de 2026)
+
+Aplicado desde `docs/design_handoff_rediseno_fintech/` (README = especificación,
+`Rediseño Fintech.dc.html` = referencia visual). Solo presentación.
+
+- **Tokens** (`styles.css`): paleta gris/blanco/indigo en claro y oscuro,
+  `--hairline-strong` para bordes de botones y campos, escala de cifras
+  24/36/40 px y utilitarios nuevos `badge`, `segmented`, `row`, `tile`.
+  `amount` y `cifra` pasan a Inter Tight tabular.
+- **Fuentes** (`src/fonts.css`): Inter e Inter Tight variables, solo el
+  subconjunto latino (los paquetes traen también cirílico, griego y
+  vietnamita, que el service worker precachearía).
+- **Shell**: barra lateral de 236 px, barra inferior de 58 px sin píldora, botón
+  flotante cuadrado con el ícono de billete. `.pb-nav`, `.above-nav` y los
+  toasts usan la altura nueva.
+- **Encabezados** (`PageHeader`): barra blanca a todo el ancho en el celular y
+  encabezado simple desde `md`.
+- **Hoy**: neto en tinta con variación contra ayer, fila de ventas/proveedores/
+  turnos, fórmula del efectivo esperado con montos reales (el fondo sale de
+  `efectivo_esperado − efectivo_neto`), barra apilada por método, lista de tres
+  que se expande en el lugar y grilla de turnos con el faltante "Pendiente".
+- **Cierre**: segmented de modo y de trabajadores (hasta 4; con más, píldoras),
+  proveedores con iniciales y forma de pago como badge, descuadre como badge,
+  hojas blancas con teclado de teclas con borde.
+- **Planilla/revisión** (`Ledger`): tabla con etiquetas de sección, total de
+  ventas, proveedores en rojo con signo y neto en franja o bloque.
+- **Análisis**: KPIs en una tarjeta 2×2 en el celular con **Neto primero**
+  (el diseño lo ponía tercero; así el e2e de exportación sigue encontrando la
+  tarjeta que empieza por "Neto"), barras en tinta, borradores en ámbar y
+  promedio punteado.
+- **Historial, Proveedores, Ajustes**: píldoras con la activa en tinta
+  (`components/pildora.ts`), filas de 64–72 px, métodos con acciones en una
+  segunda línea en el celular.
+- `theme-color`, manifest, encabezado del Excel y `privacidad.html` con los
+  colores nuevos. Se quitó `Amount.tsx` (sin uso).
+
 ## Pendiente
 
 - Revisar en un celular real (Safari de iOS, con su barra inferior) la altura
   de las hojas y el encabezado pegajoso del Historial.
+- Íconos de la PWA (`public/icon-*.png`, `logo.jpg`): son el logo café del
+  local; el rediseño no los tocó.
 - Probar **Exportar → compartir** en el celular de la dueña: si el navegador no
   permite compartir `.xlsx`, se descarga (Chrome para Android tiene una lista
   cerrada de tipos de archivo que se pueden compartir).
