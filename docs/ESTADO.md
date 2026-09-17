@@ -89,7 +89,7 @@ Credenciales y dónde están (nunca en el repo, salvo anon keys):
   - Regiones vivas y foco al navegar.
   - Utilitarios compartidos.
   - axe en `v2/e2e/a11y.spec.ts`: 0 violaciones (antes, 15).
-  - Migración `20260919000000_colores_metodos_fintech.sql` aplicada en staging (2026-09-17, vía MCP); **falta prod** al fusionar.
+  - Migración `20260919000000_colores_metodos_fintech.sql` aplicada en staging y en prod (2026-09-17, vía MCP, versión registrada con el nombre del archivo).
 - **Pendiente:** revisar en un celular real (Safari de iOS con su barra inferior): altura de las hojas y encabezado pegajoso del Historial.
 
 ### Fase 3 — Piloto en paralelo: **en curso, semana A** (desde 2026-09-16)
