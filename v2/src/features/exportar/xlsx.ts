@@ -30,7 +30,7 @@ function celda(v: Valor, tipo: TipoColumna, negrita: boolean): Cell {
 function filasDe(t: Tabla): Row[] {
   const tipos = t.columnas.map((c) => c.tipo)
   return [
-    t.columnas.map((c): Cell => ({ value: c.titulo, type: String, fontWeight: 'bold', backgroundColor: '#F5EAD4', wrap: true })),
+    t.columnas.map((c): Cell => ({ value: c.titulo, type: String, fontWeight: 'bold', backgroundColor: '#EEF0FE', wrap: true })),
     ...t.filas.map((f) => f.map((v, i) => celda(v, tipos[i] ?? 'texto', false))),
     ...(t.total ? [t.total.map((v, i) => celda(v, tipos[i] ?? 'texto', true))] : []),
   ]

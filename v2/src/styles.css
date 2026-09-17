@@ -4,76 +4,79 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 /* ──────────────────────────────────────────────────────────────
-   Tokens "Cálido Editorial" (portados de la app actual). Los valores
-   viven en variables CSS que cambian en .dark; el @theme los expone a
-   Tailwind como colores (bg-brand, text-ink, border-hairline, …).
-   Contraste: muted, muted2 y warn cumplen 4,5:1 sobre tarjeta, canvas
-   y soft. `on-solid` es el color del texto sobre un fondo sólido de
-   marca/estado: blanco en claro, tinta en oscuro (donde brand, warn,
-   info y neg son claros y el blanco encima no se lee).
+   Tokens "Fintech": superficie gris ultraclaro, tarjetas blancas de
+   1 px, acento indigo y semántica verde/roja solo en los números. Los
+   valores viven en variables CSS que cambian en .dark; el @theme los
+   expone a Tailwind como colores (bg-brand, text-ink, border-hairline, …).
+   Contraste: muted (4,9:1) y muted2 (4,8:1) sobre tarjeta; no usar grises
+   más claros para texto. `on-solid` es el color del texto sobre un fondo
+   sólido de marca/estado: blanco en claro, casi negro en oscuro.
    ────────────────────────────────────────────────────────────── */
 :root {
-  --brand:       #5C3317;
-  --brand-hover: #4A2810;
-  --brand-tint:  #F5EAD4;
-  --canvas:      #FBF6EC;
+  --brand:       #4F46E5;
+  --brand-hover: #4338CA;
+  --brand-tint:  #EEF0FE;
+  --canvas:      #F6F7F9;
   --card:        #FFFFFF;
-  --hairline:    #F0E7D6;
-  --soft:        #F6EFE1;
-  --ink:         #2A211A;
-  --ink2:        #5F5245;
-  --muted:       #6F5F4E;
-  --muted2:      #6E5F45;
-  --pos:         #1E7A4F;
-  --pos-tint:    #E6F1EA;
-  --pos-border:  #B8DCC7;
-  --neg:         #B91C1C;
-  --neg-tint:    #FBE9E9;
-  --warn:        #7A5514;
-  --warn-tint:   #FBF1DD;
-  --info:        #33518C;
-  --info-tint:   #E8EDF6;
+  --hairline:    #EBEDF1;
+  --soft:        #F1F3F6;
+  --ink:         #0F1115;
+  --ink2:        #3C424E;
+  --muted:       #667085;
+  --muted2:      #6B7280;
+  --pos:         #047857;
+  --pos-tint:    #E7F4EF;
+  --pos-border:  #A7D8C6;
+  --neg:         #DC2626;
+  --neg-tint:    #FDECEC;
+  --warn:        #B45309;
+  --warn-tint:   #FDF2E3;
+  --info:        #4F46E5;
+  --info-tint:   #EEF0FE;
   --image-bg:    #F3F4F6;
-  --cash:        #1E7A4F;
-  --wire:        #33518C;
-  /* Cuánto del color de cada método (dato de la base) se usa tal cual: en oscuro se aclara. */
+  --cash:        #047857;
+  --wire:        #4F46E5;
   --metodo-mezcla: 100%;
   --on-solid:    #FFFFFF;
-  --shadow-card: 0 6px 20px -14px rgba(92, 51, 23, .20);
-  --shadow-hero: 0 8px 24px -14px rgba(92, 51, 23, .28);
+  /* Borde fuerte: contorno de botones secundarios, campos y separadores
+     de mayor peso (en el diseño aparece como --bd2). */
+  --hairline-strong: #DFE2E8;
+  --shadow-card: 0 1px 2px rgba(16, 24, 40, .05), 0 1px 3px rgba(16, 24, 40, .06);
+  --shadow-hero: 0 6px 20px -8px rgba(16, 24, 40, .14);
   color-scheme: light;
 }
 
 /* Impreso (reporte / PDF) siempre en claro: el oscuro gasta tinta y no se lee en papel. */
 @media not print {
   html.dark {
-    --brand:       #D4A77A;
-    --brand-hover: #E5BB8E;
-    --brand-tint:  #4A341E;
-    --canvas:      #1A1612;
-    --card:        #241F1A;
-    --hairline:    #332B22;
-    --soft:        #2A241E;
-    --ink:         #F1E7D5;
-    --ink2:        #B3A48F;
-    --muted:       #A89882;
-    --muted2:      #9D8D76;
-    --pos:         #5DB890;
-    --pos-tint:    #1A3C2A;
+    --brand:       #8B93F8;
+    --brand-hover: #A5ABFB;
+    --brand-tint:  #1E2240;
+    --canvas:      #0B0D10;
+    --card:        #15181D;
+    --hairline:    #242931;
+    --soft:        #1D2128;
+    --ink:         #F3F5F8;
+    --ink2:        #C6CBD5;
+    --muted:       #9AA2B0;
+    --muted2:      #7C8492;
+    --pos:         #34D399;
+    --pos-tint:    #0F2A22;
     --pos-border:  #2E6048;
-    --neg:         #E0726F;
-    --neg-tint:    #462020;
-    --warn:        #E0B87A;
-    --warn-tint:   #46341E;
-    --info:        #7393D2;
-    --info-tint:   #263050;
+    --neg:         #FB7185;
+    --neg-tint:    #2E1519;
+    --warn:        #FBBF24;
+    --warn-tint:   #2D2211;
+    --info:        #8B93F8;
+    --info-tint:   #1E2240;
     --image-bg:    #322D26;
-    --cash:        #5DB890;
-    --wire:        #7393D2;
+    --cash:        #34D399;
+    --wire:        #8B93F8;
     --metodo-mezcla: 55%;
-    --on-solid:    #1A1612;
-    --shadow-card: 0 6px 20px -14px rgba(0, 0, 0, .40);
-    --shadow-hero: 0 8px 24px -14px rgba(0, 0, 0, .50);
+    --on-solid:    #0B0D10;
+    --hairline-strong: #2E343E;
+    --shadow-card: 0 1px 2px rgba(0, 0, 0, .5);
+    --shadow-hero: 0 10px 28px -12px rgba(0, 0, 0, .7);
     color-scheme: dark;
   }
 }
@@ -82,20 +85,19 @@
 @media print { body { background-color: #fff; } }
 
 @theme inline {
-  --font-sans: "Hanken Grotesk", system-ui, sans-serif;
-  --font-display: "Instrument Serif", Georgia, serif;
+  --font-sans: "Inter Variable", Inter, system-ui, sans-serif;
+  --font-display: "Inter Tight Variable", "Inter Tight", Inter, sans-serif;
 
-  /* Escala tipográfica: seis pasos y nada bajo 12 px (la caja se cierra
-     de noche en un celular). Los tamaños de display son para cifras. */
+  /* Nada bajo 12 px en contenido; los tamaños de display son para cifras. */
   --text-xs: 12px;
   --text-sm: 13px;
   --text-base: 15px;
   --text-lg: 17px;
-  --text-2xl: 24px;
-  --text-amount-sm: 30px;
-  --text-amount: 44px;
-  --text-amount-lg: 52px;
-  --text-hero: 60px;
+  --text-2xl: 22px;
+  --text-amount-sm: 24px;
+  --text-amount: 36px;
+  --text-amount-lg: 36px;
+  --text-hero: 40px;
 
   --color-brand: var(--brand);
   --color-brand-hover: var(--brand-hover);
@@ -103,6 +105,7 @@
   --color-canvas: var(--canvas);
   --color-card: var(--card);
   --color-hairline: var(--hairline);
+  --color-hairline-strong: var(--hairline-strong);
   --color-soft: var(--soft);
   --color-ink: var(--ink);
   --color-ink2: var(--ink2);
@@ -122,7 +125,7 @@
   --color-wire: var(--wire);
   --color-on-solid: var(--on-solid);
 
-  --radius-xl2: 20px;
+  --radius-xl2: 16px;
   --shadow-card: var(--shadow-card);
   --shadow-hero: var(--shadow-hero);
 }
@@ -186,33 +189,65 @@
 
 /* Utilidades propias (Tailwind v4: @utility permite usarlas en @apply). */
 @utility btn {
-  @apply inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-2 text-sm font-semibold transition-colors focus:outline-none disabled:opacity-50 disabled:pointer-events-none;
+  @apply inline-flex items-center justify-center gap-2 rounded-[14px] px-4 py-2 text-sm font-semibold transition-colors focus:outline-none disabled:opacity-50 disabled:pointer-events-none;
   min-height: 44px;
 }
 @utility btn-primary { @apply btn bg-brand text-on-solid hover:bg-brand-hover; }
-@utility btn-secondary { @apply btn bg-card text-ink2 border border-hairline hover:bg-canvas; }
+@utility btn-secondary { @apply btn bg-card text-ink2 border border-hairline-strong hover:bg-soft; }
 @utility btn-danger { @apply btn bg-neg text-on-solid hover:opacity-90; }
 @utility btn-ghost { @apply btn bg-transparent text-ink2 hover:bg-soft; }
 
 @utility input {
-  @apply block w-full rounded-[14px] px-3.5 py-3 bg-canvas text-ink border border-hairline placeholder:text-muted2 focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand;
+  @apply block w-full rounded-[12px] px-3.5 py-3 bg-soft text-ink border border-hairline placeholder:text-muted focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand;
   min-height: 44px;
   transition: border-color .15s ease;
 }
 
-@utility card { @apply rounded-[20px] p-5 bg-card border border-hairline shadow-card; }
+@utility card { @apply rounded-[16px] p-[18px] bg-card border border-hairline shadow-card; }
 @utility card-hero { @apply card shadow-hero; }
 
-@utility eyebrow { @apply text-xs font-bold uppercase text-muted2 tracking-[0.12em]; }
-/* Cifra de display (serif). Instrument Serif no trae cifras tabulares:
-   para columnas de números va `cifra`, en Hanken Grotesk. */
-@utility amount { @apply font-display; }
-@utility cifra { @apply font-sans font-semibold tabular-nums; }
+/* Etiqueta de sección: 11 px, sin color de marca (el acento se reserva
+   para acciones). */
+@utility eyebrow { @apply text-[11px] font-semibold uppercase text-muted tracking-[0.1em]; }
+
+/* Cifra de display: Inter Tight, tabular y con tracking negativo. La
+   clase se llama igual que antes (`amount`), así que todas las cifras
+   grandes del proyecto cambian de serif a sans tabular de una vez. */
+@utility amount { @apply font-display font-bold tabular-nums tracking-[-0.025em]; }
+/* Cifra en fila de lista o tabla. */
+@utility cifra { @apply font-display font-semibold tabular-nums tracking-[-0.01em]; }
 @utility label { @apply block text-sm font-medium mb-1 text-ink2; }
 
+/* Píldora de estado (EstadoChip, badges de forma de pago): sin uppercase. */
+@utility badge {
+  @apply inline-flex items-center whitespace-nowrap rounded-[7px] px-2 py-[5px] text-[11px] font-semibold leading-none;
+}
+
+/* Contenedor de segmented control: la opción activa lleva
+   `bg-card shadow-card text-ink`; las inactivas, `text-muted`. */
+@utility segmented {
+  @apply flex gap-[3px] p-[3px] rounded-[12px] bg-soft border border-hairline;
+}
+@utility segmented-item {
+  @apply flex-1 flex items-center justify-center rounded-[9px] text-sm font-medium text-muted transition-colors;
+  min-height: 40px;
+}
+@utility segmented-item-on { @apply segmented-item bg-card shadow-card text-ink font-semibold; }
+
+/* Fila tocable de lista: 64 px es la altura del rediseño. */
+@utility row {
+  @apply flex items-center gap-[13px] w-full px-4 text-left active:bg-soft;
+  min-height: 64px;
+}
+
+/* Contenedor uniforme de logo de método de pago / avatar de iniciales. */
+@utility tile {
+  @apply shrink-0 grid place-items-center w-10 h-10 rounded-[10px] border border-hairline bg-card;
+}
+
 @layer components {
-  .pb-nav { padding-bottom: calc(60px + max(8px, env(safe-area-inset-bottom)) + 16px); }
-  .above-nav { bottom: calc(60px + max(8px, env(safe-area-inset-bottom))); }
+  .pb-nav { padding-bottom: calc(58px + max(10px, env(safe-area-inset-bottom)) + 16px); }
+  .above-nav { bottom: calc(58px + max(10px, env(safe-area-inset-bottom))); }
   @media (min-width: 768px) { .above-nav { bottom: 0; } }
 
   .app-shell { height: 100dvh; overflow: hidden; }
