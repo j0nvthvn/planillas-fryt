@@ -107,7 +107,7 @@ Valores nuevos:
 - La migración `20260919000000_colores_metodos_fintech.sql` cambia efectivo,
   getnet y transferencia a la paleta nueva, solo si siguen con el color de la
   semilla.
-- Se aplica a staging y a prod como las demás migraciones (**pendiente**). La
+- Aplicada en staging el 17 de septiembre; **falta prod** (al fusionar). La
   app actual no lee esa columna.
 
 ## Pendiente o decidido no hacer
