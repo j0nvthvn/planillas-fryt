@@ -62,6 +62,71 @@ export type Database = {
         }
         Relationships: []
       }
+      correo_destinatarios: {
+        Row: {
+          activo: boolean
+          cierre: boolean
+          creado_en: string
+          diario: boolean
+          email: string
+          id: string
+          mensual: boolean
+          nombre: string | null
+          semanal: boolean
+          usuario_id: string | null
+        }
+        Insert: {
+          activo?: boolean
+          cierre?: boolean
+          creado_en?: string
+          diario?: boolean
+          email: string
+          id?: string
+          mensual?: boolean
+          nombre?: string | null
+          semanal?: boolean
+          usuario_id?: string | null
+        }
+        Update: {
+          activo?: boolean
+          cierre?: boolean
+          creado_en?: string
+          diario?: boolean
+          email?: string
+          id?: string
+          mensual?: boolean
+          nombre?: string | null
+          semanal?: boolean
+          usuario_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "correo_destinatarios_usuario_id_fkey"
+            columns: ["usuario_id"]
+            isOneToOne: false
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      correos_enviados: {
+        Row: {
+          enviado_en: string
+          periodo: string
+          tipo: string
+        }
+        Insert: {
+          enviado_en?: string
+          periodo: string
+          tipo: string
+        }
+        Update: {
+          enviado_en?: string
+          periodo?: string
+          tipo?: string
+        }
+        Relationships: []
+      }
       jornadas: {
         Row: {
           creado_en: string
@@ -603,6 +668,8 @@ export type Database = {
         Args: { p_efectivo_contado?: number; p_turno_id: string }
         Returns: string
       }
+      enviar_correo_prueba: { Args: { p_tipo: string }; Returns: undefined }
+      enviar_resumen_periodico: { Args: { p_tipo: string }; Returns: undefined }
       es_dueno: { Args: never; Returns: boolean }
       fusionar_proveedores: {
         Args: { p_destino: string; p_origen: string }
@@ -610,7 +677,12 @@ export type Database = {
       }
       get_my_rol: { Args: never; Returns: string }
       guardar_turno: { Args: { p: Json }; Returns: Json }
+      invocar_edge_function: {
+        Args: { p_body: Json; p_nombre: string }
+        Returns: undefined
+      }
       norm_nombre: { Args: { p: string }; Returns: string }
+      programar_resumenes: { Args: { p_ahora?: string }; Returns: string[] }
       resumen_periodo: {
         Args: { p_desde: string; p_hasta: string }
         Returns: Json
@@ -654,12 +726,12 @@ export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends (DefaultSchemaTableNameOrOptions extends {
+  TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
         DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-    : never) = never,
+    : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -683,11 +755,11 @@ export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends (DefaultSchemaTableNameOrOptions extends {
+  TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never) = never,
+    : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -708,11 +780,11 @@ export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends (DefaultSchemaTableNameOrOptions extends {
+  TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never) = never,
+    : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -733,11 +805,11 @@ export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
     | { schema: keyof DatabaseWithoutInternals },
-  EnumName extends (DefaultSchemaEnumNameOrOptions extends {
+  EnumName extends DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-    : never) = never,
+    : never = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -750,11 +822,11 @@ export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
-  CompositeTypeName extends (PublicCompositeTypeNameOrOptions extends {
+  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never) = never,
+    : never = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -768,3 +840,4 @@ export const Constants = {
     Enums: {},
   },
 } as const
+

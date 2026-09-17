@@ -136,8 +136,6 @@ export interface Config {
   horaCorteManana: number
   nombreLocal: string
   fondoCajaInicial: number
-  notificacionesActivas: boolean
-  notificacionesEmailExtra: string
 }
 
 export const CONFIG_DEFAULT: Config = {
@@ -145,8 +143,6 @@ export const CONFIG_DEFAULT: Config = {
   horaCorteManana: 14,
   nombreLocal: 'Fryt',
   fondoCajaInicial: 0,
-  notificacionesActivas: true,
-  notificacionesEmailExtra: '',
 }
 
 function leerConfig(filas: { clave: string; valor: Json }[]): Config {
@@ -156,8 +152,6 @@ function leerConfig(filas: { clave: string; valor: Json }[]): Config {
     horaCorteManana: typeof m.hora_corte_manana === 'number' ? m.hora_corte_manana : CONFIG_DEFAULT.horaCorteManana,
     nombreLocal: typeof m.nombre_local === 'string' && m.nombre_local ? m.nombre_local : CONFIG_DEFAULT.nombreLocal,
     fondoCajaInicial: typeof m.fondo_caja_inicial === 'number' ? m.fondo_caja_inicial : CONFIG_DEFAULT.fondoCajaInicial,
-    notificacionesActivas: m.notificaciones_activas !== false,
-    notificacionesEmailExtra: typeof m.notificaciones_email_extra === 'string' ? m.notificaciones_email_extra : '',
   }
 }
 
@@ -182,8 +176,6 @@ export function useGuardarConfig() {
         { clave: 'hora_corte_manana', valor: c.horaCorteManana },
         { clave: 'nombre_local', valor: c.nombreLocal || CONFIG_DEFAULT.nombreLocal },
         { clave: 'fondo_caja_inicial', valor: c.fondoCajaInicial ?? 0 },
-        { clave: 'notificaciones_activas', valor: c.notificacionesActivas },
-        { clave: 'notificaciones_email_extra', valor: c.notificacionesEmailExtra || '' },
       ]
       const { error } = await supabase.from('configuracion').upsert(filas, { onConflict: 'clave' })
       if (error) throw error

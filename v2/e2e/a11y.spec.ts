@@ -11,7 +11,7 @@ const PASSWORD = process.env.STAGING_PASSWORD ?? process.env.SMOKE_PASSWORD ?? '
 
 test.skip(!PASSWORD, 'necesita STAGING_PASSWORD (v2/.env.staging.local)')
 
-const PANTALLAS = ['/hoy', '/turno', '/historial', '/analisis', '/proveedores', '/ajustes', '/ajustes?seccion=metodos']
+const PANTALLAS = ['/hoy', '/turno', '/historial', '/analisis', '/proveedores', '/ajustes', '/ajustes?seccion=correos', '/ajustes?seccion=metodos']
 
 async function entrar(page: Page, tema: 'claro' | 'oscuro') {
   await page.addInitScript((t) => localStorage.setItem('tema', t), tema)

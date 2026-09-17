@@ -56,6 +56,8 @@ export const qk = {
   papelera: ['papelera'] as const,
   usuarios: ['usuarios'] as const,
   errores: ['errores'] as const,
+  destinatarios: ['destinatarios'] as const,
+  ajustesCorreo: ['ajustes-correo'] as const,
 }
 
 /** Después de guardar un turno: todo lo que muestra ese día y agregados. */
