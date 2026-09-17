@@ -157,17 +157,25 @@ export function useTurnoForm({ fecha, modo, fondoPorDefecto, online }: Opciones)
     if (cargadoPara.current.startsWith(`${fecha}|${modo}|`) && stateRef.current.sucio) { cargadoPara.current = firma; return }
     cargadoPara.current = firma
     let vivo = true
+    let listo = false
     void (async () => {
       const servidor = (dia.data ?? []).find((t) => t.turno.tipo === tipo)
       const local = await leerBorradorLocal(fecha, modo)
       if (!vivo) return
+      listo = true
       const servidorMs = servidor ? new Date(servidor.turno.updated_at ?? 0).getTime() : 0
       const usarLocal = !!local && (!servidor || servidor.turno.is_draft) && local.guardadoEn > servidorMs
       if (usarLocal && local) dispatch({ type: 'cargar', state: desdeLocal(local, servidor) })
       else if (servidor) { dispatch({ type: 'cargar', state: desdeServidor(servidor) }); void borrarBorradorLocal(fecha, modo) }
       else dispatch({ type: 'cargar', state: { fondoInicial: fondoPorDefecto } })
     })()
-    return () => { vivo = false }
+    return () => {
+      vivo = false
+      // Cancelada a medio camino (cambió otra dependencia, como el fondo por
+      // defecto al llegar la configuración): la próxima corrida debe cargar,
+      // o la pantalla se queda en el spinner.
+      if (!listo && cargadoPara.current === firma) cargadoPara.current = ''
+    }
   }, [dia.isPending, dia.data, dia.dataUpdatedAt, fecha, modo, tipo, fondoPorDefecto])
 
   // ---- persistencia local + autoguardado ----
