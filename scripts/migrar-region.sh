@@ -41,14 +41,15 @@ echo "▸ migraciones del repo en el destino"
 $SUPABASE db push --db-url "$DESTINO_DB_URL" --include-all --yes 2>&1 | grep -viE "^NOTICE|skipping" | tail -3
 
 echo "▸ vaciar el destino"
+# public primero: turnos referencia a usuarios, que cae en cascada con auth.users.
 destino -c "
   set client_min_messages = warning;
-  delete from auth.users;
   do \$\$ declare r record; begin
     for r in select tablename from pg_tables where schemaname = 'public' loop
       execute format('truncate public.%I cascade', r.tablename);
     end loop;
-  end \$\$;"
+  end \$\$;
+  delete from auth.users;"
 
 echo "▸ cargar datos"
 # session_replication_role = replica: sin triggers (auditoría, updated_at,
@@ -62,11 +63,13 @@ docker run --rm -i --network host -e PGURL="$DESTINO_DB_URL" -v "$dir:/out" post
 echo "▸ logos"
 service_key=$($SUPABASE projects api-keys --project-ref "$DESTINO_REF" -o json | jq -r '.[] | select(.name == "service_role") | .api_key')
 SUPABASE_URL="$DESTINO_URL" SUPABASE_SERVICE_ROLE_KEY="$service_key" node scripts/copiar-logos.mjs "$dir/logos" | tail -1
-destino -c "update public.proveedores_frecuentes set imagen_url = replace(imagen_url, '$ORIGEN_URL', '$DESTINO_URL') where imagen_url like '$ORIGEN_URL%'"
+# Ajustes propios de la copia: sin triggers, para no sumar filas a
+# `auditoria` ni tocar updated_at.
+destino -c "set session_replication_role = replica; update public.proveedores_frecuentes set imagen_url = replace(imagen_url, '$ORIGEN_URL', '$DESTINO_URL') where imagen_url like '$ORIGEN_URL%'"
 
 if [ "${SILENCIAR_CORREOS:-}" = 1 ]; then
   echo "▸ correos apagados en el destino"
-  destino -c "update public.configuracion set valor = 'false' where clave = 'notificaciones_activas'"
+  destino -c "set session_replication_role = replica; update public.configuracion set valor = 'false' where clave = 'notificaciones_activas'"
 fi
 
 echo "▸ comparar con el manifiesto"
@@ -75,6 +78,13 @@ if ! diff <(jq -S . "$dir/manifiesto.json") <(jq -S . "$dir/manifiesto.destino.j
   echo "✘ el destino no coincide con el origen"
   exit 1
 fi
+
+# `auditoria` no está en el manifiesto (el respaldo no la necesita), pero acá
+# también debe quedar igual.
+contar='select count(*) from public.auditoria'
+a_origen=$(docker run --rm --network host -e PGURL="$ORIGEN_DB_URL" postgres:17 sh -c 'psql "$PGURL" -qtAc "$1"' sh "$contar")
+a_destino=$(destino -c "$contar")
+[ "$a_origen" = "$a_destino" ] || { echo "✘ auditoria: origen $a_origen, destino $a_destino"; exit 1; }
 
 echo "▸ verificar_integridad()"
 hallazgos=$(destino -F ' | ' -c "select * from public.verificar_integridad()")
