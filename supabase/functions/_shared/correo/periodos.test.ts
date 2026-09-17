@@ -5,7 +5,7 @@ import { fechaChile, horaChile, periodoAnteriorA, periodoPrevio, periodoQueConti
 import { clp, clpSigno, variacion, fechaDia, rango } from './formato.ts'
 
 test('hora y fecha de Chile con y sin horario de verano', () => {
-  // Invierno (UTC−4): 12:00 UTC = 08:00.
+  // Invierno (UTC−4, abril a septiembre): 12:00 UTC = 08:00.
   assert.equal(horaChile(new Date('2026-07-15T12:00:00Z')), 8)
   // Verano (UTC−3): 11:00 UTC = 08:00.
   assert.equal(horaChile(new Date('2026-12-15T11:00:00Z')), 8)
