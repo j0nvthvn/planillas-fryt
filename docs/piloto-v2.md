@@ -1,5 +1,9 @@
 # Piloto de la v2 (Fase 3)
 
+> **Terminado.** El 2026-09-17 la v2 pasó a ser la app principal y la base se
+> movió a `aecopggpahxjaglakqwd` (ver `docs/ESTADO.md` y `docs/cambio-fase4.md`).
+> Este documento queda como referencia.
+
 Ambas apps contra la **misma base de producción**. La app actual sigue en
 `planillas-fryt.vercel.app`; la v2 en `frytcontrol-v2.vercel.app`
 (producción) apunta a prod, y sus previews (rama `v2`) a staging.

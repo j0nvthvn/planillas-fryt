@@ -8,7 +8,8 @@ cómo aplicar migraciones. El plan completo de la renovación está en
 
 | Entorno | Proyecto Supabase | Región | Uso |
 |---|---|---|---|
-| Producción | `kfmwhtbvgqurnpotypii` (`planillas-fryt`) | us-east-2 | La app actual (`planillas-fryt.vercel.app`) |
+| Producción | `aecopggpahxjaglakqwd` (`frytcontrol`) | sa-east-1 | La v2 en `app.frytspa.cl` (desde el 2026-09-17) |
+| Prod anterior | `kfmwhtbvgqurnpotypii` (`planillas-fryt`) | us-east-2 | **Pausado** el 2026-09-17; no borrar antes del 2026-10-17 |
 | Staging | `psdhhwcxjcobwxjiemrr` (`planillas-fryt-staging`) | sa-east-1 | Desarrollo de la v2 con copia de datos (creado 2026-09-16) |
 
 Staging tiene el esquema completo (Fase 0 + Fase 1), una copia de los datos
@@ -28,8 +29,8 @@ Para correr la app actual contra staging: `pnpm dev --mode staging`
 
 | Proyecto Vercel | Root Directory | Rama | URL | Apunta a |
 |---|---|---|---|---|
-| `planillas-fryt` | raíz | `main` | planillas-fryt.vercel.app | prod (app actual) |
-| `frytcontrol-v2` (`prj_VR9zMl4lzvSeWZXAwJI9cx7IErlh`) | `v2` | `main` | frytcontrol-v2.vercel.app | **prod** (`v2/.env.production`) |
+| `planillas-fryt` | raíz | `main` | planillas-fryt.vercel.app | nada: redirige (308) a `app.frytspa.cl` (app antigua retirada) |
+| `frytcontrol-v2` (`prj_VR9zMl4lzvSeWZXAwJI9cx7IErlh`) | `v2` | `main` | **app.frytspa.cl** (y frytcontrol-v2.vercel.app) | **prod** (`v2/.env.production`) |
 | `frytcontrol-v2` previews | `v2` | cualquier otra rama (p. ej. `v2`) | frytcontrol-v2-git-<rama>-… (requiere login en Vercel) | staging (`v2/.env.staging`) |
 
 El entorno lo decide `VERCEL_ENV` en el `buildCommand` de `v2/vercel.json`:
@@ -59,7 +60,7 @@ La CLI viene como devDependency: `pnpm exec supabase …`.
 
 ```sh
 pnpm exec supabase login            # una vez por máquina (abre el navegador)
-pnpm exec supabase link --project-ref kfmwhtbvgqurnpotypii
+pnpm exec supabase link --project-ref aecopggpahxjaglakqwd   # prod (hasta el 2026-09-17 estaba linkeada al prod anterior)
 pnpm exec supabase migration list   # compara repo vs. proyecto
 pnpm exec supabase db push          # aplica migraciones pendientes
 pnpm exec supabase functions deploy # despliega las 3 edge functions
@@ -178,7 +179,7 @@ Ambos se pueden lanzar a mano: Actions → respaldo → Run workflow, o
    así que cambiarla no afecta nada. Guardarla en el gestor de claves.
 2. Cadena de conexión: Dashboard → Connect → *Session pooler* (IPv4; los
    runners de GitHub no tienen IPv6):
-   `postgresql://postgres.kfmwhtbvgqurnpotypii:<clave>@aws-0-us-east-2.pooler.supabase.com:5432/postgres`
+   `postgresql://postgres.aecopggpahxjaglakqwd:<clave>@aws-0-sa-east-1.pooler.supabase.com:5432/postgres`
    (copiar la que muestra el dashboard).
 3. Claves de cifrado: `age-keygen -o frytcontrol-respaldo.key`. La línea
    `# public key: age1…` es la pública. **El archivo es la única forma de
@@ -288,6 +289,20 @@ ventas; los pagos pasaron a la mañana y la tarde a la papelera).
 
 ## Correos (Resend)
 
+**Estado (2026-09-17):** activos en prod (`aecopggpahxjaglakqwd`). Dominio
+`frytspa.cl` verificado en Resend (DNS en Cloudflare: `send` MX/SPF,
+`resend._domainkey`, `_dmarc`, todos "DNS only"), remitente
+`FrytControl <avisos@frytspa.cl>`, API key solo de envío. Secretos de las
+funciones: `RESEND_API_KEY`, `RESEND_FROM`, `WEBHOOK_SECRET` (sin
+`ANTHROPIC_API_KEY`: el resumen va sin texto narrativo). Vault con
+`webhook_secret` y `functions_base_url`. Destinatarios: cuentas de dueño
+activas más el correo adicional de Ajustes → General → Correos, que también
+los apaga. Funciones desplegadas con
+`pnpm exec supabase functions deploy --project-ref <ref> --use-api`.
+
+Pasos para otro entorno:
+
+
 1. Verificar un dominio en <https://resend.com/domains> (DNS: SPF + DKIM).
    Sin dominio, Resend solo envía al correo del dueño de la cuenta.
 2. Secretos de las edge functions:
@@ -348,3 +363,16 @@ prod después de aplicarlas:
 6. Proveedores: renombrar uno y subir un logo.
 7. Análisis 7 y 30 días + Exportar CSV.
 8. Papelera: eliminar un turno y restaurarlo.
+
+## Migración de región (Fase 4, hecha el 2026-09-17)
+
+`scripts/migrar-region.sh` copia un proyecto a otro: vuelca el origen,
+aplica las migraciones del repo en el destino, **borra** sus datos y carga
+public + `auth.users`/`identities` (las contraseñas siguen sirviendo),
+copia los logos y compara manifiesto, `auditoria` y `verificar_integridad()`.
+Credenciales en `~/.config/frytcontrol/migracion.env` (fuera del repo).
+Guion usado la noche del cambio: `docs/cambio-fase4.md`.
+
+Las definiciones de los crons y el trigger de correo del prod anterior
+(con la llave incrustada) quedaron en
+`~/.config/frytcontrol/prod-viejo-correos.json` por si hay que volver atrás.

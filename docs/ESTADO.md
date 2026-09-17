@@ -2,12 +2,13 @@
 
 Documento para quien continúe el trabajo, sea persona o modelo. Resume qué
 es el sistema, qué se hizo, en qué punto está cada fase y qué falta, con las
-reglas que no se deben romper. Última actualización: **2026-09-18**.
+reglas que no se deben romper. Última actualización: **2026-09-17**.
 
 Documentos complementarios:
 - `docs/plan-v2.md`: el plan completo por fases (con encabezado de estado).
 - `docs/operacion.md`: entornos, CLI, migraciones, correos, seguridad, humo.
-- `docs/piloto-v2.md`: cómo se ejecuta el piloto (Fase 3) y sus criterios.
+- `docs/piloto-v2.md`: cómo se ejecutó el piloto (Fase 3) y sus criterios.
+- `docs/cambio-fase4.md`: guion de la noche del cambio (Fase 4).
 - `docs/limpieza-datos-2026-09.sql`: consultas de limpieza y de comparación.
 - `docs/mejoras-ux.md`: mejoras de UI/UX de la v2 (tipografía, accesibilidad, flujo y la revisión móvil con capturas del 2026-09-16): qué se aplicó y qué quedó pendiente.
 - `v2/README.md`: la app nueva (stack, estructura, cómo correrla).
@@ -21,34 +22,38 @@ en dos turnos (mañana/tarde) o como día completo. Lo usa la dueña
 y Jonathan (desarrollador, `jonathan.flores@mail.udp.cl`, también rol dueño).
 Hay una cuenta trabajador (`diegoflores@gmail.com`) casi sin uso.
 
-Conviven **dos apps sobre la misma base de datos**:
+Desde el **2026-09-17** la única app en uso es la v2, en
+**https://app.frytspa.cl**, sobre la base de sa-east-1. La app actual quedó
+retirada: su dirección redirige a la nueva.
 
 | App | Carpeta | URL | Estado |
 |---|---|---|---|
-| Actual (v1) | raíz del repo (`src/`) | https://planillas-fryt.vercel.app | En uso diario por la dueña. Solo recibe arreglos mínimos. |
-| Nueva (v2) | `v2/` | https://frytcontrol-v2.vercel.app | Fase 3, piloto, semana A (solo lectura por parte de Jonathan). |
+| Antigua (v1) | raíz del repo (`src/`) | https://planillas-fryt.vercel.app | **Retirada** (2026-09-17): redirige con 308 a app.frytspa.cl. El código se borra en la Fase 5. |
+| Nueva (v2) | `v2/` | https://app.frytspa.cl (también frytcontrol-v2.vercel.app) | **Principal** desde el 2026-09-17. |
 
-**Regla de oro:** hasta la Fase 5, todo cambio de base de datos es aditivo y
-compatible con la app actual. Si la v2 falla, la dueña sigue con la actual
-sin notar nada. Cualquier cambio a la app actual se avisa antes al usuario.
+**Regla de oro:** hasta la Fase 5, todo cambio de base de datos sigue siendo
+aditivo, para poder volver atrás (ver `docs/cambio-fase4.md` → "Volver
+atrás"). Un push a `main` despliega producción: se avisa antes.
 
 ## 2. Infraestructura
 
 | Recurso | Identificador | Notas |
 |---|---|---|
-| Supabase prod | `kfmwhtbvgqurnpotypii` (us-east-2), org `ccfgqstvcbxhllxvuivx` | Base real. Postgres 17. Plan gratis (Supabase no hace copias; las hace `.github/workflows/respaldo.yml`, ver `docs/operacion.md` → "Respaldos y restauración"). |
+| Supabase prod | `aecopggpahxjaglakqwd` (`frytcontrol`, sa-east-1), org `ccfgqstvcbxhllxvuivx` | Base real desde el 2026-09-17. Postgres 17. Plan gratis (sin copias de Supabase: las hace `.github/workflows/respaldo.yml`, ver `docs/operacion.md` → "Respaldos y restauración"). |
+| Supabase prod anterior | `kfmwhtbvgqurnpotypii` (us-east-2) | **Pausado** el 2026-09-17 con los datos a esa fecha. No borrar antes del 2026-10-17. El plan gratis admite 2 proyectos activos: prod y staging. |
 | Supabase staging | `psdhhwcxjcobwxjiemrr` (sa-east-1), misma org | Copia de prod del 2026-09-16 con los mismos ids, esquema completo. Se pausa tras 7 días sin uso; basta reactivarlo. |
 | Vercel team | `team_K2vm0PJ0CZxXz4pp3MD3ndxe` (hobby) | |
 | Vercel `planillas-fryt` | `prj_j5ZCp5g9YamCQKQy8Bthbzzjt6BZ` | App actual. Rama `main`, Root Directory raíz. |
 | Vercel `frytcontrol-v2` | `prj_VR9zMl4lzvSeWZXAwJI9cx7IErlh` | v2. Rama de producción `main`, Root Directory `v2`. Producción → prod; previews (p. ej. rama `v2`) → staging, decidido por `VERCEL_ENV` en `v2/vercel.json`. Las previews piden login de Vercel. |
 | GitHub | `j0nvthvn/planillas-fryt` | `main` es la rama de verdad. Un push a `main` despliega **las dos apps**. |
-| Resend | cuenta en modo prueba | Los correos no salen a nadie más que al dueño de la cuenta Resend. Pospuesto. |
+| Dominio | `frytspa.cl` (DNS en Cloudflare) | `app` → Vercel (DNS only). Registros de Resend en `send`, `resend._domainkey` y `_dmarc`. |
+| Resend | dominio `frytspa.cl` verificado | Correos activos desde `avisos@frytspa.cl` (cierre de turno, resumen diario y semanal). Ver `docs/operacion.md` → "Correos". |
 
 Credenciales y dónde están (nunca en el repo, salvo anon keys):
 - `.env.local` (raíz) y `v2/.env.local`: prod. `v2/.env.production` y `v2/.env.staging` **sí** se versionan (URL + anon key, públicas por diseño; RLS protege los datos).
 - `.env.staging.local` y `v2/.env.staging.local`: staging + `STAGING_PASSWORD`, contraseña única de todas las cuentas de staging (las 3 reales + `duena@test.local` / `local@test.local`). Los hashes de prod no se copiaron.
-- Supabase CLI: `pnpm exec supabase` ya logueada con la cuenta correcta y linkeada a prod (`supabase migration list` funciona). `db query --linked` sirve para leer.
-- Contraseña de la base de prod: no la tenemos; no hizo falta (todo por MCP de Supabase o CLI vía Management API).
+- Supabase CLI: `pnpm exec supabase` logueada con la cuenta correcta. Al 2026-09-17 sigue **linkeada al prod anterior (pausado)**: usar `--project-ref aecopggpahxjaglakqwd` o `supabase link` de nuevo.
+- `~/.config/frytcontrol/migracion.env` (fuera del repo, 600): cadenas del session pooler de ambas bases y la API key de Resend. El usuario tiene las contraseñas. El secreto `SUPABASE_DB_URL` de GitHub apunta a la base nueva.
 
 ## 3. Modelo de datos (lo esencial)
 
@@ -66,7 +71,7 @@ Credenciales y dónde están (nunca en el repo, salvo anon keys):
 ### Fase 0 — Estabilizar la app actual: **hecha** (2026-09-16)
 - Repo limpio (sin `.env.local`, `dist/`, `.temp/`), migraciones baseline + grants + hardening aplicadas en prod.
 - Frontend actual: aviso sin conexión y recarga automática ante chunk viejo, desplegado.
-- **Pendiente:** correos (`20260915000200_correos_seguros.sql` + edge functions reescritas) esperan dominio en Resend y secretos; ver `docs/operacion.md`. Mientras tanto siguen el trigger `notificaciones` y los crons viejos en prod. Activar *leaked password protection* en el dashboard de Auth. Limpieza de datos con la dueña (`docs/limpieza-datos-2026-09.sql`: duplicados de proveedores, días de turno único sin marcar); ahora los duplicados se fusionan desde la v2 → Proveedores.
+- **Correos: hechos** (2026-09-17) en el proyecto nuevo, con dominio propio. Lo que sigue de esta línea es historia: `docs/operacion.md`. Mientras tanto siguen el trigger `notificaciones` y los crons viejos en prod. Activar *leaked password protection* en el dashboard de Auth. Limpieza de datos con la dueña (`docs/limpieza-datos-2026-09.sql`: duplicados de proveedores, días de turno único sin marcar); ahora los duplicados se fusionan desde la v2 → Proveedores.
 
 ### Fase 1 — Backend compatible: **hecha** (2026-09-16)
 - Migraciones `20260916*` aplicadas en local (pgTAP 62/62, `scripts/test-db.sh`), staging y prod. Verificado: `turno_totales` reproduce los 115 cierres con 0 diferencias; humo de la app actual (`scripts/smoke-legacy.mjs`, 60 comprobaciones) verde en local y staging.
@@ -92,12 +97,12 @@ Credenciales y dónde están (nunca en el repo, salvo anon keys):
   - Migración `20260919000000_colores_metodos_fintech.sql` aplicada en staging y en prod (2026-09-17, vía MCP, versión registrada con el nombre del archivo).
 - **Pendiente:** revisar en un celular real (Safari de iOS con su barra inferior): altura de las hojas y encabezado pegajoso del Historial.
 
-### Fase 3 — Piloto en paralelo: **en curso, semana A** (desde 2026-09-16)
+### Fase 3 — Piloto en paralelo: **hecha** (2026-09-16/17; semanas B y C abreviadas a pedido del usuario)
 - Semana A automática: 0 diferencias en 59 días entre la fórmula de la app actual y `v_resumen_dia`.
 - Hallazgos ya corregidos durante la semana A: unir/dividir creaba correcciones; cerrar sesión de un toque; tooltip del gráfico; Proveedores inaccesible en móvil; autoguardado no enviaba ceros ni lo pendiente al salir; campos de Ajustes sin formato; Edenred con total del día (`acumulado_diario`).
 - Estado de prod al 2026-09-17: 0 errores `v2:` en `logs_error`, 1 borrador (el del día), ningún borrador de días pasados. 33 de 134 cierres son correcciones (25 %) y no hay un solo conteo de caja en toda la historia: de ahí las dos mejoras de flujo de la Fase 2.
 - Jonathan cerró desde la v2 cinco borradores antiguos en prod el 2026-09-16 (esperado: eran los turnos olvidados).
-- **Siguiente:** semana B (registro parcial desde el móvil del local con la cuenta trabajador o la de la dueña; antes: crear trabajadores en Ajustes) y semana C (v2 principal). Criterios de salida en `docs/piloto-v2.md`.
+- Semana B lista y revisión en un celular real hecha (2026-09-17). El usuario decidió pasar directo a la Fase 4.
 
 ### Integridad y respaldos: **hecho** (2026-09-16/18)
 - Migración `20260918000000_integridad.sql`: tabla `auditoria` (cambios reales y borrados de las tablas de negocio), `turno_cierres` inmutable (solo se borra en cascada con su turno, y queda en `auditoria`), sin `TRUNCATE` para los roles de la API, CHECKs de `fondo_inicial` y `efectivo_contado`, y `verificar_integridad()`. pgTAP 90/90 y humo de la app actual en verde en local y staging.
@@ -105,13 +110,15 @@ Credenciales y dónde están (nunca en el repo, salvo anon keys):
 - Aplicada en **staging** y en **prod** el 2026-09-16 (15:15 Chile, con respaldo JSON previo en el scratchpad de la sesión: `prod-backup-2026-09-18/`), versión registrada con el nombre del archivo, tipos de la v2 regenerados. Conteos iguales al respaldo; advisors solo con lo esperado.
 - Hallazgo en prod (error de `verificar_integridad()`): el 2026-06-17 está marcado como día completo y tiene un turno de tarde sin ventas pero con 2 proveedores ($207.405), sin cierres. **Resuelto el 2026-09-16:** los 2 pagos pasaron a la mañana y la tarde vacía quedó en la papelera (queda en `auditoria`); totales del día sin cambio.
 
-### Fase 4 — Cambio definitivo y migración a sa-east-1: **no iniciada**
-1. Proyecto Supabase nuevo en sa-east-1 (o reutilizar staging si se decide) con las migraciones del repo, edge functions y secretos.
-2. Ventana nocturna: copiar datos (`docs/operacion.md` → "Copiar datos de prod a otro proyecto", o `pg_dump` si se consigue la contraseña), logos, `auth.users` (esto requiere la contraseña de la base o crear las cuentas de nuevo), verificar conteos y sumas, cambiar `v2/.env.production` y las variables de la app actual en Vercel, redeploy.
-3. Proyecto antiguo pausado 30 días, no borrado.
+### Fase 4 — Cambio definitivo y migración a sa-east-1: **hecha** (2026-09-17, 03:40–04:00 Chile)
+- Proyecto `frytcontrol` (`aecopggpahxjaglakqwd`) con las migraciones del repo (todas alineadas en `schema_migrations`), las 3 edge functions, secretos, Vault y crons de correo. Correos probados antes del cambio (llegaron) y 401 sin secreto.
+- Datos copiados con `scripts/migrar-region.sh` (dos ensayos y la corrida final): manifiesto, `auditoria` y `verificar_integridad()` iguales; 31 logos; `auth.users` con sus contraseñas. La v2 revisada contra la copia: cifras idénticas a prod.
+- `main` en `778a48e`: `v2/.env.production` → proyecto nuevo, `vercel.json` de la raíz redirige a `app.frytspa.cl` y `respaldo.yml` usa la URL nueva. Respaldo manual en verde contra la base nueva.
+- Prod anterior pausado (sus crons y trigger viejos quedaron intactos, no corren; definiciones en `~/.config/frytcontrol/prod-viejo-correos.json`). Staging reactivado.
+- **Pendiente:** confirmar el primer día (entrada de la dueña en `app.frytspa.cl`, correo del primer cierre, resumen diario de las 12:00 UTC, `logs_error`). Reinstalar la PWA desde la dirección nueva en el celular del local. Re-linkear la CLI al proyecto nuevo.
 
 ### Fase 5 — Contracción: **no iniciada**
-Tras ≈1 mes sin usar la app actual: tag `legacy-final`, mover `v2/` a la raíz, `turnos.tipo` admite `'completo'`, ventas por filas, quitar triggers de compatibilidad, realtime y `replica identity full`. Detalle en `docs/plan-v2.md`.
+Decidido: empezar tras ≈1 semana estable con la v2 (la app antigua ya está retirada), es decir, desde el 2026-09-24: tag `legacy-final`, mover `v2/` a la raíz, `turnos.tipo` admite `'completo'`, ventas por filas, quitar triggers de compatibilidad, realtime y `replica identity full`. Detalle en `docs/plan-v2.md`.
 
 ## 5. Cómo trabajar en este repo
 
@@ -155,3 +162,4 @@ SMOKE_EMAIL=duena@test.local SMOKE_PASSWORD=<.env.staging.local> pnpm vitest run
 - Conexión del local estable: borrador local + reintento, sin offline-first.
 - Correos: habrá dominio propio, pero se pospuso; no es prioridad.
 - Diseño: rediseño Fintech (gris/blanco/indigo, Inter) acordado con la dueña el 2026-09-16, reemplaza al café cálido; priorizar el celular, camino A con préstamos de B y C.
+- Fase 4 adelantada (2026-09-17): la app va en `app.frytspa.cl`, la migración se hace con `pg_dump` conservando las contraseñas y la app antigua se retira al migrar (redirige; no se reconfigura contra la base nueva).
