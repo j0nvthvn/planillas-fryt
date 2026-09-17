@@ -42,10 +42,10 @@ export default function Login() {
   return (
     <div className="min-h-screen flex flex-col bg-canvas">
       <div className="flex flex-col items-center pt-14 pb-8 px-4">
-        <div className="w-[88px] h-[88px] rounded-[22px] overflow-hidden border border-hairline shadow-card mb-5 bg-card">
+        <div className="w-[88px] h-[88px] rounded-[16px] overflow-hidden border border-hairline shadow-card mb-5 bg-card">
           <img src="/logo.jpg" alt="Logo Minimarket Fryt" className="w-full h-full object-cover" />
         </div>
-        <h1 className="font-display text-[26px] font-semibold leading-[1.1] tracking-[-0.025em] text-ink">Minimarket Fryt</h1>
+        <h1 className="font-display text-2xl font-semibold leading-[1.1] tracking-[-0.025em] text-ink">Minimarket Fryt</h1>
         <p className="text-sm text-muted mt-1">FrytControl · Caja y turnos</p>
         <div className="mt-5 text-center">
           <p className="text-base font-semibold text-ink2">{saludo()}</p>
@@ -53,19 +53,19 @@ export default function Login() {
         </div>
       </div>
       <div className="flex-1 px-4">
-        <form onSubmit={onSubmit} className="w-full max-w-sm mx-auto card space-y-4" aria-describedby={error ? 'login-error' : undefined}>
+        <form onSubmit={onSubmit} className="w-full max-w-sm mx-auto card space-y-4">
           <p className="eyebrow">Iniciar sesión</p>
           <div>
             <label className="label" htmlFor="email">Correo electrónico</label>
-            <input id="email" type="email" className="input" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="email" inputMode="email" />
+            <input id="email" type="email" className="input" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="email" inputMode="email" aria-invalid={error ? true : undefined} aria-describedby={error ? 'login-error' : undefined} />
           </div>
           <div>
             <label className="label" htmlFor="password">Contraseña</label>
             <div className="relative">
-              <input id="password" type={verClave ? 'text' : 'password'} className="input pr-12" value={password} onChange={(e) => setPassword(e.target.value)} required autoComplete="current-password" />
+              <input id="password" type={verClave ? 'text' : 'password'} className="input pr-12" value={password} onChange={(e) => setPassword(e.target.value)} required autoComplete="current-password" aria-invalid={error ? true : undefined} aria-describedby={error ? 'login-error' : undefined} />
               <button type="button" onClick={() => setVerClave((v) => !v)}
                 aria-label={verClave ? 'Ocultar contraseña' : 'Mostrar contraseña'} aria-pressed={verClave}
-                className="absolute right-1 top-1/2 -translate-y-1/2 w-10 h-10 grid place-items-center rounded-[10px] text-ink2 hover:bg-hairline">
+                className="absolute right-0.5 top-1/2 -translate-y-1/2 w-11 h-11 grid place-items-center rounded-[10px] text-ink2 hover:bg-soft">
                 <Icon name={verClave ? 'eyeOff' : 'eye'} className="w-5 h-5" />
               </button>
             </div>

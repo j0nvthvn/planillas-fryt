@@ -42,7 +42,7 @@ export class ErrorBoundary extends Component<{ children: ReactNode }, { hasError
       <div className="min-h-screen flex items-center justify-center bg-canvas px-6">
         <div className="max-w-sm w-full text-center space-y-4">
           <div className="w-14 h-14 rounded-[16px] bg-neg-tint border border-hairline grid place-items-center mx-auto text-neg">
-            <svg viewBox="0 0 24 24" fill="none" className="w-7 h-7" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" className="w-7 h-7" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
               <path d="M12 4l8 15H4l8-15zM12 9v4M12 16h.01" />
             </svg>
           </div>

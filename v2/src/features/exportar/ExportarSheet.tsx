@@ -92,8 +92,8 @@ export function ExportarSheet({ resumen, onClose }: { resumen: Resumen; onClose:
         </li>
       </ul>
       {compartible && (
-        <label className="flex items-center gap-2 text-sm text-ink2 py-1">
-          <input type="checkbox" className="w-5 h-5 accent-[var(--brand)]" checked={compartir} onChange={(e) => setCompartir(e.target.checked)} />
+        <label className="flex items-center gap-2.5 min-h-[44px] text-sm text-ink2">
+          <input type="checkbox" className="w-5 h-5 shrink-0 accent-brand" checked={compartir} onChange={(e) => setCompartir(e.target.checked)} />
           Compartir al terminar (WhatsApp, correo, Drive)
         </label>
       )}

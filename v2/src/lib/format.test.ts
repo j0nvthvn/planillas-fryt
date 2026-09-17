@@ -16,7 +16,7 @@ describe('clp', () => {
   it('etiqueta corta para ejes', () => {
     expect(clpCorto(1_250_000)).toBe('$1,3M')
     expect(clpCorto(45_000)).toBe('$45k')
-    expect(clpCorto(-900)).toBe('-$900')
+    expect(clpCorto(-900)).toBe('−$900')
   })
 })
 

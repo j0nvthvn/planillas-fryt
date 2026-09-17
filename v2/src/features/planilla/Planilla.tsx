@@ -15,8 +15,8 @@ import { clp, clpSigno, fechaSinAnio, sumarDias, hoy, horaCorta } from '@/lib/fo
 import { esMetodo, type MetodoKey } from '@/lib/totales'
 import { mensajeDeError } from '@/lib/errorLog'
 
-const FLECHA = 'w-[38px] h-[38px] rounded-[10px] grid place-items-center bg-card border border-hairline-strong text-ink2 hover:bg-soft'
-const ACCION = 'btn min-h-[40px] rounded-[10px] px-3 text-sm text-ink2 bg-card border border-hairline-strong hover:bg-soft'
+const FLECHA = 'hit w-[38px] h-[38px] rounded-[10px] grid place-items-center bg-card border border-hairline-strong text-ink2 hover:bg-soft'
+const ACCION = 'hit btn min-h-[40px] rounded-[10px] px-3 text-sm text-ink2 bg-card border border-hairline-strong hover:bg-soft'
 
 export default function Planilla() {
   const { fecha } = useSearch({ from: '/app/dia' })
@@ -137,7 +137,7 @@ function TarjetaTurno({ t, fecha, esDueno, metodos, onDiff, onAccion, puedeUnir,
         </div>
         <div className="flex flex-col items-end gap-1 shrink-0">
           {turno.is_draft ? <span className="badge bg-warn-tint text-warn">Borrador</span>
-            : turno.corregido ? <button type="button" onClick={onDiff} aria-label="Corregido: ver la corrección" className="badge min-h-[36px] gap-1 bg-brand-tint text-brand">Corregido<Icon name="chevR" className="w-3.5 h-3.5" stroke={2.4} /></button>
+            : turno.corregido ? <button type="button" onClick={onDiff} aria-label="Corregido: ver la corrección" className="hit badge min-h-[36px] gap-1 bg-brand-tint text-brand">Corregido<Icon name="chevR" className="w-3.5 h-3.5" stroke={2.4} /></button>
             : <span className="badge bg-pos-tint text-pos">Cerrado</span>}
         </div>
       </div>
@@ -151,7 +151,7 @@ function TarjetaTurno({ t, fecha, esDueno, metodos, onDiff, onAccion, puedeUnir,
           <LedgerTotal label="Total ventas" value={Number(turno.total_ventas ?? 0)} size="sm" />
           {proveedores.length > 0 && <LedgerHead label="Proveedores" />}
           {proveedores.map((p) => (
-            <LedgerLine key={p.id} label={p.nombre} hint={p.forma_pago === 'efectivo' ? 'ef.' : 'tr.'} dot={p.forma_pago === 'efectivo' ? 'pos' : 'info'} value={-Number(p.monto)} color="var(--neg)" />
+            <LedgerLine key={p.id} label={p.nombre} hint={p.forma_pago === 'efectivo' ? <><span aria-hidden="true">ef.</span><span className="sr-only">efectivo</span></> : <><span aria-hidden="true">tr.</span><span className="sr-only">transferencia</span></>} dot={p.forma_pago === 'efectivo' ? 'pos' : 'info'} value={-Number(p.monto)} color="var(--neg)" />
           ))}
           <LedgerHead label="Caja" />
           <LedgerLine label="Fondo inicial" value={turno.fondo_inicial} />
@@ -167,7 +167,7 @@ function TarjetaTurno({ t, fecha, esDueno, metodos, onDiff, onAccion, puedeUnir,
           <Link to="/turno" search={{ fecha, modo: turno.modo }} className={ACCION}><Icon name="pencil" className="w-[15px] h-[15px]" stroke={1.9} />{turno.is_draft ? 'Seguir' : 'Corregir'}</Link>
           {esCompleto && turno.modo === 'completo' && <button type="button" onClick={() => onAccion('dividir')} className={ACCION}><Icon name="split" className="w-[15px] h-[15px]" stroke={1.9} />Dividir en dos turnos</button>}
           {puedeUnir && turno.modo === 'mañana' && <button type="button" onClick={() => onAccion('unir')} className={ACCION}><Icon name="merge" className="w-[15px] h-[15px]" stroke={1.9} />Unir como día completo</button>}
-          <button type="button" onClick={() => onAccion('eliminar')} className="btn min-h-[40px] rounded-[10px] px-3 text-sm text-neg hover:bg-neg-tint ml-auto"><Icon name="trash" className="w-[15px] h-[15px]" stroke={1.9} />Eliminar</button>
+          <button type="button" onClick={() => onAccion('eliminar')} className="hit btn min-h-[40px] rounded-[10px] px-3 text-sm text-neg hover:bg-neg-tint ml-auto"><Icon name="trash" className="w-[15px] h-[15px]" stroke={1.9} />Eliminar</button>
         </div>
       )}
     </article>

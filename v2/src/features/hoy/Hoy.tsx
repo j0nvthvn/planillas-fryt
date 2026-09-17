@@ -66,36 +66,36 @@ export default function Hoy() {
       </header>
 
       {borradoresViejos.length > 0 && (
-        <div role="alert" className="mb-3 rounded-[14px] bg-warn-tint border border-hairline px-4 py-3 flex items-start gap-3">
-          <span className="w-[30px] h-[30px] rounded-[9px] bg-warn/15 grid place-items-center shrink-0"><Icon name="warning" className="w-4 h-4 text-warn" stroke={2} /></span>
+        <section aria-labelledby="hoy-borradores" className="mb-3 rounded-[14px] bg-warn-tint border border-hairline px-4 py-3 flex items-start gap-3">
+          <span className="w-[30px] h-[30px] rounded-[9px] bg-warn/15 grid place-items-center shrink-0" aria-hidden="true"><Icon name="warning" className="w-4 h-4 text-warn" stroke={2} /></span>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-warn mt-1.5">{borradoresViejos.length === 1 ? 'Hay un turno sin cerrar' : `Hay ${borradoresViejos.length} turnos sin cerrar`}</p>
+            <h2 id="hoy-borradores" className="text-sm font-semibold text-warn mt-1.5">{borradoresViejos.length === 1 ? 'Hay un turno sin cerrar' : `Hay ${borradoresViejos.length} turnos sin cerrar`}</h2>
             <ul className="mt-1 space-y-1">
               {borradoresViejos.slice(0, 5).map((b) => (
                 <li key={b.id}>
-                  <Link to="/turno" search={{ fecha: b.fecha, modo: b.modo }} className="inline-block py-1 text-xs font-semibold text-warn underline underline-offset-2">
-                    {mayusculaInicial(`${fechaDiaMes(b.fecha)} · ${etiquetaModo(b.modo).toLowerCase()}`)} → cerrar
+                  <Link to="/turno" search={{ fecha: b.fecha, modo: b.modo }} className="hit inline-block py-1 text-xs font-semibold text-warn underline underline-offset-2">
+                    {mayusculaInicial(`${fechaDiaMes(b.fecha)} · ${etiquetaModo(b.modo).toLowerCase()}`)} <span aria-hidden="true">→</span> cerrar
                   </Link>
                 </li>
               ))}
             </ul>
           </div>
-        </div>
+        </section>
       )}
 
       {resumen.isPending && turnos.isPending ? <EsqueletoContenido sinTitulo /> : (
         <>
           {/* La cifra al frente */}
-          <section aria-label="Neto del día" className="card pb-4 mb-3">
+          <section aria-labelledby="hoy-neto" className="card pb-4 mb-3">
             <div className="flex items-center justify-between gap-2.5">
-              <p className="eyebrow">Neto del día</p>
+              <h2 id="hoy-neto" className="eyebrow">Neto del día</h2>
               <EstadoChip estado={r?.estado ?? 'sin_registro'} />
             </div>
             <p className="amount text-hero leading-[1.05] text-ink mt-2.5">{clp(neto)}</p>
             {hayAyer && (
               <div className="flex items-center gap-2 flex-wrap mt-2">
                 <DeltaBadge actual={neto} anterior={Number(ra.neto ?? 0)} fondo />
-                <Link to="/dia" search={{ fecha: ayer }} className="text-xs text-muted hover:text-ink">
+                <Link to="/dia" search={{ fecha: ayer }} className="hit text-xs text-muted hover:text-ink">
                   vs. ayer <span className="tabular-nums">{clp(ra.neto)}</span> · {ra.con_conteo ? (ra.con_descuadre ? 'hubo descuadre' : 'cuadró la caja') : 'sin conteo'}
                 </Link>
               </div>
@@ -116,14 +116,14 @@ export default function Hoy() {
           ) : (
             <div className="mb-3 rounded-[14px] bg-pos-tint border border-pos-border px-4 py-3 min-h-[52px] flex items-center justify-between gap-3">
               <p className="text-base font-semibold text-pos">Día completo registrado</p>
-              {esDueno && <Link to="/dia" search={{ fecha }} className="text-xs font-semibold text-pos underline underline-offset-2">Ver planilla</Link>}
+              {esDueno && <Link to="/dia" search={{ fecha }} className="hit shrink-0 text-xs font-semibold text-pos underline underline-offset-2">Ver planilla</Link>}
             </div>
           )}
 
-          <section className="card p-0 overflow-hidden mb-3" aria-label="Efectivo esperado en caja">
+          <section className="card p-0 overflow-hidden mb-3" aria-labelledby="hoy-efectivo">
             <div className="px-[18px] pt-4 pb-3.5">
               <div className="flex items-baseline justify-between gap-2.5">
-                <p className="text-md font-medium text-ink2">Efectivo esperado</p>
+                <h2 id="hoy-efectivo" className="text-md font-medium text-ink2">Efectivo esperado</h2>
                 <span className="cifra text-xl text-ink">{clp(efectivoEsperado)}</span>
               </div>
               <p className="text-xs text-muted2 mt-1.5 leading-snug">

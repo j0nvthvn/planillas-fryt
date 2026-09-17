@@ -1,4 +1,6 @@
 import { clp, parseNum } from '@/lib/format'
+import { useAnuncio } from '@/hooks/useAnuncio'
+import { useRovingRadio } from '@/hooks/useRovingRadio'
 import Icon from './Icon'
 
 /** Estado del teclado: string de dígitos ("" = vacío). Máximo 9 dígitos. */
@@ -52,21 +54,26 @@ export function Keypad({ onKey, onAccept, disabled, label }: KeypadProps) {
 }
 
 /** Display grande del monto, coloreado según contexto. */
-export function AmountDisplay({ digits, sub, color }: { digits: string; sub?: string; color?: string }) {
+export function AmountDisplay({ digits, sub, color, nombre }: { digits: string; sub?: string; color?: string; nombre?: string }) {
   const n = parseNum(digits)
+  // Se anuncia cuando se deja de teclear, no dígito a dígito.
+  const anuncio = useAnuncio(`${nombre ?? sub ?? 'Monto'}: ${clp(n)}`)
   return (
     <div className="rounded-[14px] bg-soft border border-hairline px-4 py-3.5">
       {sub && <p className="eyebrow mb-2">{sub}</p>}
-      <p className={`amount text-hero leading-none ${n ? 'text-ink' : 'text-muted2'}`} style={n && color ? { color } : undefined} aria-live="polite">
+      <p className={`amount text-hero leading-none ${n ? 'text-ink' : 'text-muted2'}`} style={n && color ? { color } : undefined} aria-hidden="true">
         {clp(n)}
       </p>
+      <p className="sr-only" aria-live="polite">{anuncio}</p>
     </div>
   )
 }
 
 /** Entrada por teclado físico (escritorio): solo dígitos, formato en vivo. */
-export function DesktopAmountInput({ digits, onChange, onEnter, color, label, autoFocus = true }: {
-  digits: string; onChange: (d: string) => void; onEnter?: () => void; color?: string; label?: string; autoFocus?: boolean
+export function DesktopAmountInput({ digits, onChange, onEnter, color, label, nombre, invalido, describedBy, autoFocus = true }: {
+  digits: string; onChange: (d: string) => void; onEnter?: () => void; color?: string; label?: string
+  /** Nombre accesible del campo (p. ej. el método); `label` es la ayuda visible. */
+  nombre?: string; invalido?: boolean; describedBy?: string; autoFocus?: boolean
 }) {
   const n = parseNum(digits)
   return (
@@ -82,7 +89,9 @@ export function DesktopAmountInput({ digits, onChange, onEnter, color, label, au
         }}
         onKeyDown={(e) => { if (e.key === 'Enter') onEnter?.() }}
         placeholder="$0"
-        aria-label={label ?? 'Monto'}
+        aria-label={nombre ?? label ?? 'Monto'}
+        aria-invalid={invalido || undefined}
+        aria-describedby={describedBy}
         className={`w-full bg-transparent border-0 p-0 outline-none focus:ring-0 font-display text-hero leading-none font-bold tracking-[-0.025em] tabular-nums placeholder:text-muted2 ${n ? '' : 'text-muted2'}`}
         style={n && color ? { color } : undefined}
       />
@@ -95,10 +104,11 @@ export function PayToggle({ value, onChange }: { value: 'efectivo' | 'transferen
     { v: 'efectivo' as const, label: 'Efectivo', icon: 'cash' as const, on: 'bg-pos-tint text-pos border-pos-border' },
     { v: 'transferencia' as const, label: 'Transferencia', icon: 'bank' as const, on: 'bg-brand-tint text-brand border-brand/40' },
   ]
+  const radio = useRovingRadio(opts.map((o) => o.v), value, onChange)
   return (
     <div className="flex gap-2" role="radiogroup" aria-label="Forma de pago">
-      {opts.map((o) => (
-        <button key={o.v} type="button" role="radio" aria-checked={value === o.v} onClick={() => onChange(o.v)}
+      {opts.map((o, i) => (
+        <button key={o.v} type="button" {...radio(o.v, i)} onClick={() => onChange(o.v)}
           className={`flex-1 flex items-center justify-center gap-2 min-h-[44px] rounded-[12px] text-sm font-semibold border transition-colors ${value === o.v ? o.on : 'bg-card text-muted border-hairline-strong'}`}>
           <Icon name={o.icon} className="w-[18px] h-[18px]" />{o.label}
         </button>

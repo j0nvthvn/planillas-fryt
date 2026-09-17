@@ -16,9 +16,9 @@ export function DeltaBadge({ actual, anterior, fondo = false }: { actual: number
   const sube = diff > 0
   const cls = `inline-flex items-center gap-[3px] text-xs font-semibold tabular-nums ${sube ? 'text-pos' : 'text-neg'} ${fondo ? `rounded-[7px] px-[7px] py-1 ${sube ? 'bg-pos-tint' : 'bg-neg-tint'}` : ''}`
   if ((actual >= 0) !== (anterior >= 0)) {
-    return <span className={cls}><Icon name={sube ? 'caretUp' : 'caretDown'} className="w-[11px] h-[11px]" stroke={3} />{sube ? '+' : '−'}{clp(Math.abs(diff))}</span>
+    return <span className={cls}><Icon name={sube ? 'caretUp' : 'caretDown'} className="w-[11px] h-[11px]" stroke={3} /><span className="sr-only">{sube ? 'sube' : 'baja'} </span>{sube ? '+' : '−'}{clp(Math.abs(diff))}</span>
   }
   const pct = (diff / Math.abs(anterior)) * 100
-  if (Math.abs(pct) < 0.5) return <span className={`text-xs font-medium text-muted2 ${fondo ? 'rounded-[7px] bg-soft px-[7px] py-1' : ''}`}>≈ igual</span>
-  return <span className={cls}><Icon name={sube ? 'caretUp' : 'caretDown'} className="w-[11px] h-[11px]" stroke={3} />{Math.abs(pct).toFixed(0)}%</span>
+  if (Math.abs(pct) < 0.5) return <span className={`text-xs font-medium text-muted2 ${fondo ? 'rounded-[7px] bg-soft px-[7px] py-1' : ''}`}><span aria-hidden="true">≈ </span>igual</span>
+  return <span className={cls}><Icon name={sube ? 'caretUp' : 'caretDown'} className="w-[11px] h-[11px]" stroke={3} /><span className="sr-only">{sube ? 'sube' : 'baja'} </span>{Math.abs(pct).toFixed(0)}%</span>
 }

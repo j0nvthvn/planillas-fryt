@@ -41,14 +41,14 @@ export default function Reporte() {
 
   return (
     <div className="min-h-dvh bg-canvas print:bg-white">
-      <div className="print:hidden sticky top-0 z-10 bg-card border-b border-hairline">
+      <header className="print:hidden sticky top-0 z-10 bg-card border-b border-hairline">
         <div className="max-w-3xl mx-auto px-4 py-2 flex items-center justify-between gap-2">
           <Link to="/analisis" search={{ desde, hasta }} className="btn-ghost px-2"><Icon name="arrowLeft" className="w-5 h-5" />Análisis</Link>
           <button type="button" onClick={() => window.print()} disabled={!r || !d} className="btn-primary px-4">
             <Icon name="download" className="w-[18px] h-[18px]" />Imprimir / Guardar PDF
           </button>
         </div>
-      </div>
+      </header>
 
       <main className="max-w-3xl mx-auto px-4 py-6 print:p-0 print:max-w-none text-ink">
         <header className="mb-5 flex items-end justify-between gap-3 border-b-2 border-brand pb-3">

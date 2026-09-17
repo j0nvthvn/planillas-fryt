@@ -70,14 +70,14 @@ export default function ProveedorDetalle() {
           e.target.value = ''
         }} />
         <div className="flex-1 min-w-0">
-          <p className="text-xs text-muted">{compras.data?.length ?? 0} compras · {clp(totalCompras)} en total</p>
+          <p className="text-xs text-muted tabular-nums">{compras.data?.length ?? 0} compras · {clp(totalCompras)} en total</p>
           <div className="flex flex-wrap gap-1.5 mt-2">
-            <button type="button" className="btn-secondary text-sm min-h-[38px] px-3" onClick={() => setRenombrar(prov.nombre)}><Icon name="pencil" className="w-4 h-4" />Renombrar</button>
-            <button type="button" className="btn-secondary text-sm min-h-[38px] px-3" onClick={() => setFusion({ q: '', destino: null })}><Icon name="merge" className="w-4 h-4" />Fusionar con…</button>
-            <button type="button" className="btn-secondary text-sm min-h-[38px] px-3" onClick={() => void correr(() => actualizarProveedor(prov.id, { activo: !prov.activo }), prov.activo ? 'Proveedor desactivado' : 'Proveedor activado')}>
+            <button type="button" className="hit btn-secondary text-sm min-h-[38px] px-3" onClick={() => setRenombrar(prov.nombre)}><Icon name="pencil" className="w-4 h-4" />Renombrar</button>
+            <button type="button" className="hit btn-secondary text-sm min-h-[38px] px-3" onClick={() => setFusion({ q: '', destino: null })}><Icon name="merge" className="w-4 h-4" />Fusionar con…</button>
+            <button type="button" className="hit btn-secondary text-sm min-h-[38px] px-3" onClick={() => void correr(() => actualizarProveedor(prov.id, { activo: !prov.activo }), prov.activo ? 'Proveedor desactivado' : 'Proveedor activado')}>
               {prov.activo ? 'Desactivar' : 'Activar'}
             </button>
-            <button type="button" className="btn-ghost text-sm min-h-[38px] px-3 text-neg" onClick={() => setConfirmar('eliminar')}><Icon name="trash" className="w-4 h-4" />Eliminar</button>
+            <button type="button" className="hit btn-ghost text-sm min-h-[38px] px-3 text-neg" onClick={() => setConfirmar('eliminar')}><Icon name="trash" className="w-4 h-4" />Eliminar</button>
           </div>
         </div>
       </div>
@@ -86,9 +86,9 @@ export default function ProveedorDetalle() {
       {compras.isPending ? <Spinner className="py-6" /> : (compras.data ?? []).length === 0 ? <p className="text-sm text-muted">Sin compras registradas.</p> : (
         <div className="card p-0 divide-y divide-hairline overflow-hidden">
           {(compras.data ?? []).map((c) => (
-            <Link key={c.id} to="/dia" search={{ fecha: c.turno?.jornada?.fecha ?? '' }} className="flex items-center gap-3 px-4 py-2.5 min-h-[52px] hover:bg-soft/60">
-              <span className={`w-[7px] h-[7px] rounded-full shrink-0 ${c.forma_pago === 'efectivo' ? 'bg-pos' : 'bg-brand'}`} />
-              <span className="flex-1 text-sm text-ink capitalize">{fechaDiaMes(c.turno?.jornada?.fecha)} <span className="text-muted text-xs">· {c.turno?.tipo}</span></span>
+            <Link key={c.id} to="/dia" search={{ fecha: c.turno?.jornada?.fecha ?? '' }} className="flex items-center gap-3 px-4 py-2.5 min-h-[56px] hover:bg-soft/60">
+              <span className={`w-[7px] h-[7px] rounded-full shrink-0 ${c.forma_pago === 'efectivo' ? 'bg-pos' : 'bg-brand'}`} aria-hidden="true" />
+              <span className="flex-1 text-sm text-ink"><span className="capitalize">{fechaDiaMes(c.turno?.jornada?.fecha)}</span> <span className="text-muted text-xs">· {c.turno?.tipo} · {c.forma_pago === 'efectivo' ? 'efectivo' : 'transferencia'}</span></span>
               <span className="cifra text-sm text-neg">{Number(c.monto) ? '−' : ''}{clp(c.monto)}</span>
             </Link>
           ))}
@@ -109,9 +109,9 @@ export default function ProveedorDetalle() {
           <input type="search" className="input" placeholder="Buscar destino" value={fusion.q} autoFocus onChange={(e) => setFusion({ q: e.target.value, destino: null })} aria-label="Buscar proveedor destino" />
           <div className="flex flex-col gap-1 max-h-[40vh] overflow-y-auto">
             {candidatos.map((c) => (
-              <button key={c.id} type="button" onClick={() => setFusion({ ...fusion, destino: c.id })}
+              <button key={c.id} type="button" aria-pressed={fusion.destino === c.id} onClick={() => setFusion({ ...fusion, destino: c.id })}
                 className={`flex items-center gap-3 rounded-[12px] px-3 py-2 text-left border transition-colors ${fusion.destino === c.id ? 'bg-brand-tint border-brand/40 text-brand' : 'bg-card border-hairline-strong text-ink hover:bg-soft'}`}>
-                <ProveedorAvatar nombre={c.nombre} imagenUrl={c.imagen_url} size="sm" /><span className="flex-1 text-base font-medium">{c.nombre}</span><span className="text-xs text-muted">{c.usos} usos</span>
+                <ProveedorAvatar nombre={c.nombre} imagenUrl={c.imagen_url} size="sm" /><span className="flex-1 text-base font-medium">{c.nombre}</span><span className="text-xs text-muted tabular-nums">{c.usos} usos</span>
               </button>
             ))}
           </div>

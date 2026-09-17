@@ -1,3 +1,4 @@
+import { useEffect, useId, useRef } from 'react'
 import { BottomSheet } from './BottomSheet'
 
 interface Props {
@@ -12,13 +13,17 @@ interface Props {
 }
 
 export function ConfirmDialog({ title, message, confirmLabel = 'Confirmar', cancelLabel = 'Cancelar', danger, loading, onConfirm, onCancel }: Props) {
+  const mensajeId = useId()
+  const cancelar = useRef<HTMLButtonElement>(null)
+  // El foco entra por la opción segura, no por la × ni por la destructiva.
+  useEffect(() => { cancelar.current?.focus() }, [])
   return (
-    <BottomSheet title={title} onClose={onCancel}>
-      {message && <p className="text-sm text-ink2">{message}</p>}
+    <BottomSheet title={title} onClose={onCancel} role="alertdialog" describedBy={message ? mensajeId : undefined}>
+      {message && <p id={mensajeId} className="text-sm text-ink2">{message}</p>}
       <div className="flex gap-2 pt-1">
-        <button type="button" className="btn-secondary flex-1 min-h-[50px] text-base" onClick={onCancel} disabled={loading}>{cancelLabel}</button>
+        <button ref={cancelar} type="button" className="btn-secondary flex-1 min-h-[50px] text-base" onClick={onCancel} disabled={loading}>{cancelLabel}</button>
         <button type="button" className={`${danger ? 'btn-danger' : 'btn-primary'} flex-1 min-h-[50px] text-base`} onClick={onConfirm} disabled={loading}>
-          {loading ? 'Un momento…' : confirmLabel}
+          <span aria-live="polite">{loading ? 'Un momento…' : confirmLabel}</span>
         </button>
       </div>
     </BottomSheet>

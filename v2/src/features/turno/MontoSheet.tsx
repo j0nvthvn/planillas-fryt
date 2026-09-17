@@ -1,8 +1,9 @@
-import { useEffect, useState, type ReactNode } from 'react'
+import { useEffect, useId, useState, type ReactNode } from 'react'
 import { BottomSheet } from '@/components/BottomSheet'
 import Icon from '@/components/Icon'
 import { AmountDisplay, DesktopAmountInput, Keypad, applyKey, digitosANumero, numeroADigitos } from '@/components/Keypad'
 import { useIsDesktop } from '@/hooks/useIsDesktop'
+import { useRovingRadio } from '@/hooks/useRovingRadio'
 import { clp } from '@/lib/format'
 import { derivarTarde, totalDesdeTarde } from './acumulado'
 
@@ -52,20 +53,26 @@ export function MontoSheet({ title, sub, valor, color, label = 'Listo', ayuda, p
   const encadenado = !!siguiente
   // Con el monto vacío aceptar guarda un 0: que el botón lo diga, en vez de
   // dejar la duda de si un método en cero se puede saltar.
+  const errorId = useId()
+  const modoRadio = useRovingRadio([true, false], modoTotal, (total) => {
+    if (!acumulado || total === modoTotal) return
+    setModoTotal(total)
+    setDigits(numeroADigitos(total ? totalDesdeTarde(escrito, acumulado.manana) : derivarTarde(escrito, acumulado.manana).tarde))
+  })
   const etiqueta = encadenado ? (escrito === 0 ? 'Omitir y seguir' : `Siguiente: ${siguiente}`) : label
   const bloqueAcumulado = acumulado && (
     <div className="rounded-[14px] border border-hairline px-4 py-3 flex flex-col gap-2.5">
       <div className="segmented" role="radiogroup" aria-label="Cómo ingresar el monto">
-        <button type="button" role="radio" aria-checked={modoTotal} onClick={() => { if (!modoTotal) { setModoTotal(true); setDigits(numeroADigitos(totalDesdeTarde(escrito, acumulado.manana))) } }}
+        <button type="button" {...modoRadio(true, 0)} onClick={() => { if (!modoTotal) { setModoTotal(true); setDigits(numeroADigitos(totalDesdeTarde(escrito, acumulado.manana))) } }}
           className={`${modoTotal ? 'segmented-item-on' : 'segmented-item'} px-2`}>Total del día (máquina)</button>
-        <button type="button" role="radio" aria-checked={!modoTotal} onClick={() => { if (modoTotal) { setModoTotal(false); setDigits(numeroADigitos(derivarTarde(escrito, acumulado.manana).tarde)) } }}
+        <button type="button" {...modoRadio(false, 1)} onClick={() => { if (modoTotal) { setModoTotal(false); setDigits(numeroADigitos(derivarTarde(escrito, acumulado.manana).tarde)) } }}
           className={`${!modoTotal ? 'segmented-item-on' : 'segmented-item'} px-2`}>Solo la tarde</button>
       </div>
       {modoTotal ? (
-        <p className={`text-sm tabular-nums ${invalido ? 'text-neg font-semibold' : 'text-ink2'}`}>
+        <p id={errorId} aria-live="polite" className={`text-sm tabular-nums ${invalido ? 'text-neg font-semibold' : 'text-ink2'}`}>
           {invalido
             ? `El total no puede ser menor que la mañana (${clp(acumulado.manana)}).`
-            : <>Mañana <b className="text-ink">{clp(acumulado.manana)}</b> → se guarda para la tarde <b className="text-ink">{clp(montoFinal)}</b></>}
+            : <>Mañana <b className="text-ink">{clp(acumulado.manana)}</b> <span aria-hidden="true">→</span> se guarda para la tarde <b className="text-ink">{clp(montoFinal)}</b></>}
         </p>
       ) : (
         <p className="text-sm text-ink2 tabular-nums">Mañana {clp(acumulado.manana)} · total del día quedaría en <b className="text-ink">{clp(totalDesdeTarde(escrito, acumulado.manana))}</b></p>
@@ -87,7 +94,7 @@ export function MontoSheet({ title, sub, valor, color, label = 'Listo', ayuda, p
         <>
           <Keypad onKey={(k) => setDigits((d) => applyKey(d, k))} onAccept={() => aceptar(encadenado)} disabled={invalido} label={etiqueta} />
           {encadenado && (
-            <button type="button" onClick={() => aceptar(false)} className="w-full -mt-0.5 min-h-[40px] px-4 text-sm font-semibold text-ink2 flex items-center justify-center gap-1.5">
+            <button type="button" onClick={() => aceptar(false)} className="hit w-full -mt-0.5 min-h-[40px] px-4 text-sm font-semibold text-ink2 flex items-center justify-center gap-1.5">
               <Icon name="check" className="w-[15px] h-[15px]" />Guardar y volver
             </button>
           )}
@@ -95,10 +102,13 @@ export function MontoSheet({ title, sub, valor, color, label = 'Listo', ayuda, p
       )}
     >
       {desktop ? (
-        <DesktopAmountInput digits={digits} onChange={setDigits} onEnter={() => aceptar(encadenado)} color={color} label={sub} />
+        <DesktopAmountInput digits={digits} onChange={setDigits} onEnter={() => aceptar(encadenado)} color={color} label={sub} nombre={title}
+          invalido={invalido} describedBy={acumulado && modoTotal ? errorId : undefined} />
       ) : (
-        <AmountDisplay digits={digits} sub={sub} color={color} />
+        <AmountDisplay digits={digits} sub={sub} color={color} nombre={title} />
       )}
+      {/* Al encadenar la hoja no se vuelve a abrir: se anuncia el paso nuevo. */}
+      {paso && <p className="sr-only" aria-live="polite">{`${title}, ${paso.actual} de ${paso.total}`}</p>}
       {bloqueAcumulado}
       {ayuda}
     </BottomSheet>

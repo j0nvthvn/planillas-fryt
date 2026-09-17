@@ -24,11 +24,11 @@ function ListaProveedores({ items, titulo }: { items: Snap[]; titulo: string }) 
           {items.map((p, i) => (
             <div key={i} className="flex items-center gap-2 text-xs">
               <span className="flex-1 text-ink2 truncate">{p.nombre}</span>
-              <span className={`badge rounded-[6px] px-1.5 py-[3px] ${p.forma_pago === 'efectivo' ? 'bg-pos-tint text-pos' : 'bg-brand-tint text-brand'}`}>{p.forma_pago === 'efectivo' ? 'Ef.' : 'Tr.'}</span>
+              <span className={`badge-sm ${p.forma_pago === 'efectivo' ? 'bg-pos-tint text-pos' : 'bg-brand-tint text-brand'}`}><span aria-hidden="true">{p.forma_pago === 'efectivo' ? 'Ef.' : 'Tr.'}</span><span className="sr-only">{p.forma_pago === 'efectivo' ? 'efectivo' : 'transferencia'}</span></span>
               <span className="text-ink font-semibold tabular-nums">{clp(p.monto)}</span>
             </div>
           ))}
-          <div className="flex items-center gap-2 text-xs pt-1 border-t border-soft mt-1">
+          <div className="flex items-center gap-2 text-xs pt-1 border-t border-hairline mt-1">
             <span className="flex-1 font-bold text-ink">Total</span><span className="font-bold text-ink tabular-nums">{clp(total)}</span>
           </div>
         </div>
@@ -62,7 +62,7 @@ export function CorreccionModal({ cierres, metodos, titulo, onClose }: { cierres
     <BottomSheet title={titulo} onClose={onClose}>
       <p className="text-xs text-muted -mt-1">{correcciones} corrección{correcciones === 1 ? '' : 'es'} desde el cierre original</p>
       <div className="text-xs text-muted bg-soft border border-hairline rounded-[12px] px-3 py-2">Original · {fechaHora(original.cerrado_en)} · {original.cerrado_por_usuario?.nombre ?? '—'}</div>
-      {sinCambios && <p className="text-sm text-ink2 bg-soft rounded-xl px-3 py-2">Se volvió a guardar el turno sin cambios en ventas, proveedores ni caja.</p>}
+      {sinCambios && <p className="text-sm text-ink2 bg-soft rounded-[12px] px-3 py-2">Se volvió a guardar el turno sin cambios en ventas, proveedores ni caja.</p>}
       {(filas.length > 0 || caja.length > 0) ? (
         <div className="space-y-2">
           <p className="eyebrow">Qué cambió</p>
@@ -71,9 +71,9 @@ export function CorreccionModal({ cierres, metodos, titulo, onClose }: { cierres
             return (
               <div key={f.key} className="flex items-center gap-2.5 text-sm">
                 <span className="flex-1 text-ink2">{f.label}</span>
-                <span className="text-muted2 tabular-nums line-through">{clp(f.antes)}</span>
+                <span className="text-muted2 tabular-nums line-through"><span className="sr-only">antes </span>{clp(f.antes)}</span>
                 <Icon name="chevR" className="w-3 h-3 text-muted2" />
-                <span className="font-bold text-ink tabular-nums">{clp(f.despues)}</span>
+                <span className="font-bold text-ink tabular-nums"><span className="sr-only">ahora </span>{clp(f.despues)}</span>
                 <span className={`text-xs font-semibold tabular-nums ${delta > 0 ? 'text-pos' : 'text-neg'}`}>({delta > 0 ? '+' : ''}{clp(delta)})</span>
               </div>
             )

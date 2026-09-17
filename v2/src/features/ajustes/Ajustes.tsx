@@ -1,6 +1,6 @@
-import { useState, type ReactNode } from 'react'
+import { useId, useState, type ReactNode } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { Link, useNavigate, useSearch } from '@tanstack/react-router'
+import { Link, useSearch } from '@tanstack/react-router'
 import PageHeader from '@/components/PageHeader'
 import Spinner from '@/components/Spinner'
 import Icon from '@/components/Icon'
@@ -17,6 +17,7 @@ import { mensajeDeError } from '@/lib/errorLog'
 import { clp, fechaHora, fechaDiaMes } from '@/lib/format'
 import { totalVentas } from '@/lib/totales'
 import { useUsuario } from '@/hooks/useUsuario'
+import { useRovingRadio } from '@/hooks/useRovingRadio'
 import {
   useConfig, useGuardarConfig, useTrabajadores, crearTrabajador, actualizarTrabajador, eliminarTrabajador,
   useMetodos, actualizarMetodo, type Config,
@@ -36,26 +37,26 @@ const SECCIONES: { v: Seccion; label: string }[] = [
 /** Campo dentro de una fila: más bajo y chico que el `input` suelto. */
 const CAMPO = 'min-h-[38px]! py-1.5! rounded-[10px]!'
 /** Acción chica de una fila (badge-botón de 34 px). */
-const ACCION = 'inline-flex items-center justify-center gap-[5px] min-h-[34px] px-2.5 rounded-[9px] text-xs transition-colors disabled:opacity-40'
+const ACCION = 'hit inline-flex items-center justify-center gap-[5px] min-h-[34px] px-2.5 rounded-[9px] text-xs transition-colors disabled:opacity-40'
 
 export default function Ajustes() {
   const { seccion = 'general' } = useSearch({ from: '/app/ajustes' })
-  const navigate = useNavigate()
   const { config } = useConfig()
   return (
     <div className="max-w-3xl mx-auto">
-      <PageHeader eyebrow={config.nombreLocal || 'FrytControl'} title="Ajustes" action={<button type="button" className="btn min-h-[40px] rounded-[11px] px-3 text-sm bg-card text-ink2 border border-hairline-strong hover:bg-soft" onClick={() => void cerrarSesion()}><Icon name="logout" className="w-4 h-4" />Salir</button>} />
-      <div className="flex gap-1.5 overflow-x-auto -mx-4 px-4 pb-3 md:flex-wrap md:mx-0 md:px-0" role="tablist">
+      <PageHeader eyebrow={config.nombreLocal || 'FrytControl'} title="Ajustes" action={<button type="button" className="hit btn min-h-[40px] rounded-[11px] px-3 text-sm bg-card text-ink2 border border-hairline-strong hover:bg-soft" onClick={() => void cerrarSesion()}><Icon name="logout" className="w-4 h-4" />Salir</button>} />
+      {/* Cada sección tiene su URL: es navegación, no pestañas. */}
+      <nav className="flex gap-1.5 overflow-x-auto -mx-4 px-4 pb-3 md:flex-wrap md:mx-0 md:px-0" aria-label="Secciones de Ajustes">
         {SECCIONES.map((s) => (
-          <button key={s.v} type="button" role="tab" aria-selected={seccion === s.v} onClick={() => void navigate({ to: '/ajustes', search: { seccion: s.v } })}
-            className={`${PILDORA} ${seccion === s.v ? PILDORA_ON : `${PILDORA_OFF} font-medium`}`}>
+          <Link key={s.v} to="/ajustes" search={{ seccion: s.v }} aria-current={seccion === s.v ? 'page' : undefined}
+            className={`${PILDORA} ${seccion === s.v ? PILDORA_ON : PILDORA_OFF}`}>
             {s.label}
-          </button>
+          </Link>
         ))}
-      </div>
+      </nav>
       {seccion === 'general' && (
         <Link to="/proveedores" className="card rounded-[14px] py-3.5 mb-5 flex items-center gap-3 hover:border-hairline-strong">
-          <span className="w-10 h-10 rounded-[11px] bg-brand-tint text-brand grid place-items-center shrink-0"><Icon name="suppliers" className="w-5 h-5" /></span>
+          <span className="w-10 h-10 rounded-[11px] bg-brand-tint text-brand grid place-items-center shrink-0" aria-hidden="true"><Icon name="suppliers" className="w-5 h-5" /></span>
           <span className="flex-1 min-w-0"><span className="block text-base font-semibold text-ink">Proveedores</span><span className="block text-xs text-muted mt-0.5">Catálogo: renombrar, fusionar duplicados, logos</span></span>
           <Icon name="chevR" className="w-[15px] h-[15px] text-muted2 shrink-0" />
         </Link>
@@ -81,6 +82,7 @@ function Fila({ label, hint, apilar, children }: { label: string; hint?: string;
 }
 
 const DIAS = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']
+const DIAS_LARGOS = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado']
 
 function General() {
   const { config, cargando } = useConfig()
@@ -88,6 +90,9 @@ function General() {
   const toast = useToast()
   const { tema, setTema } = useTema()
   const [form, setForm] = useState<Config | null>(null)
+  const temas: Tema[] = ['sistema', 'claro', 'oscuro']
+  const temaRadio = useRovingRadio(temas, tema, setTema)
+  const diasId = useId()
   const f = form ?? config
   if (cargando) return <Spinner />
   const set = (c: Partial<Config>) => setForm({ ...f, ...c })
@@ -96,16 +101,16 @@ function General() {
       <h2 className="eyebrow mb-[9px]">Operación</h2>
       <div className="card p-0 divide-y divide-hairline overflow-hidden">
         <Fila apilar label="Nombre del local"><input className={`input ${CAMPO} w-full sm:w-40 sm:text-right`} value={f.nombreLocal} onChange={(e) => set({ nombreLocal: e.target.value })} aria-label="Nombre del local" /></Fila>
-        <Fila apilar label="Fondo de caja por defecto" hint="Con lo que parte cada turno"><MontoInput className={`${CAMPO} font-display font-semibold w-full sm:w-40 sm:text-right`} value={f.fondoCajaInicial} onChange={(n) => set({ fondoCajaInicial: n })} ariaLabel="Fondo de caja" /></Fila>
-        <Fila apilar label="Corte de la mañana" hint="Hora en que termina el turno mañana"><HoraInput className={`${CAMPO} font-display font-semibold w-full sm:w-32 sm:text-right`} value={f.horaCorteManana} onChange={(h) => set({ horaCorteManana: h })} ariaLabel="Hora de corte" /></Fila>
+        <Fila apilar label="Fondo de caja por defecto" hint="Con lo que parte cada turno"><MontoInput className={`${CAMPO} font-display font-semibold w-full sm:w-40 sm:text-right`} value={f.fondoCajaInicial} onChange={(n) => set({ fondoCajaInicial: n })} ariaLabel="Fondo de caja por defecto" /></Fila>
+        <Fila apilar label="Corte de la mañana" hint="Hora en que termina el turno mañana"><HoraInput className={`${CAMPO} font-display font-semibold w-full sm:w-32 sm:text-right`} value={f.horaCorteManana} onChange={(h) => set({ horaCorteManana: h })} ariaLabel="Corte de la mañana" /></Fila>
         <div className="px-4 py-3.5">
-          <p className="text-base font-medium text-ink">Días de un solo turno</p>
-          <p className="text-xs text-muted mt-0.5 mb-2.5">Esos días se registran siempre como día completo</p>
-          <div className="grid grid-cols-7 gap-1">
+          <p id={diasId} className="text-base font-medium text-ink">Días de un solo turno</p>
+          <p id={`${diasId}-ayuda`} className="text-xs text-muted mt-0.5 mb-2.5">Esos días se registran siempre como día completo</p>
+          <div className="grid grid-cols-7 gap-1" role="group" aria-labelledby={diasId} aria-describedby={`${diasId}-ayuda`}>
             {DIAS.map((d, i) => {
               const on = f.diasTurnoUnico.includes(i)
-              return <button key={d} type="button" aria-pressed={on} onClick={() => set({ diasTurnoUnico: on ? f.diasTurnoUnico.filter((x) => x !== i) : [...f.diasTurnoUnico, i].sort() })}
-                className={`min-h-[38px] px-0 rounded-[9px] text-sm border transition-colors ${on ? 'bg-ink text-card border-ink font-semibold' : 'bg-card text-ink2 border-hairline-strong font-medium hover:bg-soft'}`}>{d}</button>
+              return <button key={d} type="button" aria-pressed={on} aria-label={DIAS_LARGOS[i]} onClick={() => set({ diasTurnoUnico: on ? f.diasTurnoUnico.filter((x) => x !== i) : [...f.diasTurnoUnico, i].sort() })}
+                className={`hit min-h-[38px] px-0 rounded-[9px] text-sm border transition-colors ${on ? 'bg-ink text-card border-ink font-semibold' : 'bg-card text-ink2 border-hairline-strong font-medium hover:bg-soft'}`}>{d}</button>
             })}
           </div>
         </div>
@@ -117,8 +122,8 @@ function General() {
         <div className="card p-0 overflow-hidden">
           <Fila label="Apariencia">
             <div className="segmented" role="radiogroup" aria-label="Apariencia">
-              {(['sistema', 'claro', 'oscuro'] as Tema[]).map((t) => (
-                <button key={t} type="button" role="radio" aria-checked={tema === t} onClick={() => setTema(t)} className={`${tema === t ? 'segmented-item-on' : 'segmented-item'} min-h-[36px] px-[11px] capitalize`}>{t}</button>
+              {temas.map((t, i) => (
+                <button key={t} type="button" {...temaRadio(t, i)} onClick={() => setTema(t)} className={`hit ${tema === t ? 'segmented-item-on' : 'segmented-item'} min-h-[36px] px-[11px] capitalize`}>{t}</button>
               ))}
             </div>
           </Fila>
@@ -161,7 +166,7 @@ function Trabajadores() {
         {(lista.data ?? []).map((t) => (
           <Fila key={t.id} label={t.nombre} hint={t.activo ? undefined : 'Inactivo'}>
             <div className="flex items-center gap-1.5">
-              <button type="button" className={`${ACCION} font-semibold border border-hairline-strong text-ink2 hover:bg-soft`} onClick={() => void run(() => actualizarTrabajador(t.id, { activo: !t.activo }), t.activo ? 'Desactivado' : 'Activado')}>{t.activo ? 'Desactivar' : 'Activar'}</button>
+              <button type="button" className={`${ACCION} font-semibold border border-hairline-strong text-ink2 hover:bg-soft`} aria-label={`${t.activo ? 'Desactivar' : 'Activar'} a ${t.nombre}`} onClick={() => void run(() => actualizarTrabajador(t.id, { activo: !t.activo }), t.activo ? 'Desactivado' : 'Activado')}>{t.activo ? 'Desactivar' : 'Activar'}</button>
               <button type="button" className={`${ACCION} w-[34px] px-0 text-neg hover:bg-neg-tint`} onClick={() => setBorrar(t)} aria-label={`Eliminar ${t.nombre}`}><Icon name="trash" className="w-4 h-4" /></button>
             </div>
           </Fila>
@@ -190,13 +195,13 @@ function Metodos() {
               {(m.sub || m.acumulado_diario) && <p className="text-xs text-muted mt-0.5">{[m.sub, m.acumulado_diario ? 'la máquina muestra el total del día' : null].filter(Boolean).join(' · ')}</p>}
             </div>
             <div className="flex items-center gap-1 ml-auto">
-              <button type="button" className={`${ACCION} w-[38px] min-h-[38px] px-0 text-ink2 hover:bg-soft`} disabled={i === 0} aria-label="Subir" onClick={() => { const prev = arr[i - 1]; if (prev) void run(async () => { await actualizarMetodo(m.key, { orden: prev.orden }); await actualizarMetodo(prev.key, { orden: m.orden }) }) }}><Icon name="caretUp" className="w-4 h-4" /></button>
-              <button type="button" className={`${ACCION} w-[38px] min-h-[38px] px-0 text-ink2 hover:bg-soft`} disabled={i === arr.length - 1} aria-label="Bajar" onClick={() => { const next = arr[i + 1]; if (next) void run(async () => { await actualizarMetodo(m.key, { orden: next.orden }); await actualizarMetodo(next.key, { orden: m.orden }) }) }}><Icon name="caretDown" className="w-4 h-4" /></button>
+              <button type="button" className={`${ACCION} w-[38px] min-h-[38px] px-0 text-ink2 hover:bg-soft`} disabled={i === 0} aria-label={`Subir ${m.label}`} onClick={() => { const prev = arr[i - 1]; if (prev) void run(async () => { await actualizarMetodo(m.key, { orden: prev.orden }); await actualizarMetodo(prev.key, { orden: m.orden }) }) }}><Icon name="caretUp" className="w-4 h-4" /></button>
+              <button type="button" className={`${ACCION} w-[38px] min-h-[38px] px-0 text-ink2 hover:bg-soft`} disabled={i === arr.length - 1} aria-label={`Bajar ${m.label}`} onClick={() => { const next = arr[i + 1]; if (next) void run(async () => { await actualizarMetodo(m.key, { orden: next.orden }); await actualizarMetodo(next.key, { orden: m.orden }) }) }}><Icon name="caretDown" className="w-4 h-4" /></button>
             </div>
             {/* En el celular las acciones van en una segunda línea: al lado del nombre lo cortaban. */}
             <div className="flex items-center gap-1.5 basis-full pl-[52px] sm:basis-auto sm:pl-0">
-              <button type="button" className={`${ACCION} ${m.acumulado_diario ? 'bg-brand-tint text-brand font-semibold' : 'border border-hairline-strong text-muted font-medium hover:bg-soft'}`} aria-pressed={m.acumulado_diario} title="La máquina muestra el total del día" onClick={() => void run(() => actualizarMetodo(m.key, { acumulado_diario: !m.acumulado_diario }))}>Total del día</button>
-              <button type="button" className={`${ACCION} font-semibold ${m.activo ? 'bg-pos-tint text-pos' : 'bg-neg-tint text-neg'}`} onClick={() => void run(() => actualizarMetodo(m.key, { activo: !m.activo }))}>{m.activo ? 'Activo' : 'Inactivo'}</button>
+              <button type="button" className={`${ACCION} ${m.acumulado_diario ? 'bg-brand-tint text-brand font-semibold' : 'border border-hairline-strong text-muted font-medium hover:bg-soft'}`} aria-pressed={m.acumulado_diario} aria-label={`Total del día en ${m.label}`} title="La máquina muestra el total del día" onClick={() => void run(() => actualizarMetodo(m.key, { acumulado_diario: !m.acumulado_diario }))}>Total del día</button>
+              <button type="button" className={`${ACCION} font-semibold ${m.activo ? 'bg-pos-tint text-pos' : 'bg-neg-tint text-neg'}`} aria-pressed={m.activo} aria-label={`${m.label} activo`} onClick={() => void run(() => actualizarMetodo(m.key, { activo: !m.activo }))}>{m.activo ? 'Activo' : 'Inactivo'}</button>
             </div>
           </div>
         ))}
@@ -218,8 +223,8 @@ function Papelera() {
         {(lista.data ?? []).map((t) => (
           <Fila key={t.id} label={`${fechaDiaMes(t.jornada?.fecha)} · ${etiquetaModo(t.jornada?.es_turno_unico && t.tipo === 'mañana' ? 'completo' : t.tipo)}`} hint={`ventas ${clp(totalVentas(t.ventas))} · eliminado ${fechaHora(t.deleted_at)}`}>
             <div className="flex items-center gap-1.5">
-              <button type="button" className={`${ACCION} font-semibold border border-hairline-strong text-ink2 hover:bg-soft`} onClick={() => void run(() => restaurarTurno(t.id, t.jornada?.fecha ?? ''), 'Turno restaurado')}><Icon name="undo" className="w-3.5 h-3.5" />Restaurar</button>
-              <button type="button" className={`${ACCION} w-[34px] px-0 text-neg hover:bg-neg-tint`} onClick={() => setPurgar(t.id)} aria-label="Borrar definitivamente"><Icon name="trash" className="w-4 h-4" /></button>
+              <button type="button" className={`${ACCION} font-semibold border border-hairline-strong text-ink2 hover:bg-soft`} aria-label={`Restaurar ${fechaDiaMes(t.jornada?.fecha)}`} onClick={() => void run(() => restaurarTurno(t.id, t.jornada?.fecha ?? ''), 'Turno restaurado')}><Icon name="undo" className="w-3.5 h-3.5" />Restaurar</button>
+              <button type="button" className={`${ACCION} w-[34px] px-0 text-neg hover:bg-neg-tint`} onClick={() => setPurgar(t.id)} aria-label={`Borrar definitivamente ${fechaDiaMes(t.jornada?.fecha)}`}><Icon name="trash" className="w-4 h-4" /></button>
             </div>
           </Fila>
         ))}
@@ -259,15 +264,19 @@ function Usuarios() {
       <div className="card p-0 divide-y divide-hairline overflow-hidden">
         {(lista.data ?? []).map((u) => (
           <Fila key={u.id} label={u.nombre + (u.id === yo?.id ? ' (tú)' : '')} hint={`${u.email} · ${u.rol}${u.activo ? '' : ' · inactivo'}`}>
-            {u.id !== yo?.id && <button type="button" className={`${ACCION} font-semibold border border-hairline-strong text-ink2 hover:bg-soft`} onClick={() => void supabase.from('usuarios').update({ activo: !u.activo }).eq('id', u.id).then(({ error }) => { if (error) toast.error(error.message); else void queryClient.invalidateQueries({ queryKey: qk.usuarios }) })}>{u.activo ? 'Desactivar' : 'Activar'}</button>}
+            {u.id !== yo?.id && <button type="button" className={`${ACCION} font-semibold border border-hairline-strong text-ink2 hover:bg-soft`} aria-label={`${u.activo ? 'Desactivar' : 'Activar'} a ${u.nombre}`} onClick={() => void supabase.from('usuarios').update({ activo: !u.activo }).eq('id', u.id).then(({ error }) => { if (error) toast.error(error.message); else void queryClient.invalidateQueries({ queryKey: qk.usuarios }) })}>{u.activo ? 'Desactivar' : 'Activar'}</button>}
           </Fila>
         ))}
       </div>
       {form ? (
         <form className="card space-y-3" onSubmit={(e) => { e.preventDefault(); void crear() }}>
-          <input className="input" placeholder="Nombre" value={form.nombre} onChange={(e) => setForm({ ...form, nombre: e.target.value })} required aria-label="Nombre" />
-          <input className="input" placeholder="Correo" type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} required aria-label="Correo" />
-          <input className="input" placeholder="Contraseña (mínimo 8)" type="password" minLength={8} value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} required aria-label="Contraseña" />
+          <label className="block"><span className="label">Nombre</span>
+            <input className="input" value={form.nombre} onChange={(e) => setForm({ ...form, nombre: e.target.value })} required autoComplete="off" /></label>
+          <label className="block"><span className="label">Correo</span>
+            <input className="input" type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} required autoComplete="off" /></label>
+          <label className="block"><span className="label">Contraseña</span>
+            <input className="input" type="password" minLength={8} value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} required autoComplete="new-password" aria-describedby="cuenta-clave-ayuda" /></label>
+          <p id="cuenta-clave-ayuda" className="text-xs text-muted -mt-1.5">Mínimo 8 caracteres.</p>
           <div className="flex gap-2"><button type="button" className="btn-secondary flex-1" onClick={() => setForm(null)}>Cancelar</button><button type="submit" className="btn-primary flex-1" disabled={ocupado}>{ocupado ? 'Creando…' : 'Crear cuenta'}</button></div>
         </form>
       ) : <button type="button" className="btn-secondary w-full" onClick={() => setForm({ nombre: '', email: '', password: '' })}><Icon name="plus" className="w-4 h-4" />Nueva cuenta</button>}

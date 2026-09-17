@@ -7,6 +7,7 @@ import { BottomSheet } from '@/components/BottomSheet'
 import { MetodoLogo } from '@/components/MetodoLogo'
 import { useToast } from '@/components/Toast'
 import { useOnline } from '@/hooks/useOnline'
+import { useRovingRadio } from '@/hooks/useRovingRadio'
 import { useUsuario } from '@/hooks/useUsuario'
 import { useConfig, useMetodos, useTrabajadores } from '@/features/catalogo/api'
 import { MODOS, etiquetaModo, type Modo } from './api'
@@ -74,6 +75,11 @@ export default function CerrarTurno() {
 
   const soloLectura = state.cerrado && !esDueno
   const turnoManana = form.dia.find((t) => t.turno.tipo === 'mañana')?.turno as unknown as Record<string, number | null> | undefined
+  // «¿Contaste la caja?»: Sí abre el conteo; No lo borra.
+  const cajaRadio = useRovingRadio([false, true], state.contoCaja, (conto) => {
+    if (conto) setSheet({ t: 'conteo' })
+    else cambiar({ type: 'caja', conto: false, monto: null })
+  }, () => soloLectura)
   const usadosIds = state.proveedores.map((p) => p.proveedor_id).filter((x): x is string => !!x)
 
   /** El botón de la barra ya no cierra: abre la revisión. */
@@ -113,7 +119,7 @@ export default function CerrarTurno() {
         back="/hoy"
         subtitle={esDueno ? (state.cerrado ? fechaLegible(fecha) : estadoGuardado || fechaLegible(fecha)) : fechaLegible(fecha)}
         action={esDueno && (
-          <button type="button" onClick={() => setSheet({ t: 'fecha' })} aria-label="Cambiar fecha"
+          <button type="button" onClick={() => setSheet({ t: 'fecha' })} aria-label={`Cambiar fecha, ${fechaDiaMes(fecha)}`}
             className="inline-flex items-center gap-[7px] min-h-[40px] px-3 rounded-[11px] bg-card border border-hairline-strong text-sm font-semibold text-ink2 hover:bg-soft">
             <Icon name="calendar" className="w-4 h-4" />{fechaDiaMes(fecha)}
           </button>
@@ -121,7 +127,7 @@ export default function CerrarTurno() {
       />
 
       {soloLectura && (
-        <div role="alert" className="mb-4 rounded-[12px] bg-info-tint border border-hairline px-4 py-3 text-sm font-medium text-info">
+        <div role="status" className="mb-4 rounded-[12px] bg-info-tint border border-hairline px-4 py-3 text-sm font-medium text-info">
           Este turno ya está cerrado. Solo la dueña puede corregirlo. <Link to="/hoy" className="font-bold underline">Volver a Hoy</Link>
         </div>
       )}
@@ -138,7 +144,7 @@ export default function CerrarTurno() {
 
       {/* Modo */}
       <section className="mb-[18px]" aria-label="Tipo de registro">
-        <div className="segmented">
+        <div className="segmented" role="group" aria-label="Tipo de registro">
           {MODOS.map((m) => {
             const on = modo === m.value
             const habilitado = disponibles.includes(m.value) || on
@@ -159,17 +165,17 @@ export default function CerrarTurno() {
       <section className="mb-5" aria-label="Quién atendió">
         <h2 className="eyebrow mb-[9px]">¿Quién atendió?</h2>
         {listaTrabajadores.length > 0 ? (
-          <div role="radiogroup" aria-label="Quién atendió"
+          <div role="group" aria-label="Quién atendió"
             className={trabajadoresSegmented ? 'segmented' : 'flex gap-2 overflow-x-auto -mx-4 px-4 pb-1 md:flex-wrap md:overflow-visible md:mx-0 md:px-0'}
             style={trabajadoresSegmented ? { display: 'grid', gridTemplateColumns: `repeat(${listaTrabajadores.length}, minmax(0, 1fr))` } : undefined}>
             {listaTrabajadores.map((t) => {
               const on = state.trabajadorId === t.id
               return (
-                <button key={t.id} type="button" role="radio" aria-checked={on} disabled={soloLectura}
+                <button key={t.id} type="button" aria-pressed={on} disabled={soloLectura}
                   onClick={() => cambiar({ type: 'trabajador', id: on ? null : t.id })}
                   className={trabajadoresSegmented
                     ? `${on ? 'segmented-item-on' : 'segmented-item'} px-1 min-w-0 truncate`
-                    : `shrink-0 min-h-[40px] rounded-[9px] px-4 text-sm border ${on ? 'bg-card text-ink font-semibold border-hairline-strong shadow-card' : 'bg-soft text-muted font-medium border-hairline'}`}>
+                    : `hit shrink-0 min-h-[40px] rounded-[9px] px-4 text-sm border ${on ? 'bg-card text-ink font-semibold border-hairline-strong shadow-card' : 'bg-soft text-muted font-medium border-hairline'}`}>
                   {t.nombre}
                 </button>
               )
@@ -256,10 +262,10 @@ export default function CerrarTurno() {
             <div className="flex items-center justify-between gap-3">
               <span className="text-base font-medium text-ink">¿Contaste la caja?</span>
               <div className="grid grid-cols-2 gap-[3px] p-[3px] rounded-[11px] bg-soft border border-hairline" role="radiogroup" aria-label="Conteo de caja">
-                <button type="button" role="radio" aria-checked={!state.contoCaja} disabled={soloLectura} onClick={() => cambiar({ type: 'caja', conto: false, monto: null })}
-                  className={`min-h-[38px] min-w-[54px] px-3 rounded-[8px] text-sm transition-colors ${!state.contoCaja ? 'bg-card text-ink font-semibold shadow-card' : 'text-muted font-medium'}`}>No</button>
-                <button type="button" role="radio" aria-checked={state.contoCaja} disabled={soloLectura} onClick={() => setSheet({ t: 'conteo' })}
-                  className={`min-h-[38px] min-w-[54px] px-3 rounded-[8px] text-sm transition-colors ${state.contoCaja ? 'bg-card text-ink font-semibold shadow-card' : 'text-muted font-medium'}`}>Sí</button>
+                <button type="button" {...cajaRadio(false, 0)} disabled={soloLectura} onClick={() => cambiar({ type: 'caja', conto: false, monto: null })}
+                  className={`hit min-h-[38px] min-w-[54px] px-3 rounded-[8px] text-sm transition-colors ${!state.contoCaja ? 'bg-card text-ink font-semibold shadow-card' : 'text-muted font-medium'}`}>No</button>
+                <button type="button" {...cajaRadio(true, 1)} disabled={soloLectura} onClick={() => setSheet({ t: 'conteo' })}
+                  className={`hit min-h-[38px] min-w-[54px] px-3 rounded-[8px] text-sm transition-colors ${state.contoCaja ? 'bg-card text-ink font-semibold shadow-card' : 'text-muted font-medium'}`}>Sí</button>
               </div>
             </div>
             {state.contoCaja && state.efectivoContado != null && (
@@ -280,14 +286,17 @@ export default function CerrarTurno() {
           <div className="max-w-2xl mx-auto flex items-center gap-3">
             <div className="flex-1 min-w-0">
               <p className="eyebrow leading-none mb-[5px]">Neto {modo === 'completo' ? 'del día' : 'del turno'}</p>
-              <p className={`amount text-amount-sm leading-none ${totales.neto >= 0 ? 'text-ink' : 'text-neg'}`}>{clp(totales.neto)}</p>
-              {estadoGuardado && (
-                <p className="flex items-center gap-[5px] text-xs text-muted mt-[5px]">
-                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${state.sucio ? 'bg-warn' : 'bg-pos'}`} aria-hidden="true" />{estadoGuardado}
-                </p>
-              )}
+              <p className={`amount text-amount-sm leading-none truncate ${totales.neto >= 0 ? 'text-ink' : 'text-neg'}`}>{clp(totales.neto)}</p>
+              {/* Región viva estable: el lector se entera de «Borrador guardado» sin mirar. */}
+              <div role="status">
+                {estadoGuardado && (
+                  <p className="flex items-center gap-[5px] text-xs text-muted mt-[5px]">
+                    <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${state.sucio ? 'bg-warn' : 'bg-pos'}`} aria-hidden="true" />{estadoGuardado}
+                  </p>
+                )}
+              </div>
             </div>
-            <button type="button" onClick={pedirCierre} disabled={form.guardando} className="btn-primary min-h-[50px] rounded-[13px] px-[22px] text-base min-w-[150px]">
+            <button type="button" onClick={pedirCierre} disabled={form.guardando} className="btn-primary min-h-[50px] rounded-[13px] px-[22px] text-base min-w-[132px] shrink-0">
               {form.guardando ? 'Guardando…' : etiquetaCerrar(modo, state.cerrado)}
             </button>
           </div>
@@ -348,7 +357,7 @@ export default function CerrarTurno() {
         <BottomSheet title="Cambiar fecha" onClose={() => setSheet(null)}>
           <div className="flex items-center gap-2">
             <button type="button" className="btn-secondary" onClick={() => void navigate({ to: '/turno', search: { fecha: sumarDias(fecha, -1) } })} aria-label="Día anterior"><Icon name="chevL" /></button>
-            <input type="date" className="input flex-1 text-center" value={fecha} max={hoy()}
+            <input type="date" aria-label="Fecha del turno" className="input flex-1 text-center" value={fecha} max={hoy()}
               onChange={(e) => { if (e.target.value) void navigate({ to: '/turno', search: { fecha: e.target.value } }) }} />
             <button type="button" className="btn-secondary" disabled={fecha >= hoy()} onClick={() => void navigate({ to: '/turno', search: { fecha: sumarDias(fecha, 1) } })} aria-label="Día siguiente"><Icon name="chevR" /></button>
           </div>

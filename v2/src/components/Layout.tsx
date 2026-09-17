@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import { useEffect, useRef, type ReactNode } from 'react'
 import { Link, useRouterState } from '@tanstack/react-router'
 import { useRegisterSW } from 'virtual:pwa-register/react'
 import Icon, { type IconName } from './Icon'
@@ -20,17 +20,28 @@ const ITEMS: Item[] = [
 const TABS_MOVIL_DUENO = ['/hoy', '/historial', '/analisis', '/ajustes']
 const TABS_MOVIL_LOCAL = ['/hoy']
 
+/** Título de la pestaña por pantalla (WCAG 2.4.2); el lector lo anuncia al navegar. */
+function tituloDe(pathname: string): string {
+  if (pathname.startsWith('/proveedores/')) return 'Proveedor'
+  if (pathname === '/dia') return 'Planilla del día'
+  return ITEMS.find((i) => activo(pathname, i.to))?.label ?? 'FrytControl'
+}
+
 function activo(pathname: string, to: string) {
   return to === '/hoy' ? pathname === '/hoy' || pathname === '/' : pathname === to || pathname.startsWith(to + '/')
 }
 
 function ActualizacionBanner() {
   const { needRefresh: [needRefresh], updateServiceWorker } = useRegisterSW()
-  if (!needRefresh) return null
+  // El contenedor queda montado para que el aviso se anuncie al aparecer.
   return (
-    <div className="shrink-0 z-30 flex items-center justify-between gap-3 bg-info text-on-solid text-sm font-semibold px-4 py-2">
-      <span>Hay una versión nueva de FrytControl.</span>
-      <button onClick={() => void updateServiceWorker(true)} className="rounded-lg bg-on-solid/20 px-3 py-1 font-bold">Actualizar</button>
+    <div aria-live="polite" className="shrink-0 z-30">
+      {needRefresh && (
+        <div className="flex items-center justify-between gap-3 bg-info text-on-solid text-sm font-semibold px-4 py-2">
+          <span>Hay una versión nueva de FrytControl.</span>
+          <button type="button" onClick={() => void updateServiceWorker(true)} className="hit shrink-0 rounded-[10px] bg-on-solid/20 px-3 py-1.5 font-bold">Actualizar</button>
+        </div>
+      )}
     </div>
   )
 }
@@ -49,15 +60,32 @@ export default function Layout({ children }: { children: ReactNode }) {
   // inferior (se sale con la flecha del encabezado) y gana alto para el cierre.
   const enfoque = activo(pathname, fab.to)
 
+  // Al cambiar de pantalla: título de la pestaña y foco al contenido, para
+  // que el teclado y el lector de pantalla no se queden en el enlace que ya
+  // no existe (o en el menú de cuenta que se cerró).
+  const mainRef = useRef<HTMLElement>(null)
+  const rutaAnterior = useRef(pathname)
+  useEffect(() => {
+    document.title = `${tituloDe(pathname)} · FrytControl`
+    if (rutaAnterior.current === pathname) return
+    rutaAnterior.current = pathname
+    mainRef.current?.focus({ preventScroll: true })
+  }, [pathname])
+
   return (
     <div className="app-shell flex flex-col bg-canvas" data-sin-nav={enfoque || undefined}>
+      <a href="#contenido" className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-[70] focus:rounded-[10px] focus:bg-card focus:px-4 focus:py-3 focus:text-sm focus:font-semibold focus:text-brand focus:shadow-hero">
+        Saltar al contenido
+      </a>
       <ActualizacionBanner />
-      {!online && (
-        <div role="status" className="shrink-0 z-30 flex items-center justify-center gap-2 bg-warn text-on-solid text-xs font-semibold px-3 py-2 text-center">
-          <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse shrink-0" />
-          Sin conexión: se guarda en este dispositivo y se reintenta al volver
-        </div>
-      )}
+      <div role="status" className="shrink-0 z-30">
+        {!online && (
+          <div className="flex items-center justify-center gap-2 bg-warn text-on-solid text-xs font-semibold px-3 py-2 text-center">
+            <span className="w-1.5 h-1.5 rounded-full bg-on-solid animate-pulse shrink-0" aria-hidden="true" />
+            Sin conexión: se guarda en este dispositivo y se reintenta al volver
+          </div>
+        )}
+      </div>
 
       <div className="flex flex-1 min-h-0 max-w-screen-2xl mx-auto w-full overflow-hidden md:overflow-visible">
         <aside className="hidden md:flex flex-col w-(--sidebar-w) shrink-0 border-r border-hairline bg-card sticky top-0 h-screen overflow-y-auto">
@@ -81,7 +109,7 @@ export default function Layout({ children }: { children: ReactNode }) {
           </div>
         </aside>
 
-        <main className="flex-1 min-h-0 min-w-0 px-4 sm:px-6 md:px-8 pt-5 pb-nav md:pb-8 overflow-y-auto overflow-x-hidden md:overflow-visible">
+        <main id="contenido" ref={mainRef} tabIndex={-1} className="focus:outline-none flex-1 min-h-0 min-w-0 px-4 sm:px-6 md:px-8 pt-5 pb-nav md:pb-8 overflow-y-auto overflow-x-hidden md:overflow-visible">
           {children}
         </main>
       </div>
@@ -93,8 +121,8 @@ export default function Layout({ children }: { children: ReactNode }) {
           <div className="w-[76px] shrink-0" aria-hidden="true" />
           <div className="flex-1 flex items-stretch">{der.map((i) => <Tab key={i.to} item={i} on={activo(pathname, i.to)} />)}</div>
         </div>
-        <Link to={fab.to} aria-label="Cerrar caja"
-          className="absolute left-1/2 -translate-x-1/2 -top-[22px] z-40 grid place-items-center w-[58px] h-[58px] rounded-[19px] border-[3px] border-card bg-brand text-on-solid shadow-[0_8px_20px_-6px_rgba(79,70,229,.5)] hover:bg-brand-hover transition-colors">
+        <Link to={fab.to} aria-label={fab.label}
+          className="absolute left-1/2 -translate-x-1/2 -top-[22px] z-40 grid place-items-center w-[58px] h-[58px] rounded-[19px] border-[3px] border-card bg-brand text-on-solid shadow-fab hover:bg-brand-hover transition-colors">
           <Icon name="cash" className="w-6 h-6" stroke={2.3} />
         </Link>
       </nav>}

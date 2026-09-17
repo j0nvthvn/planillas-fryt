@@ -22,7 +22,7 @@ export default function PageHeader({ eyebrow, title, subtitle, action, back, chi
     <header className="flex items-center justify-between gap-3 -mx-4 sm:-mx-6 -mt-5 mb-4 px-4 sm:px-6 py-4 bg-card border-b border-hairline md:m-0 md:mb-5 md:p-0 md:bg-transparent md:border-0 md:items-end">
       <div className="min-w-0 flex-1 flex items-center gap-2">
         {back && (
-          <Link to={back} aria-label="Volver" className="-ml-1.5 w-9 h-9 rounded-[10px] grid place-items-center text-ink2 hover:bg-soft shrink-0">
+          <Link to={back} aria-label="Volver" className="hit -ml-1.5 w-9 h-9 rounded-[10px] grid place-items-center text-ink2 hover:bg-soft shrink-0">
             <Icon name="chevL" className="w-5 h-5" stroke={2} />
           </Link>
         )}

@@ -51,12 +51,12 @@ export default function Proveedores() {
 
   return (
     <div className="max-w-3xl mx-auto">
-      <PageHeader eyebrow={`Catálogo · ${activos} activo${activos === 1 ? '' : 's'}`} title="Proveedores" action={<button type="button" className="btn-primary min-h-[40px] rounded-[11px] px-3 text-sm" onClick={() => setNuevo('')}><Icon name="plus" className="w-4 h-4" stroke={2.2} />Nuevo</button>} />
+      <PageHeader eyebrow={`Catálogo · ${activos} activo${activos === 1 ? '' : 's'}`} title="Proveedores" action={<button type="button" className="hit btn-primary min-h-[40px] rounded-[11px] px-3 text-sm" onClick={() => setNuevo('')}><Icon name="plus" className="w-4 h-4" stroke={2.2} />Nuevo</button>} />
       <div className="relative mb-2">
         <Icon name="search" className="w-[17px] h-[17px] absolute left-[13px] top-1/2 -translate-y-1/2 text-muted" />
         <input type="search" className="input min-h-[44px] py-2.5 pl-10" placeholder="Buscar proveedor" value={q} onChange={(e) => setQ(e.target.value)} aria-label="Buscar proveedor" />
       </div>
-      <label className="flex items-center gap-2.5 min-h-[40px] text-sm text-ink2 mb-1.5"><input type="checkbox" className="w-5 h-5 rounded-[5px] accent-brand" checked={verInactivos} onChange={(e) => setVerInactivos(e.target.checked)} />Mostrar inactivos</label>
+      <label className="flex items-center gap-2.5 min-h-[44px] text-sm text-ink2 mb-1"><input type="checkbox" className="w-5 h-5 shrink-0 accent-brand" checked={verInactivos} onChange={(e) => setVerInactivos(e.target.checked)} />Mostrar inactivos</label>
 
       {sospechosos.length > 0 && !q && (
         <div className="mb-3 rounded-[14px] bg-warn-tint border border-hairline px-4 py-3 flex items-start gap-3">

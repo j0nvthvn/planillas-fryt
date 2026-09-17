@@ -17,7 +17,7 @@ export function clpSigno(valor: number): string {
 export function clpCorto(v: number): string {
   if (v === 0) return '$0'
   const abs = Math.abs(v)
-  const sign = v < 0 ? '-' : ''
+  const sign = v < 0 ? '−' : ''
   if (abs >= 1_000_000) return `${sign}$${(abs / 1_000_000).toFixed(1).replace('.', ',')}M`
   if (abs >= 1_000) return `${sign}$${Math.round(abs / 1_000)}k`
   return `${sign}$${abs}`

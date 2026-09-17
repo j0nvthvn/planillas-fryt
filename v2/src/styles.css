@@ -240,6 +240,9 @@
   @apply inline-flex items-center whitespace-nowrap rounded-[7px] px-2 py-[5px] text-[11px] font-semibold leading-none;
 }
 
+/* Badge compacto en listas densas (forma de pago en el detalle). */
+@utility badge-sm { @apply badge rounded-[6px] px-1.5 py-[3px]; }
+
 /* Contenedor de segmented control: la opción activa lleva
    `bg-card shadow-card text-ink`; las inactivas, `text-muted`. */
 @utility segmented {
@@ -255,6 +258,21 @@
 @utility row {
   @apply flex items-center gap-[13px] w-full px-4 text-left active:bg-soft;
   min-height: 64px;
+}
+
+/* Área táctil de al menos 44×44 sin agrandar lo que se ve: un pseudo-
+   elemento invisible centrado sobre el control recibe los toques. */
+@utility hit {
+  position: relative;
+  &::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: max(100%, 44px);
+    height: max(100%, 44px);
+    transform: translate(-50%, -50%);
+  }
 }
 
 /* Contenedor uniforme de logo de método de pago / avatar de iniciales. */

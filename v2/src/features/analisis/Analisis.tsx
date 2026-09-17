@@ -45,13 +45,14 @@ export default function Analisis() {
 
   const promedio = dias.length ? dias.reduce((a, d) => a + d.neto, 0) / dias.length : 0
   const hayBorrador = dias.some((d) => d.estado === 'borrador')
+  const hayNegativo = dias.some((d) => d.neto < 0)
 
   return (
     <div className="max-w-3xl mx-auto">
       <PageHeader eyebrow={rangoLegible(desde, hasta)} title="Análisis"
         action={
           <button type="button" onClick={() => setExportando(true)} disabled={!r}
-            className="btn min-h-[40px] rounded-[11px] px-3 text-sm bg-card text-ink2 border border-hairline-strong hover:bg-soft md:min-h-[42px] md:bg-brand md:text-on-solid md:border-brand md:hover:bg-brand-hover">
+            className="hit btn min-h-[40px] rounded-[11px] px-3 text-sm bg-card text-ink2 border border-hairline-strong hover:bg-soft md:bg-brand md:text-on-solid md:border-brand md:hover:bg-brand-hover">
             <Icon name="download" className="w-4 h-4" />Exportar
           </button>
         } />
@@ -60,7 +61,7 @@ export default function Analisis() {
         <div className="segmented sm:w-auto" role="group" aria-label="Período">
           {(['7', '30', 'mes'] as const).map((p) => (
             <button key={p} type="button" aria-pressed={presetActivo === p} onClick={() => void navigate({ to: '/analisis', search: rango(p) })}
-              className={`${presetActivo === p ? 'segmented-item-on' : 'segmented-item'} min-h-[38px] px-3.5 whitespace-nowrap`}>
+              className={`hit ${presetActivo === p ? 'segmented-item-on' : 'segmented-item'} min-h-[38px] px-3.5 whitespace-nowrap`}>
               {p === 'mes' ? 'Este mes' : `${p} días`}
             </button>
           ))}
@@ -68,7 +69,7 @@ export default function Analisis() {
         {/* En el celular las fechas van en su propia fila a todo lo ancho: a 140 px cada una no cabían en 375 px. */}
         <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-1 w-full text-sm sm:flex sm:w-auto sm:ml-auto">
           <input type="date" aria-label="Desde" className="input py-1.5 px-2.5 min-h-[40px] rounded-[10px] min-w-0 w-full sm:w-[140px]" value={desde} max={hasta} onChange={(e) => e.target.value && void navigate({ to: '/analisis', search: ajustarRango(e.target.value, hasta, 'desde') })} />
-          <span className="text-muted">→</span>
+          <span className="text-muted" aria-hidden="true">→</span>
           <input type="date" aria-label="Hasta" className="input py-1.5 px-2.5 min-h-[40px] rounded-[10px] min-w-0 w-full sm:w-[140px]" value={hasta} min={desde} max={hoy()} onChange={(e) => e.target.value && void navigate({ to: '/analisis', search: ajustarRango(desde, e.target.value, 'hasta') })} />
         </div>
       </div>
@@ -90,12 +91,15 @@ export default function Analisis() {
           <div className="grid gap-3 md:grid-cols-[1.55fr_1fr] md:gap-3.5 md:items-start">
             <div className="card md:rounded-[14px] md:px-5">
               <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 mb-4">
-                <p className="text-sm font-medium text-ink">Neto por día</p>
+                <h2 className="text-sm font-medium text-ink">Neto por día</h2>
                 {dias.length > 0 && <span className="md:hidden text-xs text-muted">promedio <b className="font-semibold tabular-nums text-ink2">{clp(Math.round(promedio))}</b></span>}
-                <div className="hidden md:flex gap-3.5 text-xs text-muted" aria-hidden="true">
-                  <span className="inline-flex items-center gap-[5px]"><span className="w-[9px] h-[9px] rounded-[2px] bg-ink" />día cerrado</span>
+                {/* Leyenda: en el celular solo los colores que no se explican solos
+                    (borrador y negativo), para que nada dependa del color. */}
+                <div className={`${hayBorrador || hayNegativo ? 'flex' : 'hidden md:flex'} flex-wrap gap-x-3.5 gap-y-1 text-xs text-muted w-full md:w-auto`} aria-hidden="true">
+                  <span className="hidden md:inline-flex items-center gap-[5px]"><span className="w-[9px] h-[9px] rounded-[2px] bg-ink" />día cerrado</span>
                   {hayBorrador && <span className="inline-flex items-center gap-[5px]"><span className="w-[9px] h-[9px] rounded-[2px] bg-warn" />con borrador</span>}
-                  <span className="inline-flex items-center gap-[5px]"><span className="w-3.5 border-t border-dashed border-brand" />promedio</span>
+                  {hayNegativo && <span className="inline-flex items-center gap-[5px]"><span className="w-[9px] h-[9px] rounded-[2px] bg-neg" />neto negativo</span>}
+                  <span className="hidden md:inline-flex items-center gap-[5px]"><span className="w-3.5 border-t border-dashed border-brand" />promedio</span>
                 </div>
               </div>
               {/* El gráfico es decorativo para un lector de pantalla: el resumen
@@ -103,7 +107,7 @@ export default function Analisis() {
               <p className="sr-only">{resumenGrafico(dias)}</p>
               <div className="h-[200px] md:h-[250px]" aria-hidden="true">
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={dias} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
+                  <BarChart data={dias} margin={{ top: 4, right: 4, left: 0, bottom: 0 }} accessibilityLayer={false}>
                     <CartesianGrid stroke="var(--hairline)" vertical={false} />
                     <XAxis dataKey="label" tick={{ fontSize: 11, fill: 'var(--muted2)' }} tickLine={false} axisLine={{ stroke: 'var(--hairline-strong)' }} interval="preserveStartEnd" />
                     <YAxis tickFormatter={clpCorto} tick={{ fontSize: 11, fill: 'var(--muted2)' }} tickLine={false} axisLine={false} width={48} />
@@ -119,7 +123,7 @@ export default function Analisis() {
 
             <div className="flex flex-col gap-3 md:gap-3.5">
               <div className="card p-0 overflow-hidden md:rounded-[14px]">
-                <p className="text-sm font-medium text-ink px-[18px] pt-4 pb-3">Ventas por método</p>
+                <h2 className="text-sm font-medium text-ink px-[18px] pt-4 pb-3">Ventas por método</h2>
                 {(metodos.data ?? []).map((m) => {
                   const monto = Number(r.totales[m.key] ?? 0)
                   const pct = r.totales.total_ventas ? (monto / r.totales.total_ventas) * 100 : 0
@@ -139,7 +143,7 @@ export default function Analisis() {
                 })}
               </div>
               <div className="card p-0 overflow-hidden md:rounded-[14px]">
-                <p className="text-sm font-medium text-ink px-[18px] pt-4 pb-3">Top proveedores</p>
+                <h2 className="text-sm font-medium text-ink px-[18px] pt-4 pb-3">Top proveedores</h2>
                 {r.top_proveedores.length === 0 ? <p className="text-sm text-muted px-[18px] pb-4">Sin compras en el período.</p> : r.top_proveedores.map((p) => (
                   <Link key={p.proveedor_id ?? p.nombre} to={p.proveedor_id ? '/proveedores/$id' : '/proveedores'} params={{ id: p.proveedor_id ?? '' }} className="flex items-center gap-3 px-[18px] py-2 min-h-[54px] border-t border-hairline hover:bg-soft/60">
                     <ProveedorAvatar nombre={p.nombre} imagenUrl={p.imagen_url} size="sm" />
@@ -179,7 +183,8 @@ function resumenGrafico(dias: DiaGrafico[]): string {
     if (d.neto > mejor.neto) mejor = d
     if (d.neto < peor.neto) peor = d
   }
-  const base = `Neto por día en ${dias.length} día${dias.length === 1 ? '' : 's'} con registro.`
+  const borradores = dias.filter((d) => d.estado === 'borrador').length
+  const base = `Neto por día en ${dias.length} día${dias.length === 1 ? '' : 's'} con registro${borradores ? `, ${borradores} con borrador sin cerrar` : ''}.`
   if (dias.length === 1) return `${base} ${fechaDiaMes(mejor.fecha)}: ${clp(mejor.neto)}.`
   return `${base} El mejor fue ${fechaDiaMes(mejor.fecha)} con ${clp(mejor.neto)}; el peor, ${fechaDiaMes(peor.fecha)} con ${clp(peor.neto)}.`
 }

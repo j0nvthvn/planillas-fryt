@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { BottomSheet } from '@/components/BottomSheet'
 import Icon from '@/components/Icon'
 import { clp, clpSigno } from '@/lib/format'
+import { useAnuncio } from '@/hooks/useAnuncio'
 import { DENOMINACIONES, ajustar, cantidad, cantidadDesdeTexto, fijar, hayConteo, totalConteo, type Conteo } from './conteo'
 
 interface Props {
@@ -20,6 +21,7 @@ export function ConteoSheet({ inicial, esperado, onAccept, onTotalManual, onClos
   const total = totalConteo(conteo)
   const diferencia = total - esperado
   const vacio = !hayConteo(conteo)
+  const anuncio = useAnuncio(`Contado ${clp(total)}${vacio ? '' : diferencia === 0 ? ', cuadra' : `, diferencia ${clpSigno(diferencia)}`}`)
 
   return (
     <BottomSheet title="Conteo de caja" onClose={onClose} footer={<>
@@ -27,13 +29,14 @@ export function ConteoSheet({ inicial, esperado, onAccept, onTotalManual, onClos
         <Icon name="check" className="w-[18px] h-[18px]" stroke={2.4} />Registrar conteo
       </button>
       <div className="flex justify-between gap-2">
-        <button type="button" className="btn-ghost min-h-[40px] px-2.5 text-sm text-ink2" onClick={onTotalManual}>Escribir el total a mano</button>
-        {!vacio && <button type="button" className="btn-ghost min-h-[40px] px-2.5 text-sm text-neg" onClick={() => setConteo({})}>Empezar de nuevo</button>}
+        <button type="button" className="hit btn-ghost min-h-[40px] px-2.5 text-sm text-ink2" onClick={onTotalManual}>Escribir el total a mano</button>
+        {!vacio && <button type="button" className="hit btn-ghost min-h-[40px] px-2.5 text-sm text-neg" onClick={() => setConteo({})}>Empezar de nuevo</button>}
       </div>
     </>}>
       <div className="rounded-[14px] bg-soft border border-hairline px-4 py-3.5">
         <p className="eyebrow mb-2">Contado</p>
-        <p className="amount text-amount leading-none text-ink" aria-live="polite">{clp(total)}</p>
+        <p className="amount text-amount leading-none text-ink">{clp(total)}</p>
+        <p className="sr-only" aria-live="polite">{anuncio}</p>
         <p className="text-sm text-muted mt-[9px] tabular-nums">
           Esperado <b className="font-semibold text-ink">{clp(esperado)}</b>
           {!vacio && (
@@ -50,7 +53,7 @@ export function ConteoSheet({ inicial, esperado, onAccept, onTotalManual, onClos
               <span className="w-[56px] min-[360px]:w-[66px] shrink-0 cifra text-md text-ink">{clp(d)}</span>
               <button type="button" aria-label={`Quitar un ${clp(d)}`} disabled={n === 0}
                 onClick={() => setConteo((c) => ajustar(c, d, -1))}
-                className="w-[42px] h-[42px] shrink-0 rounded-[11px] bg-soft border border-control-border text-ink2 grid place-items-center disabled:opacity-50">
+                className="hit w-[42px] h-[42px] shrink-0 rounded-[11px] bg-soft border border-control-border text-ink2 grid place-items-center disabled:opacity-50">
                 <Icon name="minus" className="w-4 h-4" stroke={2.4} />
               </button>
               <input
@@ -61,7 +64,7 @@ export function ConteoSheet({ inicial, esperado, onAccept, onTotalManual, onClos
               />
               <button type="button" aria-label={`Agregar un ${clp(d)}`}
                 onClick={() => setConteo((c) => ajustar(c, d, 1))}
-                className="w-[42px] h-[42px] shrink-0 rounded-[11px] bg-soft border border-control-border text-ink2 grid place-items-center">
+                className="hit w-[42px] h-[42px] shrink-0 rounded-[11px] bg-soft border border-control-border text-ink2 grid place-items-center">
                 <Icon name="plus" className="w-4 h-4" stroke={2.4} />
               </button>
               <span className={`flex-1 min-w-0 truncate text-right text-sm font-semibold tabular-nums ${n ? 'text-ink2' : 'text-muted2'}`}>{clp(d * n)}</span>

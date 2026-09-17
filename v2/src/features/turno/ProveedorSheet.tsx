@@ -69,7 +69,7 @@ export function ProveedorSheet({ linea, usados, onSave, onDelete, onClose }: Pro
       title={linea ? 'Editar proveedor' : 'Agregar proveedor'}
       onClose={onClose}
       extra={linea && onDelete ? (
-        <button type="button" onClick={() => onDelete(linea.key)} className="w-9 h-9 rounded-full grid place-items-center bg-neg-tint text-neg" aria-label="Quitar proveedor">
+        <button type="button" onClick={() => onDelete(linea.key)} className="hit w-[34px] h-[34px] rounded-[10px] grid place-items-center bg-neg-tint text-neg" aria-label="Quitar proveedor">
           <Icon name="trash" className="w-4 h-4" />
         </button>
       ) : undefined}
@@ -87,36 +87,39 @@ export function ProveedorSheet({ linea, usados, onSave, onDelete, onClose }: Pro
       </div>
 
       {sugerencias.length > 0 && (
-        <div className="flex gap-2 overflow-x-auto -mx-5 px-5 pb-1 md:flex-wrap md:overflow-visible md:mx-0 md:px-0" role="listbox" aria-label="Proveedores frecuentes">
+        <div className="flex gap-2 overflow-x-auto -mx-5 px-5 pb-1 md:flex-wrap md:overflow-visible md:mx-0 md:px-0" role="group" aria-label="Proveedores frecuentes">
           {sugerencias.map((p) => {
             const on = elegido?.id === p.id || (!elegido && exacto?.id === p.id)
             const usado = usados.includes(p.id)
             return (
-              <button key={p.id} type="button" role="option" aria-selected={on} onClick={() => elegir(p)}
+              <button key={p.id} type="button" aria-pressed={on} onClick={() => elegir(p)}
                 className={`shrink-0 flex items-center gap-2 rounded-[12px] pl-1.5 pr-3 py-1.5 text-sm font-medium border whitespace-nowrap transition-colors ${on ? 'bg-brand-tint text-brand border-brand/40' : 'bg-card text-ink2 border-hairline-strong'}`}>
                 <ProveedorAvatar nombre={p.nombre} imagenUrl={p.imagen_url} size="sm" />
                 {p.nombre}
-                {usado && <Icon name="check" className="w-3 h-3 text-pos" stroke={2.6} />}
+                {usado && <><Icon name="check" className="w-3 h-3 text-pos" stroke={2.6} /><span className="sr-only">, ya agregado en este turno</span></>}
               </button>
             )
           })}
         </div>
       )}
+      {/* Sugerencias que aparecen mientras se escribe: se anuncian. */}
+      <div aria-live="polite" className="contents">
       {parecido && (
         <div className="flex items-center gap-2 rounded-[12px] bg-warn-tint border border-hairline px-3 py-2 -mt-1">
           <Icon name="info" className="w-[18px] h-[18px] shrink-0 text-warn" />
           <span className="flex-1 min-w-0 text-sm font-medium text-warn">¿Quisiste decir <b>{parecido.nombre}</b>?</span>
-          <button type="button" onClick={() => elegir(parecido)} className="btn-secondary min-h-[36px] px-3 text-sm shrink-0">Usar ese</button>
+          <button type="button" onClick={() => elegir(parecido)} className="hit btn-secondary min-h-[36px] px-3 text-sm shrink-0">Usar ese</button>
         </div>
       )}
       {q && !exacto && !elegido && (
         <p className="text-xs text-muted -mt-1">Se creará “{query.trim()}” como proveedor nuevo.</p>
       )}
+      </div>
 
       {desktop ? (
-        <DesktopAmountInput digits={digits} onChange={setDigits} onEnter={guardar} color={color} label="Monto" autoFocus={!!linea} />
+        <DesktopAmountInput digits={digits} onChange={setDigits} onEnter={guardar} color={color} label="Monto" nombre="Monto pagado" autoFocus={!!linea} />
       ) : (
-        <AmountDisplay digits={digits} sub="Monto" color={color} />
+        <AmountDisplay digits={digits} sub="Monto" color={color} nombre="Monto pagado" />
       )}
       <PayToggle value={forma} onChange={setForma} />
       {desktop ? (
