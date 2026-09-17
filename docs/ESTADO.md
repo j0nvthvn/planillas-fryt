@@ -47,7 +47,7 @@ atrás"). Un push a `main` despliega producción: se avisa antes.
 | Vercel `frytcontrol-v2` | `prj_VR9zMl4lzvSeWZXAwJI9cx7IErlh` | v2. Rama de producción `main`, Root Directory `v2`. Producción → prod; previews (p. ej. rama `v2`) → staging, decidido por `VERCEL_ENV` en `v2/vercel.json`. Las previews piden login de Vercel. |
 | GitHub | `j0nvthvn/planillas-fryt` | `main` es la rama de verdad. Un push a `main` despliega **las dos apps**. |
 | Dominio | `frytspa.cl` (DNS en Cloudflare) | `app` → Vercel (DNS only). Registros de Resend en `send`, `resend._domainkey` y `_dmarc`. |
-| Resend | dominio `frytspa.cl` verificado | Correos activos desde `avisos@frytspa.cl` (cierre de turno, resumen diario y semanal). Ver `docs/operacion.md` → "Correos". |
+| Resend | dominio `frytspa.cl` verificado | Correos desde `avisos@frytspa.cl` con el diseño Fintech: cierre, diario (apagado por defecto), semanal y mensual, a las 08:00 de Chile; cada persona elige en Ajustes → Correos. Ver `docs/operacion.md` → "Correos". |
 
 Credenciales y dónde están (nunca en el repo, salvo anon keys):
 - `.env.local` (raíz) y `v2/.env.local`: prod. `v2/.env.production` y `v2/.env.staging` **sí** se versionan (URL + anon key, públicas por diseño; RLS protege los datos).
@@ -115,6 +115,7 @@ Credenciales y dónde están (nunca en el repo, salvo anon keys):
 - Datos copiados con `scripts/migrar-region.sh` (dos ensayos y la corrida final): manifiesto, `auditoria` y `verificar_integridad()` iguales; 31 logos; `auth.users` con sus contraseñas. La v2 revisada contra la copia: cifras idénticas a prod.
 - `main` en `778a48e`: `v2/.env.production` → proyecto nuevo, `vercel.json` de la raíz redirige a `app.frytspa.cl` y `respaldo.yml` usa la URL nueva. Respaldo manual en verde contra la base nueva.
 - Prod anterior pausado (sus crons y trigger viejos quedaron intactos, no corren; definiciones en `~/.config/frytcontrol/prod-viejo-correos.json`). Staging reactivado.
+- **Correos rediseñados** (2026-09-17, rama `correos`): plantillas Fintech en `supabase/functions/_shared/correo/`, resumen mensual, preferencias por persona (`correo_destinatarios`), hora configurable con el horario de verano resuelto (`programar_resumenes`, un cron por hora) y pruebas desde Ajustes → Correos. pgTAP 30/30 (`supabase/tests/correos.test.sql`).
 - **Pendiente:** confirmar el primer día (entrada de la dueña en `app.frytspa.cl`, correo del primer cierre, resumen diario de las 12:00 UTC, `logs_error`). Reinstalar la PWA desde la dirección nueva en el celular del local. Re-linkear la CLI al proyecto nuevo.
 
 ### Fase 5 — Contracción: **no iniciada**

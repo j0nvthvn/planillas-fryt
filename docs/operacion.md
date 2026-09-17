@@ -289,16 +289,42 @@ ventas; los pagos pasaron a la mañana y la tarde a la papelera).
 
 ## Correos (Resend)
 
-**Estado (2026-09-17):** activos en prod (`aecopggpahxjaglakqwd`). Dominio
-`frytspa.cl` verificado en Resend (DNS en Cloudflare: `send` MX/SPF,
+**Estado:** activos en prod (`aecopggpahxjaglakqwd`) desde el 2026-09-17.
+Dominio `frytspa.cl` verificado en Resend (DNS en Cloudflare: `send` MX/SPF,
 `resend._domainkey`, `_dmarc`, todos "DNS only"), remitente
 `FrytControl <avisos@frytspa.cl>`, API key solo de envío. Secretos de las
-funciones: `RESEND_API_KEY`, `RESEND_FROM`, `WEBHOOK_SECRET` (sin
-`ANTHROPIC_API_KEY`: el resumen va sin texto narrativo). Vault con
-`webhook_secret` y `functions_base_url`. Destinatarios: cuentas de dueño
-activas más el correo adicional de Ajustes → General → Correos, que también
-los apaga. Funciones desplegadas con
-`pnpm exec supabase functions deploy --project-ref <ref> --use-api`.
+funciones: `RESEND_API_KEY`, `RESEND_FROM`, `WEBHOOK_SECRET`. Vault con
+`webhook_secret` y `functions_base_url`.
+
+Qué sale y cuándo (migración `20260920000000_correos_preferencias`):
+
+| Correo | Cuándo | Contenido |
+|---|---|---|
+| Cierre | al cerrar cada turno (trigger `notificar_cierre`) | la fotografía del cierre |
+| Diario | cada día, a la hora de `configuracion.correos_hora` (8) | el día anterior |
+| Semanal | lunes, misma hora | lunes a domingo anteriores |
+| Mensual | día 1, misma hora | el mes calendario anterior |
+
+- La hora es de Chile: el cron `resumenes` corre cada hora (`5 * * * *`)
+  y `programar_resumenes()` solo envía cuando la hora local coincide, una
+  vez por período (`correos_enviados`). El horario de verano (desde
+  principios de septiembre hasta abril) no mueve el envío.
+- Quién recibe qué: `correo_destinatarios` (Ajustes → Correos). Cada fila
+  marca cierre/diario/semanal/mensual; las cuentas de dueño entran solas y
+  solo se pausan, los correos agregados se pueden quitar. El diario parte
+  apagado para todos. `notificaciones_activas` apaga todo.
+- Un correo por persona (Resend batch): nadie ve las direcciones de los demás.
+- Pruebas: Ajustes → Correos → Probar (`enviar_correo_prueba`) manda el
+  último de cada tipo solo a quien lo pide. A mano, desde SQL:
+  `select public.enviar_resumen_periodico('mensual');` (a todos los que lo
+  tienen marcado).
+- Diseño: `supabase/functions/_shared/correo/` (TypeScript puro). Para
+  revisarlo con datos reales: `psql … -v hoy=AAAA-MM-DD -f
+  scripts/correos/datos-vista-previa.sql > datos.json` y
+  `node scripts/correos/vista-previa.ts datos.json <carpeta>`.
+- Desplegar funciones: `pnpm exec supabase functions deploy --project-ref <ref> --use-api`.
+- Para ver qué pasó: `select * from correos_enviados order by enviado_en desc`
+  y `select status_code, left(content, 200), created from net._http_response order by created desc limit 5`.
 
 Pasos para otro entorno:
 
@@ -311,8 +337,7 @@ Pasos para otro entorno:
 pnpm exec supabase secrets set \
   RESEND_API_KEY=re_xxx \
   RESEND_FROM="FrytControl <avisos@tudominio.cl>" \
-  WEBHOOK_SECRET="$(openssl rand -hex 32)" \
-  ANTHROPIC_API_KEY=sk-ant-xxx        # opcional: resumen narrativo
+  WEBHOOK_SECRET="$(openssl rand -hex 32)"
 ```
 
 3. El mismo `WEBHOOK_SECRET` y la URL de las funciones van a Vault
@@ -332,10 +357,7 @@ select status_code, left(content, 200), created
 from net._http_response order by created desc limit 3;
 ```
 
-Cómo funciona: el trigger `notificar_cierre` (tabla `turno_cierres`)
-manda el correo "turno cerrado"; `pg_cron` corre `resumen-diario`
-(12:00 UTC, día anterior) y `resumen-semanal` (lunes 12:00 UTC). Las
-funciones rechazan cualquier petición sin el header `x-webhook-secret`.
+Las funciones rechazan cualquier petición sin el header `x-webhook-secret`.
 Las llaves **no** están en el repo ni en las definiciones de la base.
 
 ## Seguridad
