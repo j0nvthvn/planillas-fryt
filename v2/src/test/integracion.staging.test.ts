@@ -15,7 +15,7 @@ const password = process.env.SMOKE_PASSWORD
 const url = import.meta.env.VITE_SUPABASE_URL as string
 const fecha = `2028-${String(1 + Math.floor(Math.random() * 12)).padStart(2, '0')}-${String(1 + Math.floor(Math.random() * 28)).padStart(2, '0')}`
 
-describe.skipIf(!password || /kfmwhtbvgqurnpotypii/.test(url))('data layer v2 contra staging', () => {
+describe.skipIf(!password || /kfmwhtbvgqurnpotypii|aecopggpahxjaglakqwd/.test(url))('data layer v2 contra staging', () => {
   beforeAll(async () => {
     const { error } = await supabase.auth.signInWithPassword({ email, password: password! })
     if (error) throw error

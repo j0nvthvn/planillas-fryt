@@ -9,7 +9,8 @@
 //   SMOKE_EMAIL=duena@test.local SMOKE_PASSWORD=... \
 //   node scripts/copiar-logos.mjs <carpeta>
 //
-// Nunca contra producción (kfmwhtbvgqurnpotypii): sobreescribe objetos.
+// Nunca contra producción (kfmwhtbvgqurnpotypii, ni aecopggpahxjaglakqwd salvo
+// con la service key desde migrar-region.sh): sobreescribe objetos.
 import { createClient } from '@supabase/supabase-js'
 import { readdir, readFile } from 'node:fs/promises'
 import { join, extname } from 'node:path'
@@ -25,7 +26,7 @@ if (!url || !dir || !(serviceKey || (key && email && password))) {
   console.error('Uso: SUPABASE_URL SUPABASE_ANON_KEY SMOKE_EMAIL SMOKE_PASSWORD node scripts/copiar-logos.mjs <carpeta>')
   process.exit(2)
 }
-if (/kfmwhtbvgqurnpotypii/.test(url)) {
+if (/kfmwhtbvgqurnpotypii/.test(url) || (/aecopggpahxjaglakqwd/.test(url) && !serviceKey)) {
   console.error('Este script sobreescribe objetos: no correrlo contra producción.')
   process.exit(2)
 }

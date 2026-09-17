@@ -19,7 +19,7 @@ if (!url || !key || !email || !password) {
   console.error('Faltan SUPABASE_URL / SUPABASE_ANON_KEY / SMOKE_EMAIL / SMOKE_PASSWORD')
   process.exit(2)
 }
-if (/kfmwhtbvgqurnpotypii/.test(url)) {
+if (/kfmwhtbvgqurnpotypii|aecopggpahxjaglakqwd/.test(url)) {
   console.error('Este script escribe datos: no correrlo contra producción.')
   process.exit(2)
 }

@@ -16,7 +16,7 @@ const FECHA = `2028-0${1 + Math.floor(Math.random() * 9)}-${String(1 + Math.floo
 test.skip(!PASSWORD, 'necesita STAGING_PASSWORD (v2/.env.staging.local)')
 
 test.afterAll(async () => {
-  if (!ANON || !URL || /kfmwhtbvgqurnpotypii/.test(URL)) return
+  if (!ANON || !URL || /kfmwhtbvgqurnpotypii|aecopggpahxjaglakqwd/.test(URL)) return
   const sb = createClient(URL, ANON)
   await sb.auth.signInWithPassword({ email: EMAIL, password: PASSWORD })
   await sb.from('jornadas').delete().eq('fecha', FECHA)
