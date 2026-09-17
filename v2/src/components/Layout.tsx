@@ -144,13 +144,17 @@ export default function Layout({ children }: { children: ReactNode }) {
         style={{ paddingBottom: 'max(10px, env(safe-area-inset-bottom))' }}>
         <div className="flex items-stretch">
           <div className="flex-1 flex items-stretch">{izq.map((i) => <Tab key={i.to} item={i} on={activo(marcada, i.to)} actual={ariaActual(activo(marcada, i.to), pathname, i.to)} />)}</div>
-          <div className="w-[76px] shrink-0" aria-hidden="true" />
+          {/* Botón flotante con su etiqueta a la altura de las demás: el alto
+              del ícono se reserva y el cuadro sube por encima de la barra. */}
+          <Link to={fab.to} className="group relative w-[76px] shrink-0 flex flex-col items-center justify-center gap-1 pt-2.5 pb-0.5 min-h-[58px] text-[11px] text-muted font-medium">
+            <span aria-hidden="true" className="absolute left-1/2 -translate-x-1/2 -top-[28px] z-40 grid place-items-center w-[58px] h-[58px] rounded-[19px] border-[3px] border-card bg-brand text-on-solid shadow-fab group-hover:bg-brand-hover transition-colors">
+              <Icon name="cash" className="w-6 h-6" stroke={2.3} />
+            </span>
+            <span className="h-[21px]" aria-hidden="true" />
+            <span className="whitespace-nowrap">{fab.label}</span>
+          </Link>
           <div className="flex-1 flex items-stretch">{der.map((i) => <Tab key={i.to} item={i} on={activo(marcada, i.to)} actual={ariaActual(activo(marcada, i.to), pathname, i.to)} />)}</div>
         </div>
-        <Link to={fab.to} aria-label={fab.label}
-          className="absolute left-1/2 -translate-x-1/2 -top-[22px] z-40 grid place-items-center w-[58px] h-[58px] rounded-[19px] border-[3px] border-card bg-brand text-on-solid shadow-fab hover:bg-brand-hover transition-colors">
-          <Icon name="cash" className="w-6 h-6" stroke={2.3} />
-        </Link>
       </nav>}
     </div>
   )
