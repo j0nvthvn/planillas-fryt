@@ -82,6 +82,14 @@ Credenciales y dónde están (nunca en el repo, salvo anon keys):
 - **Ajustes móviles** (commit `33f27f4`, en producción; detalle en `docs/mejoras-ux.md` → "Móvil"): revisión con capturas de Playwright en Pixel 7 (claro/oscuro) e iPhone SE contra staging. Fechas sin "De" en mayúscula (`mayusculaInicial`) y negativos como "−$404.199" en `clp`; `BottomSheet` con `footer` fijo (teclado, conteo y revisión siempre a la vista); sin botón flotante en Cerrar turno; Historial agrupado por mes con filas que caben en 375 px; Análisis con fechas a todo lo ancho y rango siempre válido (`ajustarRango`); Ajustes apilado; esqueletos de carga (`Esqueleto.tsx`) en vez de spinner; login con "Ingresando…" y `?volver=`; color de los métodos aclarado en oscuro (`colorMetodo` + `--metodo-mezcla`). Cierra los tres pendientes que tenía `mejoras-ux.md`.
 - **Selección de texto bloqueada** en toda la interfaz, sin el menú de copiar al mantener presionado (`styles.css`, capa base). Solo los campos de texto se seleccionan. Reemplaza la utilidad `no-select`: antes se podían copiar montos para WhatsApp, y ahora para eso está Compartir.
 - **Rediseño Fintech** (rama `rediseno-fintech`; handoff en `docs/design_handoff_rediseno_fintech/`; detalle en `docs/mejoras-ux.md` → "Rediseño Fintech"): se reemplaza la piel café por gris/blanco/indigo, Inter + Inter Tight (solo subconjunto latino) y cifras tabulares. Sin cambios de flujo, rutas, consultas ni textos de dominio. Revisado con capturas en Pixel 7 (claro/oscuro), iPhone SE y escritorio contra staging; `pnpm e2e` sin cambios de selectores.
+- **Auditoría de accesibilidad y UI** (misma rama, 2026-09-17; detalle en `docs/auditoria-ui.md`):
+  - Contraste AA en tokens (`muted`, `muted2` y `neg` más oscuros).
+  - Áreas táctiles de 44 px.
+  - Radios con flechas.
+  - Regiones vivas y foco al navegar.
+  - Utilitarios compartidos.
+  - axe en `v2/e2e/a11y.spec.ts`: 0 violaciones (antes, 15).
+  - Migración `20260919000000_colores_metodos_fintech.sql` **sin aplicar** en staging ni en prod.
 - **Pendiente:** revisar en un celular real (Safari de iOS con su barra inferior): altura de las hojas y encabezado pegajoso del Historial.
 
 ### Fase 3 — Piloto en paralelo: **en curso, semana A** (desde 2026-09-16)

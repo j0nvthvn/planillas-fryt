@@ -167,6 +167,20 @@ Aplicado desde `docs/design_handoff_rediseno_fintech/` (README = especificación
 - `theme-color`, manifest, encabezado del Excel y `privacidad.html` con los
   colores nuevos. Se quitó `Amount.tsx` (sin uso).
 
+### Auditoría de accesibilidad y UI (17 de septiembre de 2026)
+
+Detalle, tabla de contraste y pendientes en `docs/auditoria-ui.md`.
+
+- **Contraste AA:** `muted`, `muted2` y `neg` un poco más oscuros que en el
+  handoff, para pasar también sobre `soft` y los tintes.
+- **Campos y controles:** `--control-border` en el contorno de los campos.
+- **Áreas táctiles:** 44 px con `hit`.
+- **Teclado:** radios con flechas (`useRovingRadio`).
+- **Lectores de pantalla:** regiones vivas estables y anuncio diferido del
+  monto (`useAnuncio`); skip link, foco y título por pantalla.
+- **Utilitarios nuevos:** `btn-lg`, `btn-bar`, `aviso` y `badge-sm`.
+- **Pruebas:** axe en `e2e/a11y.spec.ts` (0 violaciones; antes, 15 de contraste).
+
 ## Pendiente
 
 - Revisar en un celular real (Safari de iOS, con su barra inferior) la altura
