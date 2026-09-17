@@ -51,6 +51,9 @@
   --shadow-fab:  0 8px 20px -6px rgba(79, 70, 229, .5);
   --shadow-bar:  0 -6px 20px -12px rgba(16, 24, 40, .18);
   --sidebar-w:   236px;
+  /* Banda del saludo en Hoy: el texto encima es blanco en ambos temas. */
+  --saludo-from: #3730A3;
+  --saludo-to:   #4F46E5;
   color-scheme: light;
 }
 
@@ -88,6 +91,8 @@
     --shadow-hero: 0 10px 28px -12px rgba(0, 0, 0, .7);
     --shadow-fab:  0 8px 20px -6px rgba(0, 0, 0, .6);
     --shadow-bar:  0 -6px 20px -12px rgba(0, 0, 0, .7);
+    --saludo-from: #1E2240;
+    --saludo-to:   #2E3470;
     color-scheme: dark;
   }
 }
@@ -282,6 +287,20 @@
     height: max(100%, 44px);
     transform: translate(-50%, -50%);
   }
+}
+
+/* Fondo del saludo de Hoy: degradado de marca con el borde inferior en diagonal. */
+@utility saludo-banda {
+  background: linear-gradient(135deg, var(--saludo-from), var(--saludo-to));
+  clip-path: polygon(0 0, 100% 0, 100% 64%, 0 100%);
+}
+
+/* Tarjeta destacada: borde de 1,5 px con el mismo degradado de la banda. */
+@utility borde-marca {
+  border: 1.5px solid transparent;
+  background: linear-gradient(var(--card), var(--card)) padding-box,
+              linear-gradient(135deg, var(--saludo-from), var(--brand)) border-box;
+  box-shadow: var(--shadow-card);
 }
 
 /* Contenedor uniforme de logo de método de pago / avatar de iniciales. */

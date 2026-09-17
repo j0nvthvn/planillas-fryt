@@ -35,6 +35,11 @@ export function iniciales(nombre: string | null | undefined): string {
   return partes.slice(0, 2).map((p) => p[0]!.toLocaleUpperCase('es-CL')).join('')
 }
 
+/** "Jonathan Flores" → "Jonathan"; vacío → null. */
+export function primerNombre(nombre: string | null | undefined): string | null {
+  return (nombre ?? '').trim().split(/\s+/)[0] || null
+}
+
 /** Mayúscula solo en la primera letra: el `capitalize` de CSS dejaba "16 De Septiembre De". */
 export function mayusculaInicial(texto: string): string {
   return texto.charAt(0).toLocaleUpperCase('es-CL') + texto.slice(1)

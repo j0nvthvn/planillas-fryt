@@ -71,7 +71,8 @@ test('cerrar un día completo con conteo por billetes', async ({ page }) => {
 test('salir lleva al login y ya no deja volver sin sesión', async ({ page }) => {
   await entrar(page)
   await page.goto('/ajustes')
-  await page.getByRole('button', { name: 'Salir' }).click()
+  await page.getByRole('button', { name: 'Cerrar sesión' }).click()
+  await page.getByRole('button', { name: 'Sí, cerrar sesión' }).click()
   await expect(page).toHaveURL(/\/login/)
   await page.goto('/hoy')
   await expect(page).toHaveURL(/\/login/)

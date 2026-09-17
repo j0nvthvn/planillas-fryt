@@ -4,7 +4,8 @@ import { useRegisterSW } from 'virtual:pwa-register/react'
 import Icon, { type IconName } from './Icon'
 import { useOnline } from '@/hooks/useOnline'
 import { useUsuario } from '@/hooks/useUsuario'
-import { AvatarMenu } from './AvatarMenu'
+import { useColorBarra } from '@/hooks/useColorBarra'
+import { iniciales } from '@/lib/format'
 
 interface Item { to: string; label: string; icon: IconName; dueno?: boolean }
 
@@ -58,10 +59,15 @@ function ActualizacionBanner() {
 }
 
 export default function Layout({ children }: { children: ReactNode }) {
-  const { esDueno } = useUsuario()
+  const { usuario, esDueno } = useUsuario()
   const online = useOnline()
   const pathname = useRouterState({ select: (s) => s.location.pathname })
+  const conSeccion = useRouterState({ select: (s) => 'seccion' in s.location.search && !!s.location.search.seccion })
   const marcada = seccion(pathname, esDueno)
+  // Barra de estado: índigo donde la banda llega arriba (Hoy y la portada de Ajustes);
+  // en el resto, blanca como la barra del encabezado.
+  const conBanda = pathname === '/' || pathname === '/hoy' || (pathname === '/ajustes' && !conSeccion)
+  useColorBarra(conBanda ? '--saludo-from' : '--card')
   const items = ITEMS.filter((i) => !i.dueno || esDueno)
   const tabsMovil = items.filter((i) => (esDueno ? TABS_MOVIL_DUENO : TABS_MOVIL_LOCAL).includes(i.to))
   const mitad = Math.ceil(tabsMovil.length / 2)
@@ -74,7 +80,7 @@ export default function Layout({ children }: { children: ReactNode }) {
 
   // Al cambiar de pantalla: título de la pestaña y foco al contenido, para
   // que el teclado y el lector de pantalla no se queden en el enlace que ya
-  // no existe (o en el menú de cuenta que se cerró).
+  // no existe.
   const mainRef = useRef<HTMLElement>(null)
   const rutaAnterior = useRef(pathname)
   useEffect(() => {
@@ -101,9 +107,12 @@ export default function Layout({ children }: { children: ReactNode }) {
 
       <div className="flex flex-1 min-h-0 max-w-screen-2xl mx-auto w-full overflow-hidden md:overflow-visible">
         <aside className="hidden md:flex flex-col w-(--sidebar-w) shrink-0 border-r border-hairline bg-card sticky top-0 h-screen overflow-y-auto">
-          <div className="px-5 pt-6 pb-4 mb-2 border-b border-hairline">
-            <p className="font-display text-sm font-semibold tracking-[-0.01em] text-ink">FrytControl</p>
-            <p className="text-xs text-muted mt-0.5">Minimarket Fryt</p>
+          <div className="flex items-center gap-2.5 px-5 pt-6 pb-4 mb-2 border-b border-hairline">
+            <img src="/logo.jpg" alt="" width={32} height={32} className="w-8 h-8 rounded-full shrink-0" />
+            <div className="min-w-0">
+              <p className="font-display text-sm font-semibold tracking-[-0.01em] text-ink">FrytControl</p>
+              <p className="text-xs text-muted mt-0.5">Minimarket Fryt</p>
+            </div>
           </div>
           <nav className="flex-1 space-y-0.5 px-3 pb-4" aria-label="Navegación principal">
             {items.map((i) => {
@@ -116,12 +125,17 @@ export default function Layout({ children }: { children: ReactNode }) {
               )
             })}
           </nav>
-          <div className="px-3 pb-4 border-t border-hairline pt-2">
-            <AvatarMenu variante="bloque" />
+          {/* Solo muestra quién está conectado; se cierra sesión en Ajustes (o en Hoy, la cuenta del local). */}
+          <div className="flex items-center gap-3 mx-3 mb-4 border-t border-hairline px-[11px] pt-4">
+            <span className="w-[34px] h-[34px] rounded-[10px] bg-soft border border-hairline text-ink2 text-md font-semibold grid place-items-center shrink-0" aria-hidden="true">{iniciales(usuario?.nombre)}</span>
+            <span className="min-w-0 flex-1">
+              <span className="block text-sm font-semibold text-ink truncate">{usuario?.nombre ?? 'Cuenta'}</span>
+              <span className="block text-xs text-muted truncate">{esDueno ? 'dueña' : 'cuenta del local'}</span>
+            </span>
           </div>
         </aside>
 
-        <main id="contenido" data-scroll-restoration-id="contenido" ref={mainRef} tabIndex={-1} className="focus:outline-none flex-1 min-h-0 min-w-0 px-4 sm:px-6 md:px-8 pt-5 pb-nav md:pb-8 overflow-y-auto overflow-x-hidden md:overflow-visible">
+        <main id="contenido" data-scroll-restoration-id="contenido" ref={mainRef} tabIndex={-1} className="focus:outline-none scroll-pt-[76px] md:scroll-pt-0 flex-1 min-h-0 min-w-0 px-4 sm:px-6 md:px-8 pt-5 pb-nav md:pb-8 overflow-y-auto overflow-x-hidden md:overflow-visible">
           {children}
         </main>
       </div>

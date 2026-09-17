@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { clp, clpSigno, clpCorto, fechaISO, sumarDias, ajustarRango, diaSemana, parseNum, fechaLegible, mesAnio } from './format'
+import { clp, clpSigno, clpCorto, fechaISO, sumarDias, ajustarRango, diaSemana, parseNum, fechaLegible, mesAnio, primerNombre } from './format'
 
 describe('clp', () => {
   it('formatea pesos chilenos sin decimales', () => {
@@ -68,5 +68,13 @@ describe('fechas legibles', () => {
   it('mayúscula solo al comienzo', () => {
     expect(fechaLegible('2026-09-16')).toBe('Miércoles, 16 de septiembre de 2026')
     expect(mesAnio('2026-09-01')).toBe('Septiembre de 2026')
+  })
+})
+
+describe('primerNombre', () => {
+  it('toma el primer nombre para el saludo', () => {
+    expect(primerNombre('  Jonathan Flores ')).toBe('Jonathan')
+    expect(primerNombre('')).toBeNull()
+    expect(primerNombre(null)).toBeNull()
   })
 })

@@ -16,18 +16,21 @@ interface Props {
    * volver: enlace directo o recarga.
    */
   volverAtras?: boolean
+  className?: string
   children?: ReactNode
 }
 
 /**
  * En el celular es una barra superior blanca a todo el ancho (anula el
  * padding de `main`); desde `md`, con la barra lateral, un encabezado simple.
+ * Con `back`, en el celular queda fijo arriba al hacer scroll para que la
+ * flecha y las acciones estén siempre a mano (`-top-5` compensa el `pt-5` de `main`).
  */
-export default function PageHeader({ eyebrow, title, subtitle, action, back, volverAtras, children }: Props) {
+export default function PageHeader({ eyebrow, title, subtitle, action, back, volverAtras, className = '', children }: Props) {
   const router = useRouter()
   const puedeVolver = useCanGoBack()
   return (
-    <header className="flex items-center justify-between gap-3 -mx-4 sm:-mx-6 -mt-5 mb-4 px-4 sm:px-6 py-4 bg-card border-b border-hairline md:m-0 md:mb-5 md:p-0 md:bg-transparent md:border-0 md:items-end">
+    <header className={`${back ? 'sticky -top-5 z-20 md:static' : ''} ${className} flex items-center justify-between gap-3 -mx-4 sm:-mx-6 -mt-5 mb-4 px-4 sm:px-6 py-4 bg-card border-b border-hairline md:m-0 md:mb-5 md:p-0 md:bg-transparent md:border-0 md:items-end`}>
       <div className="min-w-0 flex-1 flex items-center gap-2">
         {back && (
           <Link to={back} aria-label="Volver"

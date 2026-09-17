@@ -11,7 +11,7 @@ const PASSWORD = process.env.STAGING_PASSWORD ?? process.env.SMOKE_PASSWORD ?? '
 
 test.skip(!PASSWORD, 'necesita STAGING_PASSWORD (v2/.env.staging.local)')
 
-const PANTALLAS = ['/hoy', '/turno', '/historial', '/analisis', '/proveedores', '/ajustes', '/ajustes?seccion=correos', '/ajustes?seccion=metodos']
+const PANTALLAS = ['/hoy', '/turno', '/historial', '/analisis', '/proveedores', '/ajustes', '/ajustes?seccion=correos', '/ajustes?seccion=metodos', '/ajustes?seccion=apariencia']
 
 async function entrar(page: Page, tema: 'claro' | 'oscuro') {
   await page.addInitScript((t) => localStorage.setItem('tema', t), tema)
@@ -35,7 +35,7 @@ for (const tema of ['claro', 'oscuro'] as const) {
     await entrar(page, tema)
     for (const ruta of PANTALLAS) {
       await page.goto(ruta)
-      await expect(page.locator('main h1').first()).toBeVisible()
+      await expect(page.locator('main h1:visible').first()).toBeVisible()
       // Que terminen de llegar los datos (sin spinner) antes de revisar.
       await expect(page.locator('main [aria-label="Cargando"]')).toHaveCount(0)
       await revisar(page, `${tema} ${ruta}`)

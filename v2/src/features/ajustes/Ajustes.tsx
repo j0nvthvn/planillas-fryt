@@ -1,6 +1,6 @@
 import { useId, useState, type ReactNode } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { Link, useSearch } from '@tanstack/react-router'
+import { useSearch } from '@tanstack/react-router'
 import PageHeader from '@/components/PageHeader'
 import Spinner from '@/components/Spinner'
 import Icon from '@/components/Icon'
@@ -10,7 +10,6 @@ import { ConfirmDialog } from '@/components/ConfirmDialog'
 import { MontoInput, HoraInput } from '@/components/MontoInput'
 import { useToast } from '@/components/Toast'
 import { useTema, type Tema } from '@/lib/theme'
-import { cerrarSesion } from '@/lib/auth'
 import { supabase } from '@/lib/supabase'
 import { qk, queryClient } from '@/lib/query'
 import { mensajeDeError } from '@/lib/errorLog'
@@ -29,51 +28,37 @@ import {
 } from '@/features/correos/api'
 import { usePapelera, restaurarTurno, purgarTurno, etiquetaModo } from '@/features/turno/api'
 import { leerMetricas } from '@/features/turno/metricas'
+import { Menu } from './Menu'
+import { etiquetaSeccion, type Seccion } from './secciones'
 
-type Seccion = 'general' | 'correos' | 'trabajadores' | 'metodos' | 'papelera' | 'usuarios' | 'errores'
-const SECCIONES: { v: Seccion; label: string }[] = [
-  { v: 'general', label: 'General' },
-  { v: 'correos', label: 'Correos' },
-  { v: 'trabajadores', label: 'Trabajadores' },
-  { v: 'metodos', label: 'Métodos de pago' },
-  { v: 'papelera', label: 'Papelera' },
-  { v: 'usuarios', label: 'Cuentas' },
-  { v: 'errores', label: 'Errores' },
-]
 /** Campo dentro de una fila: más bajo y chico que el `input` suelto. */
 const CAMPO = 'min-h-[38px]! py-1.5! rounded-[10px]!'
 /** Acción chica de una fila (badge-botón de 34 px). */
 const ACCION = 'hit inline-flex items-center justify-center gap-[5px] min-h-[34px] px-2.5 rounded-[9px] text-xs transition-colors disabled:opacity-40'
 
 export default function Ajustes() {
-  const { seccion = 'general' } = useSearch({ from: '/app/ajustes' })
-  const { config } = useConfig()
+  const { seccion } = useSearch({ from: '/app/ajustes' })
+  // Celular: la portada es el menú y cada sección abre su pantalla.
+  // Escritorio: menú fijo a la izquierda y la sección (General por omisión) al lado.
+  const abierta: Seccion = seccion ?? 'general'
   return (
-    <div className="max-w-3xl mx-auto">
-      <PageHeader eyebrow={config.nombreLocal || 'FrytControl'} title="Ajustes" action={<button type="button" className="btn-secondary btn-bar" onClick={() => void cerrarSesion()}><Icon name="logout" className="w-4 h-4" />Salir</button>} />
-      {/* Cada sección tiene su URL: es navegación, no pestañas. */}
-      <nav className="flex gap-1.5 overflow-x-auto -mx-4 px-4 pb-3 md:flex-wrap md:mx-0 md:px-0" aria-label="Secciones de Ajustes">
-        {SECCIONES.map((s) => (
-          <Link key={s.v} to="/ajustes" search={{ seccion: s.v }} aria-current={seccion === s.v ? 'page' : undefined}
-            className={`${PILDORA} ${seccion === s.v ? PILDORA_ON : PILDORA_OFF}`}>
-            {s.label}
-          </Link>
-        ))}
-      </nav>
-      {seccion === 'general' && (
-        <Link to="/proveedores" className="card rounded-[14px] py-3.5 mb-5 flex items-center gap-3 hover:border-hairline-strong">
-          <span className="w-10 h-10 rounded-[11px] bg-brand-tint text-brand grid place-items-center shrink-0" aria-hidden="true"><Icon name="suppliers" className="w-5 h-5" /></span>
-          <span className="flex-1 min-w-0"><span className="block text-base font-semibold text-ink">Proveedores</span><span className="block text-xs text-muted mt-0.5">Catálogo: renombrar, fusionar duplicados, logos</span></span>
-          <Icon name="chevR" className="w-[15px] h-[15px] text-muted2 shrink-0" />
-        </Link>
-      )}
-      {seccion === 'general' && <General />}
-      {seccion === 'correos' && <Correos />}
-      {seccion === 'trabajadores' && <Trabajadores />}
-      {seccion === 'metodos' && <Metodos />}
-      {seccion === 'papelera' && <Papelera />}
-      {seccion === 'usuarios' && <Usuarios />}
-      {seccion === 'errores' && <Errores />}
+    <div className="relative isolate max-w-5xl mx-auto md:grid md:grid-cols-[300px_minmax(0,1fr)] md:gap-8 md:items-start">
+      {/* En escritorio la banda queda dentro de la columna del menú. */}
+      <div className={`md:relative ${seccion ? 'hidden md:block' : ''}`}>
+        <Menu activa={abierta} abierta={!!seccion} />
+      </div>
+      <div className={`${seccion ? '' : 'hidden md:block'} md:pt-5`}>
+        <PageHeader title={etiquetaSeccion(abierta)} back="/ajustes" volverAtras className="md:hidden" />
+        <h2 className="hidden md:block font-display text-xl font-semibold tracking-[-0.02em] text-ink mb-4">{etiquetaSeccion(abierta)}</h2>
+        {abierta === 'general' && <General />}
+        {abierta === 'correos' && <Correos />}
+        {abierta === 'trabajadores' && <Trabajadores />}
+        {abierta === 'metodos' && <Metodos />}
+        {abierta === 'papelera' && <Papelera />}
+        {abierta === 'usuarios' && <Usuarios />}
+        {abierta === 'errores' && <Errores />}
+        {abierta === 'apariencia' && <Apariencia />}
+      </div>
     </div>
   )
 }
@@ -95,10 +80,7 @@ function General() {
   const { config, cargando } = useConfig()
   const guardar = useGuardarConfig()
   const toast = useToast()
-  const { tema, setTema } = useTema()
   const [form, setForm] = useState<Config | null>(null)
-  const temas: Tema[] = ['sistema', 'claro', 'oscuro']
-  const temaRadio = useRovingRadio(temas, tema, setTema)
   const diasId = useId()
   const f = form ?? config
   if (cargando) return <Spinner />
@@ -123,19 +105,26 @@ function General() {
         </div>
       </div>
       {form && <button type="button" className="btn-primary btn-lg w-full mt-3" disabled={guardar.isPending} onClick={() => guardar.mutate(form, { onSuccess: () => { setForm(null); toast.ok('Ajustes guardados') }, onError: (e) => toast.error(mensajeDeError(e)) })}>{guardar.isPending ? 'Guardando…' : 'Guardar cambios'}</button>}
-      <h2 className="eyebrow mt-5 mb-[9px]">Aplicación</h2>
-      <div className="space-y-3">
-        <TiempoDeCierre />
-        <div className="card p-0 overflow-hidden">
-          <Fila label="Apariencia">
-            <div className="segmented" role="radiogroup" aria-label="Apariencia">
-              {temas.map((t, i) => (
-                <button key={t} type="button" {...temaRadio(t, i)} onClick={() => setTema(t)} className={`hit ${tema === t ? 'segmented-item-on' : 'segmented-item'} min-h-[36px] px-[11px] capitalize`}>{t}</button>
-              ))}
-            </div>
-          </Fila>
-        </div>
+    </div>
+  )
+}
+
+function Apariencia() {
+  const { tema, setTema } = useTema()
+  const temas: Tema[] = ['sistema', 'claro', 'oscuro']
+  const temaRadio = useRovingRadio(temas, tema, setTema)
+  return (
+    <div className="space-y-3">
+      <div className="card p-0 overflow-hidden">
+        <Fila label="Apariencia">
+          <div className="segmented" role="radiogroup" aria-label="Apariencia">
+            {temas.map((t, i) => (
+              <button key={t} type="button" {...temaRadio(t, i)} onClick={() => setTema(t)} className={`hit ${tema === t ? 'segmented-item-on' : 'segmented-item'} min-h-[36px] px-[11px] capitalize`}>{t}</button>
+            ))}
+          </div>
+        </Fila>
       </div>
+      <TiempoDeCierre />
     </div>
   )
 }

@@ -110,7 +110,7 @@ const ajustesRoute = createRoute({
   getParentRoute: () => appRoute,
   path: '/ajustes',
   beforeLoad: soloDueno,
-  validateSearch: z.object({ seccion: z.enum(['general', 'correos', 'trabajadores', 'metodos', 'papelera', 'usuarios', 'errores']).optional() }),
+  validateSearch: z.object({ seccion: z.enum(['general', 'correos', 'trabajadores', 'metodos', 'papelera', 'usuarios', 'errores', 'apariencia']).optional() }),
   component: Ajustes,
 })
 

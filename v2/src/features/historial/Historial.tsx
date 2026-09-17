@@ -47,7 +47,7 @@ export default function Historial() {
 
   return (
     <div className="max-w-3xl mx-auto">
-      <PageHeader eyebrow="Día a día" title="Historial" />
+      <PageHeader title="Historial" />
       <div className="flex gap-1.5 overflow-x-auto -mx-4 px-4 pb-3 md:flex-wrap md:mx-0 md:px-0" role="group" aria-label="Filtro">
         {FILTROS.map((f) => (
           <button key={f.v} type="button" aria-pressed={filtro === f.v}

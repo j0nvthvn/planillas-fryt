@@ -6,8 +6,8 @@ import { EsqueletoContenido } from '@/components/Esqueleto'
 import { useUsuario } from '@/hooks/useUsuario'
 import { useResumenDia, useTurnosDia, useBorradores, etiquetaModo, type Modo } from '@/features/turno/api'
 import { useConfig, useMetodos } from '@/features/catalogo/api'
-import { fechaSinAnio, mayusculaInicial, fechaDiaMes, hoy, clp, clpSigno, diaSemana, sumarDias, horaCorta } from '@/lib/format'
-import { AvatarMenu } from '@/components/AvatarMenu'
+import { mayusculaInicial, fechaDiaMes, hoy, clp, clpSigno, diaSemana, sumarDias, horaCorta } from '@/lib/format'
+import { SaludoHeader } from '@/components/SaludoHeader'
 import { colorMetodo } from '@/lib/theme'
 import { MetodoLogo } from '@/components/MetodoLogo'
 import { DeltaBadge } from '@/components/DeltaBadge'
@@ -57,14 +57,8 @@ export default function Hoy() {
   const metodosVisibles = verMetodos ? porMetodo : porMetodo.slice(0, 3)
 
   return (
-    <div className="max-w-2xl mx-auto">
-      <header className="flex items-center justify-between gap-3 mb-[18px]">
-        <div className="min-w-0">
-          <p className="eyebrow mb-[5px] truncate">{fechaSinAnio(fecha)}</p>
-          <h1 className="font-display text-xl font-semibold leading-[1.1] tracking-[-0.02em] text-ink">Hoy</h1>
-        </div>
-        <AvatarMenu />
-      </header>
+    <div className="relative isolate max-w-2xl mx-auto">
+      <SaludoHeader fecha={fecha} />
 
       {borradoresViejos.length > 0 && (
         <AvisoAmbar className="mb-3" titulo={borradoresViejos.length === 1 ? 'Hay un turno sin cerrar' : `Hay ${borradoresViejos.length} turnos sin cerrar`}>
