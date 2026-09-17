@@ -160,6 +160,6 @@ SMOKE_EMAIL=duena@test.local SMOKE_PASSWORD=<.env.staging.local> pnpm vitest run
 - Modelo "día completo o dividido" (no mañana/tarde obligatorio).
 - Desarrollo contra staging, piloto con ambas apps contra la base real, migración a sa-east-1 solo en el cambio definitivo.
 - Conexión del local estable: borrador local + reintento, sin offline-first.
-- Correos: habrá dominio propio, pero se pospuso; no es prioridad.
+- Correos: con dominio propio (`frytspa.cl`), activos desde el 2026-09-17.
 - Diseño: rediseño Fintech (gris/blanco/indigo, Inter) acordado con la dueña el 2026-09-16, reemplaza al café cálido; priorizar el celular, camino A con préstamos de B y C.
 - Fase 4 adelantada (2026-09-17): la app va en `app.frytspa.cl`, la migración se hace con `pg_dump` conservando las contraseñas y la app antigua se retira al migrar (redirige; no se reconfigura contra la base nueva).
