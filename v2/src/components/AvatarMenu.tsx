@@ -4,6 +4,7 @@ import { BottomSheet } from './BottomSheet'
 import Icon from './Icon'
 import { useUsuario } from '@/hooks/useUsuario'
 import { cerrarSesion } from '@/lib/auth'
+import { iniciales } from '@/lib/format'
 
 /**
  * Abre el menú de cuenta (cerrar sesión pide confirmación). `avatar` es el
@@ -61,9 +62,3 @@ export function AvatarMenu({ variante = 'avatar' }: { variante?: 'avatar' | 'blo
   )
 }
 
-/** "Jonathan Flores" → "JF"; un solo nombre → su inicial. */
-function iniciales(nombre: string | null | undefined) {
-  const partes = (nombre ?? '').trim().split(/\s+/).filter(Boolean)
-  if (!partes.length) return '?'
-  return partes.slice(0, 2).map((p) => p[0]!.toUpperCase()).join('')
-}

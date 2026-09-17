@@ -28,6 +28,13 @@ function fechaLocal(fecha: string): Date {
   return new Date(fecha + 'T12:00:00')
 }
 
+/** "Jonathan Flores" → "JF"; un solo nombre → su inicial. */
+export function iniciales(nombre: string | null | undefined): string {
+  const partes = (nombre ?? '').trim().split(/\s+/).filter(Boolean)
+  if (!partes.length) return '?'
+  return partes.slice(0, 2).map((p) => p[0]!.toLocaleUpperCase('es-CL')).join('')
+}
+
 /** Mayúscula solo en la primera letra: el `capitalize` de CSS dejaba "16 De Septiembre De". */
 export function mayusculaInicial(texto: string): string {
   return texto.charAt(0).toLocaleUpperCase('es-CL') + texto.slice(1)
