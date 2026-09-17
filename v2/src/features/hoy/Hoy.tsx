@@ -8,7 +8,7 @@ import { useResumenDia, useTurnosDia, useBorradores, etiquetaModo, type Modo } f
 import { useConfig, useMetodos } from '@/features/catalogo/api'
 import { mayusculaInicial, fechaDiaMes, hoy, clp, clpSigno, diaSemana, sumarDias, horaCorta } from '@/lib/format'
 import { SaludoHeader } from '@/components/SaludoHeader'
-import { colorMetodo } from '@/lib/theme'
+import { BarraMetodos } from '@/components/BarraMetodos'
 import { MetodoLogo } from '@/components/MetodoLogo'
 import { DeltaBadge } from '@/components/DeltaBadge'
 
@@ -48,10 +48,6 @@ export default function Hoy() {
   const neto = Number(r?.neto ?? 0)
   const ra = resumenAyer.data
   const hayAyer = !!ra && (ra.turnos ?? 0) > 0
-  const descuadres = lista.filter(({ turno }) => turno.diferencia_efectivo != null && Number(turno.diferencia_efectivo) !== 0)
-  // efectivo_esperado = Σ fondo_inicial + Σ efectivo − Σ proveedores en efectivo (v_turnos).
-  const efectivoEsperado = Number(r?.efectivo_esperado ?? 0)
-  const fondo = efectivoEsperado - Number(r?.efectivo_neto ?? 0)
   const turnosEsperados = diaUnico || esCompleto ? 1 : 2
   const pendiente: Modo | null = diaUnico || esCompleto || !lista.length ? null : !hayManana ? 'mañana' : !hayTarde ? 'tarde' : null
   const metodosVisibles = verMetodos ? porMetodo : porMetodo.slice(0, 3)
@@ -111,25 +107,14 @@ export default function Hoy() {
             </div>
           )}
 
-          <section className="card p-0 overflow-hidden mb-3" aria-labelledby="hoy-efectivo">
+          {/* El efectivo esperado va en cada turno: el del día suma dos fondos cuando hay mañana y tarde. */}
+          <section className="card p-0 overflow-hidden mb-3" aria-labelledby="hoy-metodos">
             <div className="px-[18px] pt-4 pb-3.5">
               <div className="flex items-baseline justify-between gap-2.5">
-                <h2 id="hoy-efectivo" className="text-md font-medium text-ink2">Efectivo esperado</h2>
-                <span className="cifra text-xl text-ink">{clp(efectivoEsperado)}</span>
+                <h2 id="hoy-metodos" className="text-md font-medium text-ink2">Ventas por método</h2>
+                <span className="cifra text-xl text-ink">{clp(totalVentas)}</span>
               </div>
-              <p className="text-xs text-muted2 mt-1.5 leading-snug">
-                Fondo <span className="tabular-nums">{clp(fondo)}</span> + efectivo <span className="tabular-nums">{clp(r?.efectivo ?? 0)}</span> − proveedores en efectivo <span className="tabular-nums">{clp(r?.prov_efectivo ?? 0)}</span>
-              </p>
-              {r?.con_conteo && (
-                <p className={`text-xs font-semibold mt-2 ${r.con_descuadre ? 'text-neg' : 'text-pos'}`}>
-                  {r.con_descuadre ? `Descuadre al contar: ${descuadres.map(({ turno }) => clpSigno(Number(turno.diferencia_efectivo))).join(' · ')}` : 'La caja cuadró al contar'}
-                </p>
-              )}
-              {porMetodo.length > 0 && (
-                <div className="flex h-1.5 gap-0.5 mt-3.5 rounded-full overflow-hidden" aria-hidden="true">
-                  {porMetodo.map((m) => <span key={m.key} className="rounded-full min-w-[3px]" style={{ flex: `${m.monto} 1 0`, background: colorMetodo(m.color) }} />)}
-                </div>
-              )}
+              <BarraMetodos metodos={porMetodo} className="mt-3.5" />
             </div>
             {metodosVisibles.map((m) => (
               <div key={m.key} className="flex items-center gap-3 px-[18px] py-2.5 min-h-[60px] border-t border-hairline">
@@ -161,6 +146,7 @@ export default function Hoy() {
                   <span className="text-xs text-muted truncate mt-[5px]">
                     {[turno.trabajador_nombre ?? turno.usuario_nombre, horaCorta(turno.ultimo_cierre_en ?? turno.updated_at)].filter(Boolean).join(' · ') || '—'}
                   </span>
+                  <CajaTurno ancha={turno.modo === 'completo'} esperado={turno.efectivo_esperado} contado={turno.efectivo_contado} diferencia={turno.diferencia_efectivo} />
                 </Link>
               ))}
               {pendiente && (
@@ -178,6 +164,26 @@ export default function Hoy() {
         </>
       )}
     </div>
+  )
+}
+
+/** Lo que debería haber en la caja de ese turno y, si se contó, si cuadró. */
+function CajaTurno({ esperado, contado, diferencia, ancha }: { esperado: number | null; contado: number | null; diferencia: number | null; ancha?: boolean }) {
+  const dif = Number(diferencia ?? 0)
+  const badge = contado == null ? null : dif === 0
+    ? <span className="badge-sm bg-pos-tint text-pos">Cuadró</span>
+    : <span className="badge-sm bg-neg-tint text-neg tabular-nums">Descuadre {clpSigno(dif)}</span>
+  // mt-auto: la línea queda al pie aunque la tarjeta vecina sea más alta.
+  // En media tarjeta el badge no cabe al lado del monto y baja a su propia línea.
+  return (
+    <span className="mt-auto pt-2.5">
+      <span className="flex items-center gap-2 pt-2 border-t border-hairline">
+        <span className="text-xs text-muted">En caja</span>
+        {ancha && badge}
+        <span className="cifra text-sm text-ink ml-auto">{esperado == null ? '—' : clp(esperado)}</span>
+      </span>
+      {!ancha && badge && <span className="flex mt-1.5">{badge}</span>}
+    </span>
   )
 }
 
