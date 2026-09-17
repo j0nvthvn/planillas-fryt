@@ -1,4 +1,4 @@
-// node --test supabase/functions/_shared/correo/
+// node --test supabase/functions/_shared/correo/periodos.test.ts
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { fechaChile, horaChile, periodoAnteriorA, periodoPrevio, periodoQueContiene } from './periodos.ts'

@@ -37,7 +37,7 @@ jobs:
       # puro, se prueba con Node y se chequean tipos con el tsc de la v2.
       - name: correos
         run: |
-          node --test ../supabase/functions/_shared/correo/
+          node --test ../supabase/functions/_shared/correo/periodos.test.ts
           pnpm exec tsc --noEmit --allowImportingTsExtensions --target es2022 --lib es2022,dom \
             --module esnext --moduleResolution bundler --strict --skipLibCheck --types node \
             ../supabase/functions/_shared/correo/{cierre,periodo,envio}.ts ../scripts/correos/vista-previa.ts
