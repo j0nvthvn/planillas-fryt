@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { clp, clpSigno, clpCorto, fechaISO, sumarDias, ajustarRango, diaSemana, parseNum, fechaLegible, mesAnio, primerNombre } from './format'
+import { clp, clpSigno, clpCorto, clpEje, fechaISO, sumarDias, ajustarRango, diaSemana, parseNum, fechaLegible, mesAnio, primerNombre } from './format'
 
 describe('clp', () => {
   it('formatea pesos chilenos sin decimales', () => {
@@ -17,6 +17,11 @@ describe('clp', () => {
     expect(clpCorto(1_250_000)).toBe('$1,3M')
     expect(clpCorto(45_000)).toBe('$45k')
     expect(clpCorto(-900)).toBe('−$900')
+  })
+  it('eje con una sola unidad', () => {
+    const eje = clpEje(916_000)
+    expect([1_000_000, 750_000, 1_400_000, 0, -250_000].map(eje)).toEqual(['$1M', '$0,75M', '$1,4M', '$0', '−$0,25M'])
+    expect(clpEje(400_000)(450_000)).toBe('$450k')
   })
 })
 

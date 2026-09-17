@@ -64,7 +64,7 @@ export default function Reporte() {
           <>
             <section className="grid grid-cols-2 md:grid-cols-4 print:grid-cols-4 gap-2 mb-2">
               <Kpi label="Ventas" value={r.totales.total_ventas} anterior={r.anterior.total_ventas} />
-              <Kpi label="Proveedores" value={r.totales.total_proveedores} anterior={r.anterior.total_proveedores} invertir />
+              <Kpi label="Proveedores" value={r.totales.total_proveedores} anterior={r.anterior.total_proveedores} menosEsMejor />
               <Kpi label="Neto" value={r.totales.neto} anterior={r.anterior.neto} />
               <Kpi label="Efectivo neto" value={r.totales.efectivo_neto} anterior={r.anterior.efectivo_neto} />
             </section>
@@ -85,12 +85,12 @@ export default function Reporte() {
   )
 }
 
-function Kpi({ label, value, anterior, invertir }: { label: string; value: number; anterior: number; invertir?: boolean }) {
+function Kpi({ label, value, anterior, menosEsMejor }: { label: string; value: number; anterior: number; menosEsMejor?: boolean }) {
   return (
     <div className="rounded-[12px] border border-hairline bg-card px-3 py-2 print:break-inside-avoid">
       <p className="text-xs text-muted">{label}</p>
       <p className={`cifra text-lg ${value < 0 ? 'text-neg' : ''}`}>{clp(value)}</p>
-      <div className="min-h-[16px]">{invertir ? <DeltaBadge actual={-value} anterior={-anterior} /> : <DeltaBadge actual={value} anterior={anterior} />}</div>
+      <div className="min-h-[16px]"><DeltaBadge actual={value} anterior={anterior} menosEsMejor={menosEsMejor} /></div>
     </div>
   )
 }

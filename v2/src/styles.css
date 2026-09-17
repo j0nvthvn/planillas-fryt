@@ -266,7 +266,8 @@
   @apply flex-1 flex items-center justify-center rounded-[9px] text-sm font-medium text-muted transition-colors;
   min-height: 40px;
 }
-@utility segmented-item-on { @apply segmented-item bg-card shadow-card text-ink font-semibold; }
+/* En oscuro `card` es más oscura que el riel (`soft`): el activo se hundía. */
+@utility segmented-item-on { @apply segmented-item bg-card shadow-card text-ink font-semibold dark:bg-hairline-strong; }
 
 /* Fila tocable de lista: 64 px es la altura del rediseño. */
 @utility row {
@@ -301,6 +302,14 @@
   background: linear-gradient(var(--card), var(--card)) padding-box,
               linear-gradient(135deg, var(--saludo-from), var(--brand)) border-box;
   box-shadow: var(--shadow-card);
+}
+
+/* Los gráficos son decorativos (aria-hidden): sin el recuadro de foco que recharts deja al tocarlos. */
+.recharts-wrapper:focus, .recharts-surface:focus { outline: none; }
+
+/* Fila con scroll horizontal: el borde derecho se desvanece para avisar que sigue. */
+@utility mascara-derecha {
+  mask-image: linear-gradient(to right, black calc(100% - 40px), transparent);
 }
 
 /* Contenedor uniforme de logo de método de pago / avatar de iniciales. */

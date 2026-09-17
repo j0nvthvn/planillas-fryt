@@ -11,11 +11,13 @@ import { MetodoLogo } from '@/components/MetodoLogo'
 import { useMetodos } from '@/features/catalogo/api'
 import { supabase } from '@/lib/supabase'
 import { qk } from '@/lib/query'
-import { clp, clpCorto, fechaISO, hoy, ajustarRango, sumarDias, fechaDiaMes } from '@/lib/format'
+import { clp, clpCorto, clpEje, fechaISO, hoy, ajustarRango, sumarDias, fechaDiaMes } from '@/lib/format'
 import { ExportarSheet } from '@/features/exportar/ExportarSheet'
 import type { Resumen } from '@/features/exportar/tablas'
 import type { VResumenDia } from '@/features/turno/api'
 import { colorMetodo } from '@/lib/theme'
+import { BarraMetodos } from '@/components/BarraMetodos'
+import { useIsDesktop } from '@/hooks/useIsDesktop'
 
 
 function rango(preset: '7' | '30' | 'mes'): { desde: string; hasta: string } {
@@ -46,6 +48,16 @@ export default function Analisis() {
   const promedio = dias.length ? dias.reduce((a, d) => a + d.neto, 0) / dias.length : 0
   const hayBorrador = dias.some((d) => d.estado === 'borrador')
   const hayNegativo = dias.some((d) => d.neto < 0)
+  const escritorio = useIsDesktop()
+  // Unas 6 etiquetas en el celular y 8 en escritorio, a distancias iguales.
+  const intervaloX = Math.max(0, Math.ceil(dias.length / (escritorio ? 8 : 6)) - 1)
+  const formatoY = clpEje(Math.max(0, ...dias.map((d) => Math.abs(d.neto))))
+  const irADia = (fecha: string) => void navigate({ to: '/dia', search: { fecha } })
+  const porMetodo = (metodos.data ?? [])
+    .map((m) => ({ ...m, monto: Number(r?.totales[m.key] ?? 0) }))
+    .filter((m) => m.monto > 0)
+    .sort((a, b) => b.monto - a.monto)
+  const totalProveedores = Number(r?.totales.total_proveedores ?? 0)
 
   return (
     <div className="max-w-3xl mx-auto">
@@ -80,7 +92,7 @@ export default function Analisis() {
           <div className="card p-0 overflow-hidden grid grid-cols-2 mb-3 md:grid-cols-4 md:gap-3.5 md:p-0 md:overflow-visible md:bg-transparent md:border-0 md:shadow-none md:rounded-none">
             <Kpi label="Neto" value={r.totales.neto} anterior={r.anterior.neto} destacado className="border-r border-b" />
             <Kpi label="Ventas" value={r.totales.total_ventas} anterior={r.anterior.total_ventas} className="border-b" />
-            <Kpi label="Proveedores" value={r.totales.total_proveedores} anterior={r.anterior.total_proveedores} invertir className="border-r" />
+            <Kpi label="Proveedores" value={r.totales.total_proveedores} anterior={r.anterior.total_proveedores} menosEsMejor className="border-r" />
             <Kpi label="Efectivo neto" value={r.totales.efectivo_neto} anterior={r.anterior.efectivo_neto} />
           </div>
           <p className="text-xs leading-normal text-muted mb-3">
@@ -92,14 +104,14 @@ export default function Analisis() {
             <div className="card md:px-5">
               <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 mb-4">
                 <h2 className="text-sm font-medium text-ink">Neto por día</h2>
-                {dias.length > 0 && <span className="md:hidden text-xs text-muted">promedio <b className="font-semibold tabular-nums text-ink2">{clp(Math.round(promedio))}</b></span>}
+                {dias.length > 0 && <span className="text-xs text-muted">promedio <b className="font-semibold tabular-nums text-ink2">{clp(Math.round(promedio))}</b></span>}
                 {/* Leyenda: en el celular solo los colores que no se explican solos
                     (borrador y negativo), para que nada dependa del color. */}
-                <div className={`${hayBorrador || hayNegativo ? 'flex' : 'hidden md:flex'} flex-wrap gap-x-3.5 gap-y-1 text-xs text-muted w-full md:w-auto`} aria-hidden="true">
-                  <span className="hidden md:inline-flex items-center gap-[5px]"><span className="w-[9px] h-[9px] rounded-[2px] bg-ink" />día cerrado</span>
+                <div className={`${hayBorrador || hayNegativo ? 'flex' : 'hidden md:flex'} flex-wrap gap-x-3.5 gap-y-1 text-xs text-muted w-full`} aria-hidden="true">
+                  <span className="hidden md:inline-flex items-center gap-[5px]"><span className="w-[9px] h-[9px] rounded-[2px] bg-brand" />día cerrado</span>
                   {hayBorrador && <span className="inline-flex items-center gap-[5px]"><span className="w-[9px] h-[9px] rounded-[2px] bg-warn" />con borrador</span>}
                   {hayNegativo && <span className="inline-flex items-center gap-[5px]"><span className="w-[9px] h-[9px] rounded-[2px] bg-neg" />neto negativo</span>}
-                  <span className="hidden md:inline-flex items-center gap-[5px]"><span className="w-3.5 border-t border-dashed border-brand" />promedio</span>
+                  <span className="hidden md:inline-flex items-center gap-[5px]"><span className="w-3.5 border-t border-dashed border-ink2" />promedio</span>
                 </div>
               </div>
               {/* El gráfico es decorativo para un lector de pantalla: el resumen
@@ -109,13 +121,20 @@ export default function Analisis() {
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={dias} margin={{ top: 4, right: 4, left: 0, bottom: 0 }} accessibilityLayer={false}>
                     <CartesianGrid stroke="var(--hairline)" vertical={false} />
-                    <XAxis dataKey="label" tick={{ fontSize: 11, fill: 'var(--muted2)' }} tickLine={false} axisLine={{ stroke: 'var(--hairline-strong)' }} interval="preserveStartEnd" />
-                    <YAxis tickFormatter={clpCorto} tick={{ fontSize: 11, fill: 'var(--muted2)' }} tickLine={false} axisLine={false} width={48} />
-                    <Tooltip cursor={{ fill: 'var(--soft)', radius: 6 }} content={<TooltipDia />} />
-                    <Bar dataKey="neto" radius={[5, 5, 0, 0]} maxBarSize={48}>
-                      {dias.map((d) => <Cell key={d.fecha} fill={d.neto < 0 ? 'var(--neg)' : d.estado === 'borrador' ? 'var(--warn)' : 'var(--ink)'} />)}
+                    <XAxis dataKey="label" tick={{ fontSize: 11, fill: 'var(--muted2)' }} tickLine={false} axisLine={{ stroke: 'var(--hairline-strong)' }} interval={intervaloX} />
+                    <YAxis tickFormatter={formatoY} tickCount={4} tick={{ fontSize: 11, fill: 'var(--muted2)' }} tickLine={false} axisLine={false} width={48} />
+                    {/* Celular: el toque deja fijo el detalle, con el enlace al día.
+                        Escritorio: el detalle sale al pasar el mouse y el clic abre el día. */}
+                    <Tooltip cursor={{ fill: 'var(--soft)', radius: 6 }} content={<TooltipDia enlace={!escritorio} />}
+                      trigger={escritorio ? 'hover' : 'click'} wrapperStyle={escritorio ? undefined : { pointerEvents: 'auto' }} />
+                    <Bar dataKey="neto" radius={[5, 5, 0, 0]} maxBarSize={48} activeBar={{ fillOpacity: 0.8 }}
+                      className={escritorio ? 'cursor-pointer' : undefined}
+                      onClick={escritorio ? (b: { payload?: { fecha?: string } }) => { if (b.payload?.fecha) irADia(b.payload.fecha) } : undefined}>
+                      {dias.map((d) => <Cell key={d.fecha} fill={d.neto < 0 ? 'var(--neg)' : d.estado === 'borrador' ? 'var(--warn)' : 'var(--brand)'} />)}
                     </Bar>
-                    {dias.length > 1 && <ReferenceLine y={promedio} stroke="var(--brand)" strokeDasharray="4 4" strokeOpacity={0.7} ifOverflow="extendDomain" />}
+                    {dias.length > 1 && (
+                      <ReferenceLine y={promedio} stroke="var(--ink2)" strokeDasharray="4 4" strokeOpacity={0.6} ifOverflow="extendDomain" />
+                    )}
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -123,10 +142,16 @@ export default function Analisis() {
 
             <div className="flex flex-col gap-3 md:gap-3.5">
               <div className="card p-0 overflow-hidden">
-                <h2 className="text-sm font-medium text-ink px-[18px] pt-4 pb-3">Ventas por método</h2>
-                {(metodos.data ?? []).map((m) => {
-                  const monto = Number(r.totales[m.key] ?? 0)
-                  const pct = r.totales.total_ventas ? (monto / r.totales.total_ventas) * 100 : 0
+                <div className="px-[18px] pt-4 pb-3.5">
+                  <div className="flex items-baseline justify-between gap-3">
+                    <h2 className="text-sm font-medium text-ink">Ventas por método</h2>
+                    <span className="cifra text-sm text-ink2">{clp(r.totales.total_ventas)}</span>
+                  </div>
+                  <BarraMetodos metodos={porMetodo} className="mt-3" />
+                </div>
+                {porMetodo.length === 0 && <p className="text-sm text-muted text-center py-4 border-t border-hairline">Sin ventas en el período.</p>}
+                {porMetodo.map((m) => {
+                  const pct = r.totales.total_ventas ? (m.monto / r.totales.total_ventas) * 100 : 0
                   return (
                     <div key={m.key} className="flex items-center gap-3 px-[18px] py-2.5 min-h-[60px] border-t border-hairline">
                       <MetodoLogo metodo={m} />
@@ -134,8 +159,9 @@ export default function Analisis() {
                         <span className="block text-md font-medium text-ink truncate">{m.label}</span>
                         <span className="block h-1 rounded-full bg-soft mt-1.5 overflow-hidden"><span className="block h-full rounded-full" style={{ width: `${pct}%`, background: colorMetodo(m.color) }} /></span>
                       </span>
-                      <span className="text-right shrink-0">
-                        <span className="block cifra text-base text-ink">{clp(monto)}</span>
+                      {/* Ancho fijo: así todas las barras de arriba miden lo mismo. */}
+                      <span className="text-right shrink-0 min-w-[96px]">
+                        <span className="block cifra text-base text-ink">{clp(m.monto)}</span>
                         <span className="block text-[11px] text-muted2 tabular-nums">{pct.toFixed(0)}%</span>
                       </span>
                     </div>
@@ -143,14 +169,20 @@ export default function Analisis() {
                 })}
               </div>
               <div className="card p-0 overflow-hidden">
-                <h2 className="text-sm font-medium text-ink px-[18px] pt-4 pb-3">Top proveedores</h2>
+                <div className="flex items-baseline justify-between gap-3 px-[18px] pt-4 pb-3">
+                  <h2 className="text-sm font-medium text-ink">Top proveedores</h2>
+                  {totalProveedores > 0 && <span className="cifra text-sm text-neg">−{clp(totalProveedores)}</span>}
+                </div>
                 {r.top_proveedores.length === 0 ? <p className="text-sm text-muted px-[18px] pb-4">Sin compras en el período.</p> : r.top_proveedores.map((p) => (
                   <Link key={p.proveedor_id ?? p.nombre} to={p.proveedor_id ? '/proveedores/$id' : '/proveedores'} params={{ id: p.proveedor_id ?? '' }} className="flex items-center gap-3 px-[18px] py-2 min-h-[54px] border-t border-hairline hover:bg-soft/60">
                     <ProveedorAvatar nombre={p.nombre} imagenUrl={p.imagen_url} size="sm" />
-                    <span className="flex-1 min-w-0"><span className="block text-sm font-medium text-ink truncate">{p.nombre}</span><span className="block text-xs text-muted mt-0.5">{p.compras} compra{p.compras === 1 ? '' : 's'}</span></span>
+                    <span className="flex-1 min-w-0"><span className="block text-sm font-medium text-ink truncate">{p.nombre}</span><span className="block text-xs text-muted mt-0.5 tabular-nums">{p.compras} compra{p.compras === 1 ? '' : 's'}{totalProveedores > 0 && <> · {Math.round((Number(p.monto) / totalProveedores) * 100)}%</>}</span></span>
                     <span className="cifra text-sm text-neg">{Number(p.monto) ? '−' : ''}{clp(p.monto)}</span>
                   </Link>
                 ))}
+                <Link to="/proveedores" className="flex items-center justify-center gap-1.5 min-h-[52px] border-t border-hairline text-sm font-semibold text-brand hover:bg-soft">
+                  Ver todos los proveedores<Icon name="chevR" className="w-3.5 h-3.5" stroke={2.2} />
+                </Link>
               </div>
             </div>
           </div>
@@ -190,7 +222,7 @@ function resumenGrafico(dias: DiaGrafico[]): string {
 }
 
 /** Tooltip del gráfico con los tokens del tema (el de recharts venía en gris sobre gris). */
-function TooltipDia({ active, payload }: { active?: boolean; payload?: { payload?: Record<string, unknown> }[] }) {
+function TooltipDia({ active, payload, enlace }: { active?: boolean; payload?: { payload?: Record<string, unknown> }[]; enlace?: boolean }) {
   const d = payload?.[0]?.payload as (VResumenDia & { neto: number; total_ventas: number }) | undefined
   if (!active || !d) return null
   const neto = Number(d.neto)
@@ -201,18 +233,25 @@ function TooltipDia({ active, payload }: { active?: boolean; payload?: { payload
       <p className="flex justify-between gap-4 text-ink2"><span>Proveedores</span><b className="tabular-nums text-ink">{clp(d.total_proveedores)}</b></p>
       <p className={`flex justify-between gap-4 pt-1 mt-1 border-t border-hairline font-semibold ${neto >= 0 ? 'text-ink' : 'text-neg'}`}><span>Neto</span><span className="tabular-nums">{clp(neto)}</span></p>
       {d.estado !== 'completo' && <p className="text-xs text-warn mt-1">{d.estado === 'borrador' ? 'Con borrador' : d.estado === 'parcial' ? 'Falta la tarde' : ''}</p>}
+      {/* Solo para el toque: el gráfico está oculto al lector de pantalla y el día se abre también desde Historial. */}
+      {enlace
+        ? <Link to="/dia" search={{ fecha: d.fecha }} tabIndex={-1} className="hit mt-1.5 flex items-center justify-end gap-1 font-semibold text-brand">Ver día<Icon name="chevR" className="w-3 h-3" stroke={2.4} /></Link>
+        : <p className="text-[11px] text-muted mt-1.5">Clic para ver el día</p>}
     </div>
   )
 }
 
-function Kpi({ label, value, anterior, destacado, invertir, className = '' }: { label: string; value: number; anterior: number | null; destacado?: boolean; invertir?: boolean; className?: string }) {
+function Kpi({ label, value, anterior, destacado, menosEsMejor, className = '' }: { label: string; value: number; anterior: number | null; destacado?: boolean; menosEsMejor?: boolean; className?: string }) {
   return (
     <div className={`relative p-4 border-hairline md:overflow-hidden md:rounded-[14px] md:bg-card md:border md:shadow-card md:px-[18px] ${destacado ? 'md:border-hairline-strong' : ''} ${className}`}>
       {destacado && <span className="hidden md:block absolute inset-y-0 left-0 w-[3px] bg-brand" aria-hidden="true" />}
       <p className="text-xs leading-none text-muted mb-[7px] md:mb-[9px]">{label}</p>
       {/* A 375 px una cifra de 7 dígitos en 20 px tocaba el borde. */}
       <p className={`cifra text-lg min-[390px]:text-xl md:text-amount-sm leading-none ${destacado ? 'md:font-bold' : ''} ${value < 0 ? 'text-neg' : 'text-ink'}`}>{clp(value)}</p>
-      <div className="mt-2 min-h-[16px]">{invertir ? <DeltaBadge actual={-value} anterior={anterior == null ? null : -anterior} /> : <DeltaBadge actual={value} anterior={anterior} />}</div>
+      <div className="mt-2.5 min-h-[22px] flex flex-wrap items-center gap-x-1.5 gap-y-1">
+        <DeltaBadge actual={value} anterior={anterior} menosEsMejor={menosEsMejor} fondo />
+        {anterior != null && anterior !== 0 && <span className="text-[11px] text-muted tabular-nums whitespace-nowrap">vs. {clpCorto(anterior)}</span>}
+      </div>
     </div>
   )
 }

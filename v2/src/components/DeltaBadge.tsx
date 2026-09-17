@@ -1,24 +1,12 @@
-import { clp } from '@/lib/format'
 import Icon from './Icon'
+import { calcularDelta } from './delta'
 
-/**
- * Variación contra el período anterior del mismo largo. Sin dato previo no
- * hay %; si cambia el signo (caja negativa → positiva) el % engaña, así que
- * se muestra la diferencia en pesos.
- */
-export function DeltaBadge({ actual, anterior, fondo = false }: { actual: number; anterior: number | null | undefined; fondo?: boolean }) {
-  if (anterior == null) return null
-  if (anterior === 0) {
-    if (actual === 0) return null
-    return <span className={`text-xs font-semibold text-muted2 ${fondo ? 'rounded-[7px] bg-soft px-[7px] py-1' : ''}`}>nuevo</span>
-  }
-  const diff = actual - anterior
-  const sube = diff > 0
-  const cls = `inline-flex items-center gap-[3px] text-xs font-semibold tabular-nums ${sube ? 'text-pos' : 'text-neg'} ${fondo ? `rounded-[7px] px-[7px] py-1 ${sube ? 'bg-pos-tint' : 'bg-neg-tint'}` : ''}`
-  if ((actual >= 0) !== (anterior >= 0)) {
-    return <span className={cls}><Icon name={sube ? 'caretUp' : 'caretDown'} className="w-[11px] h-[11px]" stroke={3} /><span className="sr-only">{sube ? 'sube' : 'baja'} </span>{sube ? '+' : '−'}{clp(Math.abs(diff))}</span>
-  }
-  const pct = (diff / Math.abs(anterior)) * 100
-  if (Math.abs(pct) < 0.5) return <span className={`text-xs font-medium text-muted2 ${fondo ? 'rounded-[7px] bg-soft px-[7px] py-1' : ''}`}><span aria-hidden="true">≈ </span>igual</span>
-  return <span className={cls}><Icon name={sube ? 'caretUp' : 'caretDown'} className="w-[11px] h-[11px]" stroke={3} /><span className="sr-only">{sube ? 'sube' : 'baja'} </span>{Math.abs(pct).toFixed(0)}%</span>
+/** Variación contra el período anterior del mismo largo (ver `calcularDelta`). */
+export function DeltaBadge({ actual, anterior, fondo = false, menosEsMejor = false }: { actual: number; anterior: number | null | undefined; fondo?: boolean; menosEsMejor?: boolean }) {
+  const d = calcularDelta(actual, anterior, menosEsMejor)
+  if (!d) return null
+  if (d.tipo === 'nuevo') return <span className={`text-xs font-semibold text-muted2 ${fondo ? 'rounded-[7px] bg-soft px-[7px] py-1' : ''}`}>nuevo</span>
+  if (d.tipo === 'igual') return <span className={`text-xs font-medium text-muted2 ${fondo ? 'rounded-[7px] bg-soft px-[7px] py-1' : ''}`}><span aria-hidden="true">≈ </span>igual</span>
+  const cls = `inline-flex items-center gap-[3px] text-xs font-semibold tabular-nums ${d.bueno ? 'text-pos' : 'text-neg'} ${fondo ? `rounded-[7px] px-[7px] py-1 ${d.bueno ? 'bg-pos-tint' : 'bg-neg-tint'}` : ''}`
+  return <span className={cls}><Icon name={d.sube ? 'caretUp' : 'caretDown'} className="w-[11px] h-[11px]" stroke={3} /><span className="sr-only">{d.sube ? 'sube' : 'baja'} </span>{d.texto}</span>
 }

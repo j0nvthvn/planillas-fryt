@@ -23,6 +23,20 @@ export function clpCorto(v: number): string {
   return `${sign}$${abs}`
 }
 
+/**
+ * Formateador de eje con una sola unidad, elegida por el valor más grande:
+ * "$1M · $0,75M · $0,5M" en vez de "$1,0M · $750k · $500k". Desde medio
+ * millón ya va en millones, porque recharts redondea el tope hacia arriba.
+ */
+export function clpEje(maxAbs: number): (v: number) => string {
+  if (maxAbs < 500_000) return clpCorto
+  return (v) => {
+    if (v === 0) return '$0'
+    const m = Number((Math.abs(v) / 1_000_000).toFixed(2)).toString().replace('.', ',')
+    return `${v < 0 ? '−' : ''}$${m}M`
+  }
+}
+
 function fechaLocal(fecha: string): Date {
   // "YYYY-MM-DD" a mediodía local: nunca cambia de día por zona horaria.
   return new Date(fecha + 'T12:00:00')
