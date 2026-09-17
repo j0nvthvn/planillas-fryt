@@ -50,7 +50,7 @@ export class ErrorBoundary extends Component<{ children: ReactNode }, { hasError
             <h1 className="font-display text-2xl font-semibold tracking-[-0.02em] text-ink">Algo salió mal</h1>
             <p className="text-sm text-muted mt-1">Ya quedó registrado. Recarga la página para seguir.</p>
           </div>
-          <button type="button" onClick={() => window.location.reload()} className="btn-primary w-full min-h-[50px] text-base">Recargar</button>
+          <button type="button" onClick={() => window.location.reload()} className="btn-primary w-full btn-lg">Recargar</button>
         </div>
       </div>
     )

@@ -87,8 +87,8 @@ export function MontoSheet({ title, sub, valor, color, label = 'Listo', ayuda, p
       extra={paso ? <span className="text-xs font-semibold text-muted tabular-nums">{paso.actual} de {paso.total}</span> : undefined}
       footer={desktop ? (
         <div className="flex gap-2 mt-1">
-          {encadenado && <button type="button" className="btn-secondary flex-1 min-h-[50px] text-base" disabled={invalido} onClick={() => aceptar(false)}>Listo</button>}
-          <button type="button" className="btn-primary flex-[2] min-h-[50px] text-base" disabled={invalido} onClick={() => aceptar(encadenado)}>{etiqueta}</button>
+          {encadenado && <button type="button" className="btn-secondary flex-1 btn-lg" disabled={invalido} onClick={() => aceptar(false)}>Listo</button>}
+          <button type="button" className="btn-primary flex-[2] btn-lg" disabled={invalido} onClick={() => aceptar(encadenado)}>{etiqueta}</button>
         </div>
       ) : (
         <>

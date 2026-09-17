@@ -120,24 +120,24 @@ export default function CerrarTurno() {
         subtitle={esDueno ? (state.cerrado ? fechaLegible(fecha) : estadoGuardado || fechaLegible(fecha)) : fechaLegible(fecha)}
         action={esDueno && (
           <button type="button" onClick={() => setSheet({ t: 'fecha' })} aria-label={`Cambiar fecha, ${fechaDiaMes(fecha)}`}
-            className="inline-flex items-center gap-[7px] min-h-[40px] px-3 rounded-[11px] bg-card border border-hairline-strong text-sm font-semibold text-ink2 hover:bg-soft">
+            className="btn-secondary btn-bar gap-[7px]">
             <Icon name="calendar" className="w-4 h-4" />{fechaDiaMes(fecha)}
           </button>
         )}
       />
 
       {soloLectura && (
-        <div role="status" className="mb-4 rounded-[12px] bg-info-tint border border-hairline px-4 py-3 text-sm font-medium text-info">
+        <div role="status" className="mb-4 aviso bg-info-tint text-info">
           Este turno ya está cerrado. Solo la dueña puede corregirlo. <Link to="/hoy" className="font-bold underline">Volver a Hoy</Link>
         </div>
       )}
       {state.cerrado && esDueno && (
-        <div className="mb-4 rounded-[12px] bg-info-tint border border-hairline px-4 py-3 text-sm font-medium text-info">
+        <div className="mb-4 aviso bg-info-tint text-info">
           Turno cerrado: al guardar se registra una <b>corrección</b> con la fotografía anterior y la nueva.
         </div>
       )}
       {form.errorAutosave && online && (
-        <div role="alert" className="mb-4 rounded-[12px] bg-neg-tint border border-hairline px-4 py-3 text-sm font-medium text-neg">
+        <div role="alert" className="mb-4 aviso bg-neg-tint text-neg">
           {form.errorAutosave}
         </div>
       )}
@@ -361,7 +361,7 @@ export default function CerrarTurno() {
               onChange={(e) => { if (e.target.value) void navigate({ to: '/turno', search: { fecha: e.target.value } }) }} />
             <button type="button" className="btn-secondary" disabled={fecha >= hoy()} onClick={() => void navigate({ to: '/turno', search: { fecha: sumarDias(fecha, 1) } })} aria-label="Día siguiente"><Icon name="chevR" /></button>
           </div>
-          <button type="button" className="btn-primary w-full" onClick={() => setSheet(null)}>Listo</button>
+          <button type="button" className="btn-primary btn-lg w-full" onClick={() => setSheet(null)}>Listo</button>
         </BottomSheet>
       )}
 
@@ -396,8 +396,8 @@ export default function CerrarTurno() {
             Mientras escribías, alguien guardó este mismo turno ({etiquetaModo(form.conflicto.actual.modo)} · ventas {clp(form.conflicto.actual.total_ventas)}).
             ¿Qué quieres hacer?
           </p>
-          <button type="button" className="btn-primary w-full" onClick={() => void form.adoptarServidor()}>Ver lo que se guardó (descarta lo mío)</button>
-          <button type="button" className="btn-secondary w-full" onClick={() => void form.sobrescribir(false)}>Conservar lo mío y reemplazar</button>
+          <button type="button" className="btn-primary btn-lg w-full" onClick={() => void form.adoptarServidor()}>Ver lo que se guardó (descarta lo mío)</button>
+          <button type="button" className="btn-secondary btn-lg w-full" onClick={() => void form.sobrescribir(false)}>Conservar lo mío y reemplazar</button>
         </BottomSheet>
       )}
     </div>

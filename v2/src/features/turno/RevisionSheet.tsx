@@ -39,8 +39,8 @@ export function RevisionSheet({
   return (
     <BottomSheet title={yaCerrado ? 'Revisar la corrección' : 'Revisar antes de cerrar'} onClose={onClose} footer={
       <div className="flex gap-2 pt-1">
-        <button type="button" className="btn-secondary flex-1 min-h-[50px] text-base" onClick={onClose} disabled={guardando}>Revisar</button>
-        <button type="button" className="btn-primary flex-[2] min-h-[50px] text-base" onClick={onConfirmar} disabled={guardando}>
+        <button type="button" className="btn-secondary flex-1 btn-lg" onClick={onClose} disabled={guardando}>Revisar</button>
+        <button type="button" className="btn-primary flex-[2] btn-lg" onClick={onConfirmar} disabled={guardando}>
           {guardando ? 'Guardando…' : etiquetaCerrar(modo, yaCerrado)}
         </button>
       </div>

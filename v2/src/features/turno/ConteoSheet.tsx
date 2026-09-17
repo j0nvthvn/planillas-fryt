@@ -25,7 +25,7 @@ export function ConteoSheet({ inicial, esperado, onAccept, onTotalManual, onClos
 
   return (
     <BottomSheet title="Conteo de caja" onClose={onClose} footer={<>
-      <button type="button" className="btn-primary w-full min-h-[50px] text-base" disabled={vacio} onClick={() => onAccept(total, conteo)}>
+      <button type="button" className="btn-primary w-full btn-lg" disabled={vacio} onClick={() => onAccept(total, conteo)}>
         <Icon name="check" className="w-[18px] h-[18px]" stroke={2.4} />Registrar conteo
       </button>
       <div className="flex justify-between gap-2">

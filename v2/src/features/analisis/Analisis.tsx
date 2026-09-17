@@ -52,7 +52,7 @@ export default function Analisis() {
       <PageHeader eyebrow={rangoLegible(desde, hasta)} title="Análisis"
         action={
           <button type="button" onClick={() => setExportando(true)} disabled={!r}
-            className="hit btn min-h-[40px] rounded-[11px] px-3 text-sm bg-card text-ink2 border border-hairline-strong hover:bg-soft md:bg-brand md:text-on-solid md:border-brand md:hover:bg-brand-hover">
+            className="btn-secondary btn-bar md:bg-brand md:text-on-solid md:border-brand md:hover:bg-brand-hover">
             <Icon name="download" className="w-4 h-4" />Exportar
           </button>
         } />
@@ -89,7 +89,7 @@ export default function Analisis() {
           </p>
 
           <div className="grid gap-3 md:grid-cols-[1.55fr_1fr] md:gap-3.5 md:items-start">
-            <div className="card md:rounded-[14px] md:px-5">
+            <div className="card md:px-5">
               <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 mb-4">
                 <h2 className="text-sm font-medium text-ink">Neto por día</h2>
                 {dias.length > 0 && <span className="md:hidden text-xs text-muted">promedio <b className="font-semibold tabular-nums text-ink2">{clp(Math.round(promedio))}</b></span>}
@@ -122,7 +122,7 @@ export default function Analisis() {
             </div>
 
             <div className="flex flex-col gap-3 md:gap-3.5">
-              <div className="card p-0 overflow-hidden md:rounded-[14px]">
+              <div className="card p-0 overflow-hidden">
                 <h2 className="text-sm font-medium text-ink px-[18px] pt-4 pb-3">Ventas por método</h2>
                 {(metodos.data ?? []).map((m) => {
                   const monto = Number(r.totales[m.key] ?? 0)
@@ -142,7 +142,7 @@ export default function Analisis() {
                   )
                 })}
               </div>
-              <div className="card p-0 overflow-hidden md:rounded-[14px]">
+              <div className="card p-0 overflow-hidden">
                 <h2 className="text-sm font-medium text-ink px-[18px] pt-4 pb-3">Top proveedores</h2>
                 {r.top_proveedores.length === 0 ? <p className="text-sm text-muted px-[18px] pb-4">Sin compras en el período.</p> : r.top_proveedores.map((p) => (
                   <Link key={p.proveedor_id ?? p.nombre} to={p.proveedor_id ? '/proveedores/$id' : '/proveedores'} params={{ id: p.proveedor_id ?? '' }} className="flex items-center gap-3 px-[18px] py-2 min-h-[54px] border-t border-hairline hover:bg-soft/60">

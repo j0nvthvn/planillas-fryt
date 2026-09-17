@@ -214,6 +214,15 @@
 @utility btn-danger { @apply btn bg-neg text-on-solid hover:opacity-90; }
 @utility btn-ghost { @apply btn bg-transparent text-ink2 hover:bg-soft; }
 
+/* Botón grande de hoja o formulario (50 px). */
+@utility btn-lg { min-height: 50px; @apply text-base; }
+/* Botón de la barra superior (Salir, Exportar, Nuevo, fecha): 40 px visibles,
+   44 px tocables. */
+@utility btn-bar { @apply hit min-h-[40px] rounded-[11px] px-3 text-sm; }
+
+/* Aviso en línea con tinte: se combina con bg-*-tint y text-*. */
+@utility aviso { @apply rounded-[12px] border border-hairline px-4 py-3 text-sm font-medium; }
+
 @utility input {
   @apply block w-full rounded-[12px] px-3.5 py-3 bg-soft text-ink border border-control-border placeholder:text-muted focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand;
   min-height: 44px;

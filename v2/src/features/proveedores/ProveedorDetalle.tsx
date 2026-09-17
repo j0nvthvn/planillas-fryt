@@ -99,7 +99,7 @@ export default function ProveedorDetalle() {
         <BottomSheet title="Renombrar" onClose={() => setRenombrar(null)}>
           <input type="text" className="input" value={renombrar} autoFocus onChange={(e) => setRenombrar(e.target.value)} aria-label="Nuevo nombre" />
           <p className="text-xs text-muted">El nombre nuevo se propaga a todas las compras registradas.</p>
-          <button type="button" className="btn-primary w-full" disabled={!renombrar.trim() || ocupado}
+          <button type="button" className="btn-primary btn-lg w-full" disabled={!renombrar.trim() || ocupado}
             onClick={() => void correr(async () => { await actualizarProveedor(prov.id, { nombre: renombrar.trim() }); setRenombrar(null) }, 'Nombre actualizado')}>Guardar</button>
         </BottomSheet>
       )}
@@ -115,7 +115,7 @@ export default function ProveedorDetalle() {
               </button>
             ))}
           </div>
-          <button type="button" className="btn-primary w-full" disabled={!fusion.destino} onClick={() => setConfirmar('fusionar')}>Fusionar</button>
+          <button type="button" className="btn-primary btn-lg w-full" disabled={!fusion.destino} onClick={() => setConfirmar('fusionar')}>Fusionar</button>
         </BottomSheet>
       )}
       {confirmar === 'eliminar' && (

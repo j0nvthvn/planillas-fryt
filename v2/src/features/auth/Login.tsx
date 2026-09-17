@@ -71,7 +71,7 @@ export default function Login() {
             </div>
           </div>
           {error && <p id="login-error" role="alert" className="text-sm text-neg font-medium">{error}</p>}
-          <button type="submit" disabled={loading} className="btn-primary w-full min-h-[50px] text-base">
+          <button type="submit" disabled={loading} className="btn-primary w-full btn-lg">
             {loading ? 'Ingresando…' : 'Ingresar'}
           </button>
         </form>

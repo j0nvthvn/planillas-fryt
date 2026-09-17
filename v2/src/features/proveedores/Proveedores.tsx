@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { AvisoAmbar } from '@/components/Aviso'
 import { Link, useNavigate } from '@tanstack/react-router'
 import PageHeader from '@/components/PageHeader'
 import Spinner from '@/components/Spinner'
@@ -51,7 +52,7 @@ export default function Proveedores() {
 
   return (
     <div className="max-w-3xl mx-auto">
-      <PageHeader eyebrow={`Catálogo · ${activos} activo${activos === 1 ? '' : 's'}`} title="Proveedores" action={<button type="button" className="hit btn-primary min-h-[40px] rounded-[11px] px-3 text-sm" onClick={() => setNuevo('')}><Icon name="plus" className="w-4 h-4" stroke={2.2} />Nuevo</button>} />
+      <PageHeader eyebrow={`Catálogo · ${activos} activo${activos === 1 ? '' : 's'}`} title="Proveedores" action={<button type="button" className="btn-primary btn-bar" onClick={() => setNuevo('')}><Icon name="plus" className="w-4 h-4" stroke={2.2} />Nuevo</button>} />
       <div className="relative mb-2">
         <Icon name="search" className="w-[17px] h-[17px] absolute left-[13px] top-1/2 -translate-y-1/2 text-muted" />
         <input type="search" className="input min-h-[44px] py-2.5 pl-10" placeholder="Buscar proveedor" value={q} onChange={(e) => setQ(e.target.value)} aria-label="Buscar proveedor" />
@@ -59,14 +60,10 @@ export default function Proveedores() {
       <label className="flex items-center gap-2.5 min-h-[44px] text-sm text-ink2 mb-1"><input type="checkbox" className="w-5 h-5 shrink-0 accent-brand" checked={verInactivos} onChange={(e) => setVerInactivos(e.target.checked)} />Mostrar inactivos</label>
 
       {sospechosos.length > 0 && !q && (
-        <div className="mb-3 rounded-[14px] bg-warn-tint border border-hairline px-4 py-3 flex items-start gap-3">
-          <span className="w-[30px] h-[30px] rounded-[9px] bg-warn/15 grid place-items-center shrink-0"><Icon name="warning" className="w-4 h-4 text-warn" stroke={2} /></span>
-          <div className="min-w-0 flex-1">
-            <p className="text-sm font-semibold text-warn mt-1.5">Posibles duplicados</p>
+        <AvisoAmbar titulo="Posibles duplicados" className="mb-3">
             <ul className="mt-1 space-y-0.5 text-xs text-ink2">{sospechosos.slice(0, 6).map((g) => <li key={g.join('|')}>{g.join(' · ')}</li>)}</ul>
             <p className="mt-1.5 text-xs font-semibold text-warn">Ábrelos y usa “Fusionar con…” para unificarlos.</p>
-          </div>
-        </div>
+        </AvisoAmbar>
       )}
 
       {catalogo.isPending ? <Spinner /> : (
@@ -86,7 +83,7 @@ export default function Proveedores() {
       {nuevo !== null && (
         <BottomSheet title="Nuevo proveedor" onClose={() => setNuevo(null)}>
           <input type="text" className="input" placeholder="Nombre" value={nuevo} autoFocus onChange={(e) => setNuevo(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && void crear()} aria-label="Nombre del proveedor" />
-          <button type="button" className="btn-primary w-full" disabled={!nuevo.trim() || creando} onClick={() => void crear()}>{creando ? 'Creando…' : 'Crear'}</button>
+          <button type="button" className="btn-primary btn-lg w-full" disabled={!nuevo.trim() || creando} onClick={() => void crear()}>{creando ? 'Creando…' : 'Crear'}</button>
         </BottomSheet>
       )}
     </div>

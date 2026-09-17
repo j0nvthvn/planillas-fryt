@@ -12,7 +12,7 @@ export function EsqueletoContenido({ sinTitulo }: { sinTitulo?: boolean }) {
     <div className="max-w-2xl mx-auto" role="status" aria-label="Cargando">
       {!sinTitulo && <>
         <Bloque className="h-3 w-16 mb-2 rounded-full" />
-        <Bloque className="h-8 w-48 mb-6" />
+        <Bloque className="h-5 w-40 mb-6" />
       </>}
       <Bloque className="h-24 w-full mb-4" />
       <Bloque className="h-14 w-full mb-4" />

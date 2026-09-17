@@ -123,7 +123,7 @@ export function ProveedorSheet({ linea, usados, onSave, onDelete, onClose }: Pro
       )}
       <PayToggle value={forma} onChange={setForma} />
       {desktop ? (
-        <button type="button" className="btn-primary w-full" disabled={!puede} onClick={guardar}>{linea ? 'Guardar cambios' : 'Agregar'}</button>
+        <button type="button" className="btn-primary btn-lg w-full" disabled={!puede} onClick={guardar}>{linea ? 'Guardar cambios' : 'Agregar'}</button>
       ) : (
         <Keypad onKey={(k) => setDigits((d) => applyKey(d, k))} onAccept={guardar} disabled={!puede} label={linea ? 'Guardar cambios' : 'Agregar proveedor'} />
       )}

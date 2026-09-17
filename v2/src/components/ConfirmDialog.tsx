@@ -21,8 +21,8 @@ export function ConfirmDialog({ title, message, confirmLabel = 'Confirmar', canc
     <BottomSheet title={title} onClose={onCancel} role="alertdialog" describedBy={message ? mensajeId : undefined}>
       {message && <p id={mensajeId} className="text-sm text-ink2">{message}</p>}
       <div className="flex gap-2 pt-1">
-        <button ref={cancelar} type="button" className="btn-secondary flex-1 min-h-[50px] text-base" onClick={onCancel} disabled={loading}>{cancelLabel}</button>
-        <button type="button" className={`${danger ? 'btn-danger' : 'btn-primary'} flex-1 min-h-[50px] text-base`} onClick={onConfirm} disabled={loading}>
+        <button ref={cancelar} type="button" className="btn-secondary flex-1 btn-lg" onClick={onCancel} disabled={loading}>{cancelLabel}</button>
+        <button type="button" className={`${danger ? 'btn-danger' : 'btn-primary'} flex-1 btn-lg`} onClick={onConfirm} disabled={loading}>
           <span aria-live="polite">{loading ? 'Un momento…' : confirmLabel}</span>
         </button>
       </div>

@@ -1,4 +1,5 @@
 import { useState, type ReactNode } from 'react'
+import { AvisoAmbar } from '@/components/Aviso'
 import { Link, useNavigate } from '@tanstack/react-router'
 import Icon from '@/components/Icon'
 import { EsqueletoContenido } from '@/components/Esqueleto'
@@ -66,10 +67,7 @@ export default function Hoy() {
       </header>
 
       {borradoresViejos.length > 0 && (
-        <section aria-labelledby="hoy-borradores" className="mb-3 rounded-[14px] bg-warn-tint border border-hairline px-4 py-3 flex items-start gap-3">
-          <span className="w-[30px] h-[30px] rounded-[9px] bg-warn/15 grid place-items-center shrink-0" aria-hidden="true"><Icon name="warning" className="w-4 h-4 text-warn" stroke={2} /></span>
-          <div className="flex-1 min-w-0">
-            <h2 id="hoy-borradores" className="text-sm font-semibold text-warn mt-1.5">{borradoresViejos.length === 1 ? 'Hay un turno sin cerrar' : `Hay ${borradoresViejos.length} turnos sin cerrar`}</h2>
+        <AvisoAmbar className="mb-3" titulo={borradoresViejos.length === 1 ? 'Hay un turno sin cerrar' : `Hay ${borradoresViejos.length} turnos sin cerrar`}>
             <ul className="mt-1 space-y-1">
               {borradoresViejos.slice(0, 5).map((b) => (
                 <li key={b.id}>
@@ -79,8 +77,7 @@ export default function Hoy() {
                 </li>
               ))}
             </ul>
-          </div>
-        </section>
+        </AvisoAmbar>
       )}
 
       {resumen.isPending && turnos.isPending ? <EsqueletoContenido sinTitulo /> : (
@@ -100,7 +97,7 @@ export default function Hoy() {
                 </Link>
               </div>
             )}
-            <div className="flex gap-3 mt-4 pt-3.5 border-t border-hairline">
+            <div className="flex gap-2.5 min-[360px]:gap-3 mt-4 pt-3.5 border-t border-hairline">
               <Dato label="Ventas">{clp(totalVentas)}</Dato>
               <span className="w-px bg-hairline" aria-hidden="true" />
               <Dato label="Proveedores" className={Number(r?.total_proveedores ?? 0) > 0 ? 'text-neg' : 'text-ink'}>{Number(r?.total_proveedores ?? 0) > 0 ? '−' : ''}{clp(r?.total_proveedores ?? 0)}</Dato>
@@ -145,7 +142,7 @@ export default function Hoy() {
                 <MetodoLogo metodo={m} />
                 <span className="flex-1 min-w-0 text-md font-medium text-ink truncate">{m.label}</span>
                 <span className="text-xs text-muted2 tabular-nums">{totalVentas ? Math.round((m.monto / totalVentas) * 100) : 0}%</span>
-                <span className="cifra text-base text-ink min-w-[86px] text-right">{clp(m.monto)}</span>
+                <span className="cifra text-base text-ink min-[360px]:min-w-[86px] text-right">{clp(m.monto)}</span>
               </div>
             ))}
             {porMetodo.length > 3 && (
@@ -194,7 +191,7 @@ export function Dato({ label, className = 'text-ink', children }: { label: strin
   return (
     <div className="flex-1 min-w-0">
       <p className="text-xs leading-none text-muted mb-[5px]">{label}</p>
-      <p className={`cifra text-base leading-none truncate ${className}`}>{children}</p>
+      <p className={`cifra text-sm min-[360px]:text-base leading-none truncate ${className}`}>{children}</p>
     </div>
   )
 }

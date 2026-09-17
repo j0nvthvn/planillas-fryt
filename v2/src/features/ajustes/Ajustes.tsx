@@ -44,7 +44,7 @@ export default function Ajustes() {
   const { config } = useConfig()
   return (
     <div className="max-w-3xl mx-auto">
-      <PageHeader eyebrow={config.nombreLocal || 'FrytControl'} title="Ajustes" action={<button type="button" className="hit btn min-h-[40px] rounded-[11px] px-3 text-sm bg-card text-ink2 border border-hairline-strong hover:bg-soft" onClick={() => void cerrarSesion()}><Icon name="logout" className="w-4 h-4" />Salir</button>} />
+      <PageHeader eyebrow={config.nombreLocal || 'FrytControl'} title="Ajustes" action={<button type="button" className="btn-secondary btn-bar" onClick={() => void cerrarSesion()}><Icon name="logout" className="w-4 h-4" />Salir</button>} />
       {/* Cada sección tiene su URL: es navegación, no pestañas. */}
       <nav className="flex gap-1.5 overflow-x-auto -mx-4 px-4 pb-3 md:flex-wrap md:mx-0 md:px-0" aria-label="Secciones de Ajustes">
         {SECCIONES.map((s) => (
@@ -72,10 +72,10 @@ export default function Ajustes() {
 }
 
 /** `apilar`: en el celular la etiqueta va arriba y el campo abajo a todo lo ancho. */
-function Fila({ label, hint, apilar, children }: { label: string; hint?: string; apilar?: boolean; children: ReactNode }) {
+function Fila({ label, hint, apilar, alta, children }: { label: string; hint?: string; apilar?: boolean; alta?: boolean; children: ReactNode }) {
   return (
-    <div className={`flex justify-between gap-3 px-4 py-2.5 min-h-[60px] ${apilar ? 'flex-col items-stretch gap-2 sm:flex-row sm:items-center' : 'items-center'}`}>
-      <div className="min-w-0"><p className="text-base font-medium text-ink">{label}</p>{hint && <p className="text-xs text-muted mt-0.5">{hint}</p>}</div>
+    <div className={`flex justify-between gap-3 px-4 py-2.5 ${alta ? 'min-h-[68px]' : 'min-h-[60px]'} ${apilar ? 'flex-col items-stretch gap-2 sm:flex-row sm:items-center' : 'items-center'}`}>
+      <div className="min-w-0"><p className="text-base font-medium text-ink">{label}</p>{hint && <p className="text-xs text-muted tabular-nums mt-0.5">{hint}</p>}</div>
       {children}
     </div>
   )
@@ -115,7 +115,7 @@ function General() {
           </div>
         </div>
       </div>
-      {form && <button type="button" className="btn-primary w-full mt-3" disabled={guardar.isPending} onClick={() => guardar.mutate(form, { onSuccess: () => { setForm(null); toast.ok('Ajustes guardados') }, onError: (e) => toast.error(mensajeDeError(e)) })}>{guardar.isPending ? 'Guardando…' : 'Guardar cambios'}</button>}
+      {form && <button type="button" className="btn-primary btn-lg w-full mt-3" disabled={guardar.isPending} onClick={() => guardar.mutate(form, { onSuccess: () => { setForm(null); toast.ok('Ajustes guardados') }, onError: (e) => toast.error(mensajeDeError(e)) })}>{guardar.isPending ? 'Guardando…' : 'Guardar cambios'}</button>}
       <h2 className="eyebrow mt-5 mb-[9px]">Aplicación</h2>
       <div className="space-y-3">
         <TiempoDeCierre />
@@ -221,7 +221,7 @@ function Papelera() {
       <p className="text-sm leading-relaxed text-muted">Turnos eliminados. Se pueden restaurar o borrar definitivamente.</p>
       <div className="card p-0 divide-y divide-hairline overflow-hidden">
         {(lista.data ?? []).map((t) => (
-          <Fila key={t.id} label={`${fechaDiaMes(t.jornada?.fecha)} · ${etiquetaModo(t.jornada?.es_turno_unico && t.tipo === 'mañana' ? 'completo' : t.tipo)}`} hint={`ventas ${clp(totalVentas(t.ventas))} · eliminado ${fechaHora(t.deleted_at)}`}>
+          <Fila key={t.id} alta label={`${fechaDiaMes(t.jornada?.fecha)} · ${etiquetaModo(t.jornada?.es_turno_unico && t.tipo === 'mañana' ? 'completo' : t.tipo)}`} hint={`ventas ${clp(totalVentas(t.ventas))} · eliminado ${fechaHora(t.deleted_at)}`}>
             <div className="flex items-center gap-1.5">
               <button type="button" className={`${ACCION} font-semibold border border-hairline-strong text-ink2 hover:bg-soft`} aria-label={`Restaurar ${fechaDiaMes(t.jornada?.fecha)}`} onClick={() => void run(() => restaurarTurno(t.id, t.jornada?.fecha ?? ''), 'Turno restaurado')}><Icon name="undo" className="w-3.5 h-3.5" />Restaurar</button>
               <button type="button" className={`${ACCION} w-[34px] px-0 text-neg hover:bg-neg-tint`} onClick={() => setPurgar(t.id)} aria-label={`Borrar definitivamente ${fechaDiaMes(t.jornada?.fecha)}`}><Icon name="trash" className="w-4 h-4" /></button>
@@ -277,7 +277,7 @@ function Usuarios() {
           <label className="block"><span className="label">Contraseña</span>
             <input className="input" type="password" minLength={8} value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} required autoComplete="new-password" aria-describedby="cuenta-clave-ayuda" /></label>
           <p id="cuenta-clave-ayuda" className="text-xs text-muted -mt-1.5">Mínimo 8 caracteres.</p>
-          <div className="flex gap-2"><button type="button" className="btn-secondary flex-1" onClick={() => setForm(null)}>Cancelar</button><button type="submit" className="btn-primary flex-1" disabled={ocupado}>{ocupado ? 'Creando…' : 'Crear cuenta'}</button></div>
+          <div className="flex gap-2"><button type="button" className="btn-secondary btn-lg flex-1" onClick={() => setForm(null)}>Cancelar</button><button type="submit" className="btn-primary btn-lg flex-1" disabled={ocupado}>{ocupado ? 'Creando…' : 'Crear cuenta'}</button></div>
         </form>
       ) : <button type="button" className="btn-secondary w-full" onClick={() => setForm({ nombre: '', email: '', password: '' })}><Icon name="plus" className="w-4 h-4" />Nueva cuenta</button>}
     </div>
