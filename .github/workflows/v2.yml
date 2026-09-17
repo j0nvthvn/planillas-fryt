@@ -33,3 +33,11 @@ jobs:
       # SMOKE_PASSWORD, que no está acá (se corren a mano, ver v2/README.md).
       - run: pnpm test --mode staging
       - run: pnpm build
+      # Plantillas de correo (supabase/functions/_shared/correo): TypeScript
+      # puro, se prueba con Node y se chequean tipos con el tsc de la v2.
+      - name: correos
+        run: |
+          node --test ../supabase/functions/_shared/correo/
+          pnpm exec tsc --noEmit --allowImportingTsExtensions --target es2022 --lib es2022,dom \
+            --module esnext --moduleResolution bundler --strict --skipLibCheck --types node \
+            ../supabase/functions/_shared/correo/{cierre,periodo,envio}.ts ../scripts/correos/vista-previa.ts

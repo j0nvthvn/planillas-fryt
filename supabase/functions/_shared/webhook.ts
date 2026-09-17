@@ -28,26 +28,3 @@ export function verificarWebhook(req: Request): Response | null {
   }
   return null
 }
-
-const TZ = 'America/Santiago'
-
-/** "YYYY-MM-DD" de un instante, en hora de Chile (nunca UTC). */
-export function fechaChile(d: Date = new Date()): string {
-  // en-CA formatea como YYYY-MM-DD
-  return new Intl.DateTimeFormat('en-CA', {
-    timeZone: TZ, year: 'numeric', month: '2-digit', day: '2-digit',
-  }).format(d)
-}
-
-/** Suma días a una fecha "YYYY-MM-DD" sin pasar por zonas horarias. */
-export function sumarDias(fecha: string, dias: number): string {
-  const [y, m, d] = fecha.split('-').map(Number)
-  const t = Date.UTC(y, m - 1, d + dias)
-  return new Date(t).toISOString().slice(0, 10)
-}
-
-/** 0 = domingo … 6 = sábado, para una fecha "YYYY-MM-DD". */
-export function diaSemana(fecha: string): number {
-  const [y, m, d] = fecha.split('-').map(Number)
-  return new Date(Date.UTC(y, m - 1, d)).getUTCDay()
-}
