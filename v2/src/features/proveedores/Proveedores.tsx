@@ -37,6 +37,8 @@ export default function Proveedores() {
     return [...grupos.values()].filter((g) => g.length > 1)
   }, [catalogo.data])
 
+  const activos = (catalogo.data ?? []).filter((p) => p.activo).length
+
   async function crear() {
     if (!nuevo?.trim()) return
     setCreando(true)
@@ -49,28 +51,31 @@ export default function Proveedores() {
 
   return (
     <div className="max-w-3xl mx-auto">
-      <PageHeader eyebrow="Catálogo" title="Proveedores" action={<button type="button" className="btn-primary px-3" onClick={() => setNuevo('')}><Icon name="plus" className="w-5 h-5" stroke={2.2} />Nuevo</button>} />
-      <div className="relative mb-3">
-        <Icon name="search" className="w-[18px] h-[18px] absolute left-3.5 top-1/2 -translate-y-1/2 text-muted2" />
-        <input type="search" className="input pl-10" placeholder="Buscar proveedor" value={q} onChange={(e) => setQ(e.target.value)} aria-label="Buscar proveedor" />
+      <PageHeader eyebrow={`Catálogo · ${activos} activo${activos === 1 ? '' : 's'}`} title="Proveedores" action={<button type="button" className="btn-primary min-h-[40px] rounded-[11px] px-3 text-[13px]" onClick={() => setNuevo('')}><Icon name="plus" className="w-4 h-4" stroke={2.2} />Nuevo</button>} />
+      <div className="relative mb-2">
+        <Icon name="search" className="w-[17px] h-[17px] absolute left-[13px] top-1/2 -translate-y-1/2 text-muted" />
+        <input type="search" className="input min-h-[44px] py-2.5 pl-10" placeholder="Buscar proveedor" value={q} onChange={(e) => setQ(e.target.value)} aria-label="Buscar proveedor" />
       </div>
-      <label className="flex items-center gap-2 min-h-[40px] text-sm text-ink2 mb-1 px-1"><input type="checkbox" className="w-5 h-5 accent-brand" checked={verInactivos} onChange={(e) => setVerInactivos(e.target.checked)} />Mostrar inactivos</label>
+      <label className="flex items-center gap-2.5 min-h-[40px] text-[13px] text-ink2 mb-1.5"><input type="checkbox" className="w-5 h-5 rounded-[5px] accent-brand" checked={verInactivos} onChange={(e) => setVerInactivos(e.target.checked)} />Mostrar inactivos</label>
 
       {sospechosos.length > 0 && !q && (
-        <div className="mb-3 rounded-2xl bg-warn-tint border border-warn/30 px-4 py-3 text-sm text-warn">
-          <p className="font-semibold">Posibles duplicados</p>
-          <ul className="mt-1 space-y-0.5">{sospechosos.slice(0, 6).map((g) => <li key={g.join('|')}>{g.join(' · ')}</li>)}</ul>
-          <p className="mt-1 text-xs">Ábrelos y usa “Fusionar con…” para unificarlos.</p>
+        <div className="mb-3 rounded-[14px] bg-warn-tint border border-hairline px-4 py-3 flex items-start gap-3">
+          <span className="w-[30px] h-[30px] rounded-[9px] bg-warn/15 grid place-items-center shrink-0"><Icon name="warning" className="w-4 h-4 text-warn" stroke={2} /></span>
+          <div className="min-w-0 flex-1">
+            <p className="text-[13px] font-semibold text-warn mt-1.5">Posibles duplicados</p>
+            <ul className="mt-1 space-y-0.5 text-xs text-ink2">{sospechosos.slice(0, 6).map((g) => <li key={g.join('|')}>{g.join(' · ')}</li>)}</ul>
+            <p className="mt-1.5 text-xs font-semibold text-warn">Ábrelos y usa “Fusionar con…” para unificarlos.</p>
+          </div>
         </div>
       )}
 
       {catalogo.isPending ? <Spinner /> : (
         <div className="card p-0 divide-y divide-hairline overflow-hidden">
           {lista.map((p) => (
-            <Link key={p.id} to="/proveedores/$id" params={{ id: p.id }} className={`flex items-center gap-3 px-4 py-3 min-h-[60px] hover:bg-soft/60 ${p.activo ? '' : 'opacity-55'}`}>
+            <Link key={p.id} to="/proveedores/$id" params={{ id: p.id }} className={`row py-2.5 hover:bg-soft/60 ${p.activo ? '' : 'opacity-55'}`}>
               <ProveedorAvatar nombre={p.nombre} imagenUrl={p.imagen_url} />
-              <span className="flex-1 min-w-0"><span className="block text-base font-medium text-ink truncate">{p.nombre}</span><span className="block text-xs text-muted">{p.usos ? `${p.usos} compra${p.usos === 1 ? '' : 's'} recientes` : 'Sin compras recientes'}{p.activo ? '' : ' · inactivo'}</span></span>
-              <Icon name="chevR" className="w-4 h-4 text-muted2" />
+              <span className="flex-1 min-w-0"><span className="block text-[15px] font-medium text-ink truncate">{p.nombre}</span><span className="block text-xs text-muted mt-0.5">{p.usos ? `${p.usos} compra${p.usos === 1 ? '' : 's'} recientes` : 'Sin compras recientes'}{p.activo ? '' : ' · inactivo'}</span></span>
+              <Icon name="chevR" className="w-[15px] h-[15px] text-muted2 shrink-0" />
             </Link>
           ))}
           {lista.length === 0 && <p className="text-center text-muted py-8 text-sm">Sin resultados.</p>}

@@ -4,6 +4,7 @@ import PageHeader from '@/components/PageHeader'
 import Spinner from '@/components/Spinner'
 import Icon from '@/components/Icon'
 import { EstadoChip } from '@/features/hoy/Hoy'
+import { PILDORA, PILDORA_ON, PILDORA_OFF } from '@/components/pildora'
 import { supabase } from '@/lib/supabase'
 import { qk } from '@/lib/query'
 import type { VResumenDia } from '@/features/turno/api'
@@ -46,12 +47,12 @@ export default function Historial() {
 
   return (
     <div className="max-w-3xl mx-auto">
-      <PageHeader eyebrow="FrytControl" title="Historial" />
-      <div className="flex gap-2 overflow-x-auto -mx-4 px-4 pb-3 md:flex-wrap md:mx-0 md:px-0" role="group" aria-label="Filtro">
+      <PageHeader eyebrow="Día a día" title="Historial" />
+      <div className="flex gap-1.5 overflow-x-auto -mx-4 px-4 pb-3 md:flex-wrap md:mx-0 md:px-0" role="group" aria-label="Filtro">
         {FILTROS.map((f) => (
           <button key={f.v} type="button" aria-pressed={filtro === f.v}
             onClick={() => void navigate({ to: '/historial', search: { filtro: f.v } })}
-            className={`shrink-0 min-h-[40px] rounded-full px-4 text-sm font-semibold border ${filtro === f.v ? 'bg-brand text-on-solid border-brand' : 'bg-card text-ink2 border-hairline'}`}>
+            className={`${PILDORA} ${filtro === f.v ? PILDORA_ON : PILDORA_OFF}`}>
             {f.label}
           </button>
         ))}
@@ -60,10 +61,10 @@ export default function Historial() {
       {q.isPending ? <Spinner /> : filas.length === 0 ? (
         <p className="text-center text-muted py-10">Nada que mostrar con este filtro.</p>
       ) : (
-        <div className="space-y-2">
+        <div className="space-y-1">
           {meses.map(({ mes, dias }) => (
             <section key={mes} aria-label={mesAnio(`${mes}-01`)}>
-              <h2 className="sticky -top-5 z-10 -mx-4 px-5 pt-3 pb-2 bg-canvas/95 backdrop-blur eyebrow md:mx-0 md:px-1">{mesAnio(`${mes}-01`)}</h2>
+              <h2 className="sticky -top-5 z-10 -mx-4 px-4 pt-3 pb-2 bg-canvas eyebrow md:mx-0 md:px-0">{mesAnio(`${mes}-01`)}</h2>
               <div className="card p-0 divide-y divide-hairline overflow-hidden">
                 {dias.map((d) => <FilaDia key={d.jornada_id} d={d} />)}
               </div>
@@ -72,7 +73,7 @@ export default function Historial() {
         </div>
       )}
       {q.hasNextPage && (
-        <button type="button" className="btn-secondary w-full mt-3" disabled={q.isFetchingNextPage} onClick={() => void q.fetchNextPage()}>
+        <button type="button" className="btn-secondary w-full mt-3 min-h-[46px] rounded-[12px]" disabled={q.isFetchingNextPage} onClick={() => void q.fetchNextPage()}>
           {q.isFetchingNextPage ? 'Cargando…' : 'Ver más días'}
         </button>
       )}
@@ -81,33 +82,30 @@ export default function Historial() {
 }
 
 function FilaDia({ d }: { d: VResumenDia }) {
-  const [dia, , mes] = fechaDiaMes(d.fecha).split(' ')
+  const dia = fechaDiaMes(d.fecha).split(' ')[0]?.replace(',', '')
   return (
-    <Link to="/dia" search={{ fecha: d.fecha }} className="flex items-center gap-2.5 min-[390px]:gap-3 px-4 py-3 min-h-[64px] hover:bg-soft/60">
-      <div className="w-10 shrink-0 text-center">
-        <p className="text-xs font-bold uppercase text-muted">{dia?.replace(',', '')}</p>
-        <p className="text-xl font-display leading-none text-ink">{Number(d.fecha.slice(8, 10))}</p>
-        <p className="text-xs text-muted2">{mes}</p>
+    <Link to="/dia" search={{ fecha: d.fecha }} className="flex items-center gap-3 px-4 py-2.5 min-h-[72px] hover:bg-soft/60 active:bg-soft">
+      <div className={`w-[46px] h-[46px] shrink-0 rounded-[10px] border border-hairline grid place-content-center text-center ${d.tiene_borrador ? 'bg-warn-tint' : 'bg-soft'}`}>
+        <p className="text-[10px] leading-none font-semibold uppercase text-muted">{dia}</p>
+        <p className="font-display text-lg leading-none font-semibold tabular-nums text-ink mt-[3px]">{Number(d.fecha.slice(8, 10))}</p>
       </div>
-      {/* Etiquetas arriba a todo lo ancho y montos abajo: en 375 px "Falta la tarde" chocaba con el neto. */}
       <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-x-2 gap-y-1 flex-wrap">
+        <div className="flex items-center gap-1 flex-wrap">
           <EstadoChip estado={d.estado} />
-          {d.corregido && <span className="text-xs font-bold uppercase text-info">corregido</span>}
-          {d.con_descuadre && <span className="text-xs font-bold uppercase text-neg">descuadre</span>}
+          {d.corregido && <span className="badge bg-brand-tint text-brand">Corregido</span>}
+          {d.con_descuadre && <span className="badge bg-neg-tint text-neg">Descuadre</span>}
         </div>
-        <div className="flex items-end justify-between gap-2 mt-1">
-          <p className="text-xs text-muted flex flex-col tabular-nums">
-            <span className="whitespace-nowrap">ventas {clp(d.total_ventas)}</span>
-            <span className="whitespace-nowrap">prov. {clp(d.total_proveedores)}</span>
-          </p>
-          <p className="text-right shrink-0">
-            <span className={`block cifra text-base min-[390px]:text-lg leading-tight ${(d.neto ?? 0) >= 0 ? 'text-ink' : 'text-neg'}`}>{clp(d.neto)}</span>
-            <span className="block text-xs uppercase text-muted2">neto</span>
-          </p>
-        </div>
+        {/* En 320 px ventas y proveedores no caben en una línea: se parten sin cortar cifras. */}
+        <p className="text-xs text-muted tabular-nums mt-1.5 flex flex-wrap gap-x-1">
+          <span className="whitespace-nowrap">{clp(d.total_ventas)} ventas</span>
+          <span className="whitespace-nowrap"><span className="max-[389px]:hidden" aria-hidden="true">· </span>{clp(d.total_proveedores)} prov.</span>
+        </p>
       </div>
-      <Icon name="chevR" className="w-4 h-4 text-muted2 shrink-0" />
+      <p className="text-right shrink-0">
+        <span className={`block cifra text-base min-[390px]:text-lg leading-tight ${(d.neto ?? 0) >= 0 ? 'text-ink' : 'text-neg'}`}>{clp(d.neto)}</span>
+        <span className="block text-[11px] text-muted">neto</span>
+      </p>
+      <Icon name="chevR" className="w-[15px] h-[15px] text-muted2 shrink-0" />
     </Link>
   )
 }
