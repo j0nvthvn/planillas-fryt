@@ -51,7 +51,7 @@ Deno.serve(async (req) => {
     // Turno + jornada + quién lo registró, en una sola consulta.
     const { data: turno, error: errTurno } = await supabase
       .from('turnos')
-      .select('id, tipo, fondo_inicial, jornada:jornadas(fecha, es_turno_unico), usuario:usuarios!turnos_usuario_id_fkey(nombre)')
+      .select('id, tipo, fondo_inicial, jornada:jornadas(fecha, es_turno_unico), usuario:usuarios!turnos_usuario_id_fkey(nombre), trabajador:trabajadores(nombre)')
       .eq('id', cierre.turno_id)
       .maybeSingle()
     if (errTurno || !turno) {
@@ -60,6 +60,7 @@ Deno.serve(async (req) => {
     }
     const jornada = turno.jornada as unknown as { fecha: string; es_turno_unico: boolean } | null
     const usuario = turno.usuario as unknown as { nombre: string } | null
+    const trabajador = turno.trabajador as unknown as { nombre: string } | null
 
     const { data: cerrador } = await supabase
       .from('usuarios').select('nombre').eq('id', cierre.cerrado_por).maybeSingle()
@@ -84,6 +85,7 @@ Deno.serve(async (req) => {
       etiquetaTurno,
       ventas: cierre.ventas_snapshot ?? {},
       proveedores: cierre.proveedores_snapshot ?? [],
+      atendio: trabajador?.nombre ?? null,
       registrador: usuario?.nombre ?? 'Desconocido',
       cerradoPor: cerrador?.nombre ?? null,
       fondoInicial: Number(turno.fondo_inicial) || 0,
@@ -159,6 +161,8 @@ interface BuildEmailParams {
   etiquetaTurno: string
   ventas: Record<string, unknown>
   proveedores: Array<{ nombre: string; monto: number; forma_pago: string }>
+  /** Trabajador elegido al cerrar (la v2); los trabajadores no tienen cuenta. */
+  atendio: string | null
   registrador: string
   cerradoPor: string | null
   fondoInicial: number
@@ -168,7 +172,7 @@ interface BuildEmailParams {
 }
 
 function buildEmailTurno({
-  fecha, etiquetaTurno, ventas, proveedores, registrador, cerradoPor,
+  fecha, etiquetaTurno, ventas, proveedores, atendio, registrador, cerradoPor,
   fondoInicial, efectivoEsperado, efectivoContado, diferencia,
 }: BuildEmailParams): string {
   const totalVentas = METODOS.reduce((s, m) => s + (Number(ventas[m.key]) || 0), 0)
@@ -267,7 +271,7 @@ function buildEmailTurno({
 
     <!-- Footer -->
     <div style="padding:16px 28px 24px;border-top:1px solid #f0ebe3;">
-      <p style="margin:0;font-size:12px;color:#9ca3af;">Registrado por <strong style="color:#374151;">${escapeHtml(registrador)}</strong>${cerradoPor && cerradoPor !== registrador ? ` · cerrado por <strong style="color:#374151;">${escapeHtml(cerradoPor)}</strong>` : ''}</p>
+      <p style="margin:0;font-size:12px;color:#9ca3af;">${atendio ? `Atendió <strong style="color:#374151;">${escapeHtml(atendio)}</strong> · ` : ''}Registrado por <strong style="color:#374151;">${escapeHtml(registrador)}</strong>${cerradoPor && cerradoPor !== registrador ? ` · cerrado por <strong style="color:#374151;">${escapeHtml(cerradoPor)}</strong>` : ''}</p>
     </div>
   </div>
 </body>

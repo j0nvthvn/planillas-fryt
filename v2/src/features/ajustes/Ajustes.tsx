@@ -81,6 +81,9 @@ function Fila({ label, hint, apilar, alta, children }: { label: string; hint?: s
   )
 }
 
+/** Un correo mal escrito hace que Resend rechace el envío completo, incluido el de la dueña. */
+const correoValido = (c: string) => c === '' || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(c)
+
 const DIAS = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']
 const DIAS_LARGOS = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado']
 
@@ -115,7 +118,17 @@ function General() {
           </div>
         </div>
       </div>
-      {form && <button type="button" className="btn-primary btn-lg w-full mt-3" disabled={guardar.isPending} onClick={() => guardar.mutate(form, { onSuccess: () => { setForm(null); toast.ok('Ajustes guardados') }, onError: (e) => toast.error(mensajeDeError(e)) })}>{guardar.isPending ? 'Guardando…' : 'Guardar cambios'}</button>}
+      <h2 className="eyebrow mt-5 mb-[9px]">Correos</h2>
+      <div className="card p-0 divide-y divide-hairline overflow-hidden">
+        <Fila label="Aviso de cada cierre y resúmenes" hint="Llegan a las cuentas de dueño">
+          <button type="button" role="switch" aria-checked={f.notificacionesActivas} aria-label="Enviar correos" onClick={() => set({ notificacionesActivas: !f.notificacionesActivas })}
+            className={`${ACCION} font-semibold ${f.notificacionesActivas ? 'bg-pos-tint text-pos' : 'bg-neg-tint text-neg'}`}>{f.notificacionesActivas ? 'Activos' : 'Apagados'}</button>
+        </Fila>
+        <Fila apilar label="Correo adicional" hint={correoValido(f.notificacionesEmailExtra) ? 'Opcional: otra persona que también los recibe' : 'Revisa el correo: no parece válido'}>
+          <input type="email" inputMode="email" autoComplete="email" className={`input ${CAMPO} w-full sm:w-56 sm:text-right`} placeholder="nombre@correo.cl" value={f.notificacionesEmailExtra} onChange={(e) => set({ notificacionesEmailExtra: e.target.value.trim() })} aria-label="Correo adicional" aria-invalid={!correoValido(f.notificacionesEmailExtra)} disabled={!f.notificacionesActivas} />
+        </Fila>
+      </div>
+      {form && <button type="button" className="btn-primary btn-lg w-full mt-3" disabled={guardar.isPending || !correoValido(form.notificacionesEmailExtra)} onClick={() => guardar.mutate(form, { onSuccess: () => { setForm(null); toast.ok('Ajustes guardados') }, onError: (e) => toast.error(mensajeDeError(e)) })}>{guardar.isPending ? 'Guardando…' : 'Guardar cambios'}</button>}
       <h2 className="eyebrow mt-5 mb-[9px]">Aplicación</h2>
       <div className="space-y-3">
         <TiempoDeCierre />
