@@ -103,7 +103,7 @@ export default function Hoy() {
             <div className="flex gap-3 mt-4 pt-3.5 border-t border-hairline">
               <Dato label="Ventas">{clp(totalVentas)}</Dato>
               <span className="w-px bg-hairline" aria-hidden="true" />
-              <Dato label="Proveedores" className="text-neg">{Number(r?.total_proveedores ?? 0) > 0 ? '−' : ''}{clp(r?.total_proveedores ?? 0)}</Dato>
+              <Dato label="Proveedores" className={Number(r?.total_proveedores ?? 0) > 0 ? 'text-neg' : 'text-ink'}>{Number(r?.total_proveedores ?? 0) > 0 ? '−' : ''}{clp(r?.total_proveedores ?? 0)}</Dato>
               <span className="w-px bg-hairline" aria-hidden="true" />
               <Dato label="Turnos">{Math.min(lista.length, turnosEsperados)} de {turnosEsperados}</Dato>
             </div>
