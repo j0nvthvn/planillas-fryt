@@ -62,7 +62,7 @@ export default function ProveedorDetalle() {
       <div className="card flex items-center gap-4 mb-4">
         <button type="button" onClick={() => fileRef.current?.click()} className="relative" aria-label="Cambiar logo">
           <ProveedorAvatar nombre={prov.nombre} imagenUrl={prov.imagen_url} size="lg" />
-          <span className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-brand text-on-solid grid place-items-center border-2 border-card"><Icon name="camera" className="w-3.5 h-3.5" /></span>
+          <span className="absolute -bottom-1 -right-1 w-7 h-7 rounded-[9px] bg-brand text-on-solid grid place-items-center border-2 border-card"><Icon name="camera" className="w-3.5 h-3.5" /></span>
         </button>
         <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={(e) => {
           const f = e.target.files?.[0]
@@ -82,14 +82,14 @@ export default function ProveedorDetalle() {
         </div>
       </div>
 
-      <h2 className="eyebrow mb-2 px-1">Compras</h2>
-      {compras.isPending ? <Spinner className="py-6" /> : (compras.data ?? []).length === 0 ? <p className="text-sm text-muted px-1">Sin compras registradas.</p> : (
+      <h2 className="eyebrow mb-[9px]">Compras</h2>
+      {compras.isPending ? <Spinner className="py-6" /> : (compras.data ?? []).length === 0 ? <p className="text-sm text-muted">Sin compras registradas.</p> : (
         <div className="card p-0 divide-y divide-hairline overflow-hidden">
           {(compras.data ?? []).map((c) => (
             <Link key={c.id} to="/dia" search={{ fecha: c.turno?.jornada?.fecha ?? '' }} className="flex items-center gap-3 px-4 py-2.5 min-h-[52px] hover:bg-soft/60">
-              <span className={`w-2 h-2 rounded-full ${c.forma_pago === 'efectivo' ? 'bg-pos' : 'bg-info'}`} />
+              <span className={`w-[7px] h-[7px] rounded-full shrink-0 ${c.forma_pago === 'efectivo' ? 'bg-pos' : 'bg-brand'}`} />
               <span className="flex-1 text-sm text-ink capitalize">{fechaDiaMes(c.turno?.jornada?.fecha)} <span className="text-muted text-xs">· {c.turno?.tipo}</span></span>
-              <span className="font-semibold tabular-nums text-ink text-sm">{clp(c.monto)}</span>
+              <span className="cifra text-sm text-neg">{Number(c.monto) ? '−' : ''}{clp(c.monto)}</span>
             </Link>
           ))}
         </div>
@@ -110,7 +110,7 @@ export default function ProveedorDetalle() {
           <div className="flex flex-col gap-1 max-h-[40vh] overflow-y-auto">
             {candidatos.map((c) => (
               <button key={c.id} type="button" onClick={() => setFusion({ ...fusion, destino: c.id })}
-                className={`flex items-center gap-3 rounded-xl px-3 py-2 text-left border ${fusion.destino === c.id ? 'bg-brand-tint border-brand text-brand' : 'bg-card border-hairline text-ink'}`}>
+                className={`flex items-center gap-3 rounded-[12px] px-3 py-2 text-left border transition-colors ${fusion.destino === c.id ? 'bg-brand-tint border-brand/40 text-brand' : 'bg-card border-hairline-strong text-ink hover:bg-soft'}`}>
                 <ProveedorAvatar nombre={c.nombre} imagenUrl={c.imagen_url} size="sm" /><span className="flex-1 text-base font-medium">{c.nombre}</span><span className="text-xs text-muted">{c.usos} usos</span>
               </button>
             ))}

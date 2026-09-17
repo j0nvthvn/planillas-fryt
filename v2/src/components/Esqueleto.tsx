@@ -3,7 +3,7 @@
  * cosa en vez de un spinner en una página vacía.
  */
 function Bloque({ className }: { className: string }) {
-  return <div className={`rounded-2xl bg-soft animate-pulse ${className}`} />
+  return <div className={`rounded-[16px] bg-soft animate-pulse ${className}`} />
 }
 
 /** Contenido de una pantalla: título, cifra y tarjetas. */

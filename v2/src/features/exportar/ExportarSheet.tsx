@@ -61,7 +61,7 @@ export function ExportarSheet({ resumen, onClose }: { resumen: Resumen; onClose:
     <BottomSheet title="Exportar" onClose={onClose}>
       <p className="text-sm text-muted">Del {fechaCorta(desde)} al {fechaCorta(hasta)}</p>
       {borradores > 0 && (
-        <p role="status" className="text-sm text-warn bg-warn-tint rounded-xl px-3 py-2">
+        <p role="status" className="text-[13px] font-medium text-warn bg-warn-tint border border-hairline rounded-[12px] px-3.5 py-2.5">
           {borradores} día{borradores === 1 ? '' : 's'} con borrador: esos montos todavía pueden cambiar.
         </p>
       )}
@@ -69,10 +69,10 @@ export function ExportarSheet({ resumen, onClose }: { resumen: Resumen; onClose:
         {OPCIONES.map((o) => (
           <li key={o.id}>
             <button type="button" onClick={() => void exportar(o.id)} disabled={ocupado !== null}
-              className="w-full flex items-center gap-3 text-left rounded-2xl border border-hairline bg-card px-4 py-3 min-h-[64px] disabled:opacity-60">
-              <span className="w-10 h-10 shrink-0 rounded-full grid place-items-center bg-brand-tint text-brand"><Icon name={o.icon} className="w-5 h-5" /></span>
+              className="w-full flex items-center gap-3 text-left rounded-[14px] border border-hairline-strong bg-card px-4 py-3 min-h-[64px] hover:bg-soft disabled:opacity-60">
+              <span className="w-10 h-10 shrink-0 rounded-[11px] grid place-items-center bg-brand-tint text-brand"><Icon name={o.icon} className="w-5 h-5" /></span>
               <span className="flex-1 min-w-0">
-                <span className="block font-semibold text-ink">{o.titulo}{o.id === 'excel' && <span className="ml-2 text-xs font-bold uppercase text-pos">Recomendado</span>}</span>
+                <span className="block font-semibold text-ink">{o.titulo}{o.id === 'excel' && <span className="badge ml-2 bg-pos-tint text-pos">Recomendado</span>}</span>
                 <span className="block text-xs text-muted">{ocupado === o.id ? 'Preparando…' : o.detalle}</span>
               </span>
               <Icon name={compartible && compartir ? 'chevR' : 'download'} className="w-4 h-4 text-muted shrink-0" />
@@ -81,8 +81,8 @@ export function ExportarSheet({ resumen, onClose }: { resumen: Resumen; onClose:
         ))}
         <li>
           <Link to="/analisis/reporte" search={{ desde, hasta }} onClick={onClose}
-            className="w-full flex items-center gap-3 rounded-2xl border border-hairline bg-card px-4 py-3 min-h-[64px]">
-            <span className="w-10 h-10 shrink-0 rounded-full grid place-items-center bg-brand-tint text-brand"><Icon name="chart" className="w-5 h-5" /></span>
+            className="w-full flex items-center gap-3 rounded-[14px] border border-hairline-strong bg-card px-4 py-3 min-h-[64px] hover:bg-soft">
+            <span className="w-10 h-10 shrink-0 rounded-[11px] grid place-items-center bg-brand-tint text-brand"><Icon name="chart" className="w-5 h-5" /></span>
             <span className="flex-1 min-w-0">
               <span className="block font-semibold text-ink">Reporte para imprimir o PDF</span>
               <span className="block text-xs text-muted">Resumen del período en una página, listo para guardar como PDF</span>

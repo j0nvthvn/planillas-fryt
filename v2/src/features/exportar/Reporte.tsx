@@ -87,8 +87,8 @@ export default function Reporte() {
 
 function Kpi({ label, value, anterior, invertir }: { label: string; value: number; anterior: number; invertir?: boolean }) {
   return (
-    <div className="rounded-xl border border-hairline bg-card px-3 py-2 print:break-inside-avoid">
-      <p className="text-xs font-bold uppercase text-muted">{label}</p>
+    <div className="rounded-[12px] border border-hairline bg-card px-3 py-2 print:break-inside-avoid">
+      <p className="text-xs text-muted">{label}</p>
       <p className={`cifra text-lg ${value < 0 ? 'text-neg' : ''}`}>{clp(value)}</p>
       <div className="min-h-[16px]">{invertir ? <DeltaBadge actual={-value} anterior={-anterior} /> : <DeltaBadge actual={value} anterior={anterior} />}</div>
     </div>

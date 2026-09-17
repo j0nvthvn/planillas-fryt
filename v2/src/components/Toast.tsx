@@ -72,7 +72,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   return (
     <ToastContext.Provider value={value}>
       {children}
-      <div ref={capa} popover={SOPORTA_POPOVER ? 'manual' : undefined} className="above-nav fixed inset-x-0 inset-y-auto z-[60] w-full max-w-none m-0 p-0 px-4 border-0 bg-transparent overflow-visible pointer-events-none" style={{ display: 'block', bottom: 'calc(60px + max(8px, env(safe-area-inset-bottom)) + var(--sticky-bar-h, 0px))' }}>
+      <div ref={capa} popover={SOPORTA_POPOVER ? 'manual' : undefined} className="above-nav fixed inset-x-0 inset-y-auto z-[60] w-full max-w-none m-0 p-0 px-4 border-0 bg-transparent overflow-visible pointer-events-none" style={{ display: 'block', bottom: 'calc(58px + max(10px, env(safe-area-inset-bottom)) + var(--sticky-bar-h, 0px))' }}>
         <div className="max-w-md mx-auto flex flex-col gap-2">
           {toasts.map((t) => <ToastView key={t.id} toast={t} onHide={() => hide(t.id)} />)}
         </div>
@@ -85,11 +85,11 @@ function ToastView({ toast, onHide }: { toast: ToastItem; onHide: () => void }) 
   const color = toast.tipo === 'error' ? 'bg-neg text-on-solid' : toast.tipo === 'ok' ? 'bg-pos text-on-solid' : 'bg-ink text-canvas'
   return (
     <div role={toast.tipo === 'error' ? 'alert' : 'status'}
-      className={`pointer-events-auto flex items-center gap-3 rounded-2xl px-4 py-3 shadow-hero text-sm font-medium ${color}`}
+      className={`pointer-events-auto flex items-center gap-3 rounded-[14px] px-4 py-3 shadow-hero text-sm font-medium ${color}`}
       style={{ animation: 'toastUp .22s ease-out' }}>
       <span className="flex-1">{toast.message}</span>
       {toast.actionLabel && (
-        <button onClick={() => { toast.onAction?.(); onHide() }} className="font-bold underline underline-offset-2">{toast.actionLabel}</button>
+        <button onClick={() => { toast.onAction?.(); onHide() }} className="font-semibold underline underline-offset-2">{toast.actionLabel}</button>
       )}
       <button onClick={onHide} aria-label="Cerrar aviso" className="opacity-80 hover:opacity-100">
         <Icon name="close" className="w-4 h-4" stroke={2.2} />

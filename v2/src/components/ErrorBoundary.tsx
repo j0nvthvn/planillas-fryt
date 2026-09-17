@@ -41,16 +41,16 @@ export class ErrorBoundary extends Component<{ children: ReactNode }, { hasError
     return (
       <div className="min-h-screen flex items-center justify-center bg-canvas px-6">
         <div className="max-w-sm w-full text-center space-y-4">
-          <div className="w-16 h-16 rounded-full bg-neg-tint grid place-items-center mx-auto text-neg">
-            <svg viewBox="0 0 24 24" fill="none" className="w-8 h-8" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
+          <div className="w-14 h-14 rounded-[16px] bg-neg-tint border border-hairline grid place-items-center mx-auto text-neg">
+            <svg viewBox="0 0 24 24" fill="none" className="w-7 h-7" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
               <path d="M12 4l8 15H4l8-15zM12 9v4M12 16h.01" />
             </svg>
           </div>
           <div>
-            <h1 className="font-display text-2xl text-ink">Algo salió mal</h1>
+            <h1 className="font-display text-[22px] font-semibold tracking-[-0.02em] text-ink">Algo salió mal</h1>
             <p className="text-sm text-muted mt-1">Ya quedó registrado. Recarga la página para seguir.</p>
           </div>
-          <button type="button" onClick={() => window.location.reload()} className="btn-primary w-full py-3 text-base">Recargar</button>
+          <button type="button" onClick={() => window.location.reload()} className="btn-primary w-full min-h-[50px] text-[15px]">Recargar</button>
         </div>
       </div>
     )

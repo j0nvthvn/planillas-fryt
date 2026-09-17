@@ -24,7 +24,7 @@ function ListaProveedores({ items, titulo }: { items: Snap[]; titulo: string }) 
           {items.map((p, i) => (
             <div key={i} className="flex items-center gap-2 text-xs">
               <span className="flex-1 text-ink2 truncate">{p.nombre}</span>
-              <span className={`text-xs font-bold rounded-full px-1.5 py-0.5 ${p.forma_pago === 'efectivo' ? 'bg-pos-tint text-pos' : 'bg-info-tint text-info'}`}>{p.forma_pago === 'efectivo' ? 'Ef.' : 'Tr.'}</span>
+              <span className={`badge rounded-[6px] px-1.5 py-[3px] ${p.forma_pago === 'efectivo' ? 'bg-pos-tint text-pos' : 'bg-brand-tint text-brand'}`}>{p.forma_pago === 'efectivo' ? 'Ef.' : 'Tr.'}</span>
               <span className="text-ink font-semibold tabular-nums">{clp(p.monto)}</span>
             </div>
           ))}
@@ -61,7 +61,7 @@ export function CorreccionModal({ cierres, metodos, titulo, onClose }: { cierres
   return (
     <BottomSheet title={titulo} onClose={onClose}>
       <p className="text-xs text-muted -mt-1">{correcciones} corrección{correcciones === 1 ? '' : 'es'} desde el cierre original</p>
-      <div className="text-xs text-muted bg-canvas rounded-xl px-3 py-2">Original · {fechaHora(original.cerrado_en)} · {original.cerrado_por_usuario?.nombre ?? '—'}</div>
+      <div className="text-xs text-muted bg-soft border border-hairline rounded-[12px] px-3 py-2">Original · {fechaHora(original.cerrado_en)} · {original.cerrado_por_usuario?.nombre ?? '—'}</div>
       {sinCambios && <p className="text-sm text-ink2 bg-soft rounded-xl px-3 py-2">Se volvió a guardar el turno sin cambios en ventas, proveedores ni caja.</p>}
       {(filas.length > 0 || caja.length > 0) ? (
         <div className="space-y-2">
@@ -85,7 +85,7 @@ export function CorreccionModal({ cierres, metodos, titulo, onClose }: { cierres
         <ListaProveedores items={lista(actual.proveedores_snapshot)} titulo="Proveedores (actual)" />
       </div>
       {correcciones > 0 && (
-        <div className="text-xs text-info bg-info-tint border border-info/30 rounded-xl px-3 py-2">Última corrección · {fechaHora(actual.cerrado_en)} · {actual.cerrado_por_usuario?.nombre ?? '—'}</div>
+        <div className="text-xs font-medium text-info bg-info-tint border border-hairline rounded-[12px] px-3 py-2">Última corrección · {fechaHora(actual.cerrado_en)} · {actual.cerrado_por_usuario?.nombre ?? '—'}</div>
       )}
     </BottomSheet>
   )

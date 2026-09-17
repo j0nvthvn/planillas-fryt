@@ -42,10 +42,10 @@ export default function Login() {
   return (
     <div className="min-h-screen flex flex-col bg-canvas">
       <div className="flex flex-col items-center pt-14 pb-8 px-4">
-        <div className="w-[104px] h-[104px] rounded-full overflow-hidden border-4 border-brand-tint mb-5 bg-brand">
+        <div className="w-[88px] h-[88px] rounded-[22px] overflow-hidden border border-hairline shadow-card mb-5 bg-card">
           <img src="/logo.jpg" alt="Logo Minimarket Fryt" className="w-full h-full object-cover" />
         </div>
-        <h1 className="font-display text-amount-sm leading-none text-brand">Minimarket Fryt</h1>
+        <h1 className="font-display text-[26px] font-semibold leading-[1.1] tracking-[-0.025em] text-ink">Minimarket Fryt</h1>
         <p className="text-sm text-muted mt-1">FrytControl · Caja y turnos</p>
         <div className="mt-5 text-center">
           <p className="text-base font-semibold text-ink2">{saludo()}</p>
@@ -65,13 +65,13 @@ export default function Login() {
               <input id="password" type={verClave ? 'text' : 'password'} className="input pr-12" value={password} onChange={(e) => setPassword(e.target.value)} required autoComplete="current-password" />
               <button type="button" onClick={() => setVerClave((v) => !v)}
                 aria-label={verClave ? 'Ocultar contraseña' : 'Mostrar contraseña'} aria-pressed={verClave}
-                className="absolute right-1 top-1/2 -translate-y-1/2 w-10 h-10 grid place-items-center rounded-xl text-ink2">
+                className="absolute right-1 top-1/2 -translate-y-1/2 w-10 h-10 grid place-items-center rounded-[10px] text-ink2 hover:bg-hairline">
                 <Icon name={verClave ? 'eyeOff' : 'eye'} className="w-5 h-5" />
               </button>
             </div>
           </div>
           {error && <p id="login-error" role="alert" className="text-sm text-neg font-medium">{error}</p>}
-          <button type="submit" disabled={loading} className="btn-primary w-full py-3 text-base">
+          <button type="submit" disabled={loading} className="btn-primary w-full min-h-[50px] text-[15px]">
             {loading ? 'Ingresando…' : 'Ingresar'}
           </button>
         </form>
