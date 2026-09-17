@@ -146,12 +146,12 @@ function fechaLegible(fecha: string): string {
 }
 
 const METODOS = [
-  { key: 'efectivo',      label: 'Efectivo',      color: '#1E7A4F' },
-  { key: 'getnet',        label: 'Getnet',         color: '#33518C' },
+  { key: 'efectivo',      label: 'Efectivo',      color: '#047857' },
+  { key: 'getnet',        label: 'Getnet',         color: '#7C3AED' },
   { key: 'mercadopago',   label: 'Mercado Pago',   color: '#00b1ea' },
   { key: 'edenred',       label: 'Edenred',        color: '#f59e0b' },
   { key: 'amipass',       label: 'Amipass',        color: '#a16207' },
-  { key: 'transferencia', label: 'Transferencia',  color: '#5C3317' },
+  { key: 'transferencia', label: 'Transferencia',  color: '#4F46E5' },
 ]
 
 interface BuildEmailParams {
