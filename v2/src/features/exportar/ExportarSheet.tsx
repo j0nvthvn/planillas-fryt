@@ -61,7 +61,7 @@ export function ExportarSheet({ resumen, onClose }: { resumen: Resumen; onClose:
     <BottomSheet title="Exportar" onClose={onClose}>
       <p className="text-sm text-muted">Del {fechaCorta(desde)} al {fechaCorta(hasta)}</p>
       {borradores > 0 && (
-        <p role="status" className="text-[13px] font-medium text-warn bg-warn-tint border border-hairline rounded-[12px] px-3.5 py-2.5">
+        <p role="status" className="text-sm font-medium text-warn bg-warn-tint border border-hairline rounded-[12px] px-3.5 py-2.5">
           {borradores} día{borradores === 1 ? '' : 's'} con borrador: esos montos todavía pueden cambiar.
         </p>
       )}

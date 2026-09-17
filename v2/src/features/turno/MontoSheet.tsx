@@ -80,14 +80,14 @@ export function MontoSheet({ title, sub, valor, color, label = 'Listo', ayuda, p
       extra={paso ? <span className="text-xs font-semibold text-muted tabular-nums">{paso.actual} de {paso.total}</span> : undefined}
       footer={desktop ? (
         <div className="flex gap-2 mt-1">
-          {encadenado && <button type="button" className="btn-secondary flex-1 min-h-[50px] text-[15px]" disabled={invalido} onClick={() => aceptar(false)}>Listo</button>}
-          <button type="button" className="btn-primary flex-[2] min-h-[50px] text-[15px]" disabled={invalido} onClick={() => aceptar(encadenado)}>{etiqueta}</button>
+          {encadenado && <button type="button" className="btn-secondary flex-1 min-h-[50px] text-base" disabled={invalido} onClick={() => aceptar(false)}>Listo</button>}
+          <button type="button" className="btn-primary flex-[2] min-h-[50px] text-base" disabled={invalido} onClick={() => aceptar(encadenado)}>{etiqueta}</button>
         </div>
       ) : (
         <>
           <Keypad onKey={(k) => setDigits((d) => applyKey(d, k))} onAccept={() => aceptar(encadenado)} disabled={invalido} label={etiqueta} />
           {encadenado && (
-            <button type="button" onClick={() => aceptar(false)} className="w-full -mt-0.5 min-h-[40px] px-4 text-[13px] font-semibold text-ink2 flex items-center justify-center gap-1.5">
+            <button type="button" onClick={() => aceptar(false)} className="w-full -mt-0.5 min-h-[40px] px-4 text-sm font-semibold text-ink2 flex items-center justify-center gap-1.5">
               <Icon name="check" className="w-[15px] h-[15px]" />Guardar y volver
             </button>
           )}

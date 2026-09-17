@@ -13,7 +13,7 @@ export function Ledger({ children, className = '' }: { children: ReactNode; clas
 
 export function LedgerHead({ label, right }: { label: string; right?: ReactNode }) {
   return (
-    <div className="flex items-baseline justify-between gap-3 pt-3.5 pb-1 text-[10.5px] font-semibold uppercase tracking-[0.1em] text-muted2">
+    <div className="flex items-baseline justify-between gap-3 pt-3.5 pb-1 eyebrow">
       <span>{label}</span>{right != null && <span>{right}</span>}
     </div>
   )
@@ -28,7 +28,7 @@ export function LedgerLine({ label, hint, hintTone, value, color, muted, onClick
   const Tag = onClick ? 'button' : 'div'
   return (
     <Tag type={onClick ? 'button' : undefined} onClick={onClick} data-ledger-fila=""
-      className={`w-full flex items-center justify-between gap-3 py-1.5 min-h-[40px] text-sm text-left ${FILA} ${onClick ? 'hover:bg-soft/60 active:bg-soft' : ''}`}>
+      className={`w-full flex items-center justify-between gap-3 py-1.5 min-h-[40px] text-md text-left ${FILA} ${onClick ? 'hover:bg-soft/60 active:bg-soft' : ''}`}>
       <span className="min-w-0 flex items-baseline gap-[7px] text-ink2">
         {dot && <span className={`w-[7px] h-[7px] rounded-full shrink-0 self-center ${dot === 'pos' ? 'bg-pos' : 'bg-brand'}`} />}
         <span className="truncate">{label}</span>
@@ -49,14 +49,14 @@ export function LedgerTotal({ label, value, color, size = 'lg', className = '' }
   if (size === 'sm') {
     return (
       <div data-ledger-fila="" className={`flex items-center justify-between gap-3 py-1.5 min-h-[40px] ${FILA} ${className}`}>
-        <span className="text-sm font-semibold text-ink">{label}</span>
+        <span className="text-md font-semibold text-ink">{label}</span>
         <span className="cifra text-base text-ink shrink-0" style={color ? { color } : undefined}>{clp(value)}</span>
       </div>
     )
   }
   return (
     <div className={`flex items-center justify-between gap-3 bg-soft px-[18px] py-3.5 ${className}`}>
-      <span className="text-sm font-semibold text-ink">{label}</span>
+      <span className="text-md font-semibold text-ink">{label}</span>
       <span className="amount text-2xl text-ink" style={color ? { color } : undefined}>{clp(value)}</span>
     </div>
   )

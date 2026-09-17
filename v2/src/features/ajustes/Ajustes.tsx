@@ -44,7 +44,7 @@ export default function Ajustes() {
   const { config } = useConfig()
   return (
     <div className="max-w-3xl mx-auto">
-      <PageHeader eyebrow={config.nombreLocal || 'FrytControl'} title="Ajustes" action={<button type="button" className="btn min-h-[40px] rounded-[11px] px-3 text-[13px] bg-card text-ink2 border border-hairline-strong hover:bg-soft" onClick={() => void cerrarSesion()}><Icon name="logout" className="w-4 h-4" />Salir</button>} />
+      <PageHeader eyebrow={config.nombreLocal || 'FrytControl'} title="Ajustes" action={<button type="button" className="btn min-h-[40px] rounded-[11px] px-3 text-sm bg-card text-ink2 border border-hairline-strong hover:bg-soft" onClick={() => void cerrarSesion()}><Icon name="logout" className="w-4 h-4" />Salir</button>} />
       <div className="flex gap-1.5 overflow-x-auto -mx-4 px-4 pb-3 md:flex-wrap md:mx-0 md:px-0" role="tablist">
         {SECCIONES.map((s) => (
           <button key={s.v} type="button" role="tab" aria-selected={seccion === s.v} onClick={() => void navigate({ to: '/ajustes', search: { seccion: s.v } })}
@@ -56,7 +56,7 @@ export default function Ajustes() {
       {seccion === 'general' && (
         <Link to="/proveedores" className="card rounded-[14px] py-3.5 mb-5 flex items-center gap-3 hover:border-hairline-strong">
           <span className="w-10 h-10 rounded-[11px] bg-brand-tint text-brand grid place-items-center shrink-0"><Icon name="suppliers" className="w-5 h-5" /></span>
-          <span className="flex-1 min-w-0"><span className="block text-[15px] font-semibold text-ink">Proveedores</span><span className="block text-xs text-muted mt-0.5">Catálogo: renombrar, fusionar duplicados, logos</span></span>
+          <span className="flex-1 min-w-0"><span className="block text-base font-semibold text-ink">Proveedores</span><span className="block text-xs text-muted mt-0.5">Catálogo: renombrar, fusionar duplicados, logos</span></span>
           <Icon name="chevR" className="w-[15px] h-[15px] text-muted2 shrink-0" />
         </Link>
       )}
@@ -74,7 +74,7 @@ export default function Ajustes() {
 function Fila({ label, hint, apilar, children }: { label: string; hint?: string; apilar?: boolean; children: ReactNode }) {
   return (
     <div className={`flex justify-between gap-3 px-4 py-2.5 min-h-[60px] ${apilar ? 'flex-col items-stretch gap-2 sm:flex-row sm:items-center' : 'items-center'}`}>
-      <div className="min-w-0"><p className="text-[15px] font-medium text-ink">{label}</p>{hint && <p className="text-xs text-muted mt-0.5">{hint}</p>}</div>
+      <div className="min-w-0"><p className="text-base font-medium text-ink">{label}</p>{hint && <p className="text-xs text-muted mt-0.5">{hint}</p>}</div>
       {children}
     </div>
   )
@@ -99,13 +99,13 @@ function General() {
         <Fila apilar label="Fondo de caja por defecto" hint="Con lo que parte cada turno"><MontoInput className={`${CAMPO} font-display font-semibold w-full sm:w-40 sm:text-right`} value={f.fondoCajaInicial} onChange={(n) => set({ fondoCajaInicial: n })} ariaLabel="Fondo de caja" /></Fila>
         <Fila apilar label="Corte de la mañana" hint="Hora en que termina el turno mañana"><HoraInput className={`${CAMPO} font-display font-semibold w-full sm:w-32 sm:text-right`} value={f.horaCorteManana} onChange={(h) => set({ horaCorteManana: h })} ariaLabel="Hora de corte" /></Fila>
         <div className="px-4 py-3.5">
-          <p className="text-[15px] font-medium text-ink">Días de un solo turno</p>
+          <p className="text-base font-medium text-ink">Días de un solo turno</p>
           <p className="text-xs text-muted mt-0.5 mb-2.5">Esos días se registran siempre como día completo</p>
           <div className="grid grid-cols-7 gap-1">
             {DIAS.map((d, i) => {
               const on = f.diasTurnoUnico.includes(i)
               return <button key={d} type="button" aria-pressed={on} onClick={() => set({ diasTurnoUnico: on ? f.diasTurnoUnico.filter((x) => x !== i) : [...f.diasTurnoUnico, i].sort() })}
-                className={`min-h-[38px] px-0 rounded-[9px] text-[13px] border transition-colors ${on ? 'bg-ink text-card border-ink font-semibold' : 'bg-card text-ink2 border-hairline-strong font-medium hover:bg-soft'}`}>{d}</button>
+                className={`min-h-[38px] px-0 rounded-[9px] text-sm border transition-colors ${on ? 'bg-ink text-card border-ink font-semibold' : 'bg-card text-ink2 border-hairline-strong font-medium hover:bg-soft'}`}>{d}</button>
             })}
           </div>
         </div>
@@ -152,7 +152,7 @@ function Trabajadores() {
   if (lista.isPending) return <Spinner />
   return (
     <div className="space-y-3">
-      <p className="text-[13px] leading-relaxed text-muted">Quiénes atienden el local. No son cuentas: se eligen al cerrar el turno.</p>
+      <p className="text-sm leading-relaxed text-muted">Quiénes atienden el local. No son cuentas: se eligen al cerrar el turno.</p>
       <form className="flex gap-2" onSubmit={(e) => { e.preventDefault(); if (nuevo.trim()) void run(() => crearTrabajador(nuevo).then(() => setNuevo('')), 'Agregado') }}>
         <input className="input flex-1" placeholder="Nombre" value={nuevo} onChange={(e) => setNuevo(e.target.value)} aria-label="Nombre del trabajador" />
         <button type="submit" className="btn-primary px-4" disabled={!nuevo.trim()}>Agregar</button>
@@ -180,13 +180,13 @@ function Metodos() {
   const run = (fn: () => Promise<void>) => fn().catch((e) => toast.error(mensajeDeError(e)))
   return (
     <div className="space-y-3">
-      <p className="text-[13px] leading-relaxed text-muted">Los métodos inactivos no aparecen al cerrar el turno. "Total del día" es para máquinas que no cierran por turno: al cerrar la tarde se escribe el total y la app resta la mañana.</p>
+      <p className="text-sm leading-relaxed text-muted">Los métodos inactivos no aparecen al cerrar el turno. "Total del día" es para máquinas que no cierran por turno: al cerrar la tarde se escribe el total y la app resta la mañana.</p>
       <div className="card p-0 divide-y divide-hairline overflow-hidden">
         {(lista.data ?? []).map((m, i, arr) => (
           <div key={m.key} className="flex flex-wrap items-center gap-x-3 gap-y-2 px-4 py-3 min-h-[68px]">
             <span className={m.activo ? '' : 'opacity-50'}><MetodoLogo metodo={m} /></span>
             <div className="flex-1 min-w-0">
-              <p className={`text-[15px] font-medium truncate ${m.activo ? 'text-ink' : 'text-muted'}`}>{m.label}</p>
+              <p className={`text-base font-medium truncate ${m.activo ? 'text-ink' : 'text-muted'}`}>{m.label}</p>
               {(m.sub || m.acumulado_diario) && <p className="text-xs text-muted mt-0.5">{[m.sub, m.acumulado_diario ? 'la máquina muestra el total del día' : null].filter(Boolean).join(' · ')}</p>}
             </div>
             <div className="flex items-center gap-1 ml-auto">
@@ -213,7 +213,7 @@ function Papelera() {
   const run = (fn: () => Promise<void>, ok: string) => fn().then(() => toast.ok(ok)).catch((e) => toast.error(mensajeDeError(e)))
   return (
     <div className="space-y-3">
-      <p className="text-[13px] leading-relaxed text-muted">Turnos eliminados. Se pueden restaurar o borrar definitivamente.</p>
+      <p className="text-sm leading-relaxed text-muted">Turnos eliminados. Se pueden restaurar o borrar definitivamente.</p>
       <div className="card p-0 divide-y divide-hairline overflow-hidden">
         {(lista.data ?? []).map((t) => (
           <Fila key={t.id} label={`${fechaDiaMes(t.jornada?.fecha)} · ${etiquetaModo(t.jornada?.es_turno_unico && t.tipo === 'mañana' ? 'completo' : t.tipo)}`} hint={`ventas ${clp(totalVentas(t.ventas))} · eliminado ${fechaHora(t.deleted_at)}`}>
@@ -255,7 +255,7 @@ function Usuarios() {
   if (lista.isPending) return <Spinner />
   return (
     <div className="space-y-3">
-      <p className="text-[13px] leading-relaxed text-muted">Cuentas con acceso a la app. Las nuevas se crean como trabajador (ven Hoy y Cerrar turno).</p>
+      <p className="text-sm leading-relaxed text-muted">Cuentas con acceso a la app. Las nuevas se crean como trabajador (ven Hoy y Cerrar turno).</p>
       <div className="card p-0 divide-y divide-hairline overflow-hidden">
         {(lista.data ?? []).map((u) => (
           <Fila key={u.id} label={u.nombre + (u.id === yo?.id ? ' (tú)' : '')} hint={`${u.email} · ${u.rol}${u.activo ? '' : ' · inactivo'}`}>

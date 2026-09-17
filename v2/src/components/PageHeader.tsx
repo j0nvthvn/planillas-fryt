@@ -28,7 +28,7 @@ export default function PageHeader({ eyebrow, title, subtitle, action, back, chi
         )}
         <div className="min-w-0">
           {eyebrow && <p className="eyebrow mb-[5px]">{eyebrow}</p>}
-          <h1 className="font-display text-[20px] md:text-[26px] font-semibold leading-[1.1] tracking-[-0.02em] text-ink truncate">{title}</h1>
+          <h1 className="font-display text-xl font-semibold leading-[1.1] tracking-[-0.02em] text-ink truncate">{title}</h1>
           {subtitle && <p className="text-xs text-muted mt-[3px]">{subtitle}</p>}
           {children}
         </div>

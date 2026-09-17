@@ -114,7 +114,7 @@ export default function CerrarTurno() {
         subtitle={esDueno ? (state.cerrado ? fechaLegible(fecha) : estadoGuardado || fechaLegible(fecha)) : fechaLegible(fecha)}
         action={esDueno && (
           <button type="button" onClick={() => setSheet({ t: 'fecha' })} aria-label="Cambiar fecha"
-            className="inline-flex items-center gap-[7px] min-h-[40px] px-3 rounded-[11px] bg-card border border-hairline-strong text-[13px] font-semibold text-ink2 hover:bg-soft">
+            className="inline-flex items-center gap-[7px] min-h-[40px] px-3 rounded-[11px] bg-card border border-hairline-strong text-sm font-semibold text-ink2 hover:bg-soft">
             <Icon name="calendar" className="w-4 h-4" />{fechaDiaMes(fecha)}
           </button>
         )}
@@ -186,7 +186,7 @@ export default function CerrarTurno() {
       <section className="mb-5" aria-label="Ventas">
         <div className="flex items-baseline justify-between mb-[9px]">
           <h2 className="eyebrow">Ventas del {modo === 'completo' ? 'día' : 'turno'}</h2>
-          <span className="cifra text-[13px] text-ink">{clp(totales.total_ventas)}</span>
+          <span className="cifra text-sm text-ink">{clp(totales.total_ventas)}</span>
         </div>
         <div className="card p-0 divide-y divide-hairline overflow-hidden">
           {(metodos.data ?? []).filter((m) => esMetodo(m.key)).map((m) => {
@@ -194,10 +194,10 @@ export default function CerrarTurno() {
             const monto = state.ventas[key]
             return (
               <button key={m.key} type="button" disabled={soloLectura} onClick={() => setSheet({ t: 'venta', key })}
-                className="row py-2.5 hover:bg-soft/60 disabled:opacity-70">
+                className="row py-2.5 hover:bg-soft/60">
                 <MetodoLogo metodo={m} />
                 <span className="flex-1 min-w-0">
-                  <span className="block text-[15px] font-medium text-ink">{m.label}</span>
+                  <span className="block text-base font-medium text-ink">{m.label}</span>
                   {m.acumulado_diario && modo === 'tarde' ? (
                     <span className="block text-xs text-muted tabular-nums mt-0.5">Mañana {clp(turnoManana?.[key] ?? 0)} · total del día {clp(Number(turnoManana?.[key] ?? 0) + monto)}</span>
                   ) : m.sub && <span className="block text-xs text-muted mt-0.5">{m.sub}</span>}
@@ -214,16 +214,16 @@ export default function CerrarTurno() {
       <section className="mb-5" aria-label="Proveedores">
         <div className="flex items-baseline justify-between mb-[9px]">
           <h2 className="eyebrow">Proveedores pagados</h2>
-          <span className={`cifra text-[13px] ${totales.total_proveedores ? 'text-neg' : 'text-ink'}`}>{totales.total_proveedores ? '−' : ''}{clp(totales.total_proveedores)}</span>
+          <span className={`cifra text-sm ${totales.total_proveedores ? 'text-neg' : 'text-ink'}`}>{totales.total_proveedores ? '−' : ''}{clp(totales.total_proveedores)}</span>
         </div>
         {state.proveedores.length > 0 && (
           <div className="card p-0 divide-y divide-hairline overflow-hidden mb-2.5">
             {state.proveedores.map((p) => (
               <button key={p.key} type="button" disabled={soloLectura} onClick={() => setSheet({ t: 'prov', linea: p })}
                 className="row py-2.5 hover:bg-soft/60">
-                <span className="tile bg-soft text-[13px] font-semibold text-ink2" aria-hidden="true">{iniciales(p.nombre)}</span>
+                <span className="tile bg-soft text-sm font-semibold text-ink2" aria-hidden="true">{iniciales(p.nombre)}</span>
                 <span className="flex-1 min-w-0">
-                  <span className="block text-[15px] font-medium text-ink truncate">{p.nombre}</span>
+                  <span className="block text-base font-medium text-ink truncate">{p.nombre}</span>
                   <span className={`badge mt-1 px-1.5 py-[3px] rounded-[6px] ${p.forma_pago === 'efectivo' ? 'bg-pos-tint text-pos' : 'bg-brand-tint text-brand'}`}>{p.forma_pago === 'efectivo' ? 'Efectivo' : 'Transferencia'}</span>
                 </span>
                 <span className="cifra text-lg text-neg">{p.monto ? '−' : ''}{clp(p.monto)}</span>
@@ -245,16 +245,16 @@ export default function CerrarTurno() {
         <h2 className="eyebrow mb-[9px]">Caja</h2>
         <div className="card p-0 overflow-hidden">
           <button type="button" disabled={soloLectura} onClick={() => setSheet({ t: 'fondo' })} className="w-full flex items-center justify-between gap-3 px-4 py-2.5 min-h-[60px] text-left active:bg-soft">
-            <span><span className="block text-[15px] font-medium text-ink">Fondo inicial</span><span className="block text-xs text-muted mt-0.5">Con lo que partió la caja</span></span>
+            <span><span className="block text-base font-medium text-ink">Fondo inicial</span><span className="block text-xs text-muted mt-0.5">Con lo que partió la caja</span></span>
             <span className="cifra text-lg text-ink">{clp(state.fondoInicial)}</span>
           </button>
           <div className="flex items-center justify-between gap-3 px-4 py-3.5 bg-soft border-y border-hairline">
-            <span><span className="block text-[15px] font-semibold text-ink">Efectivo esperado</span><span className="block text-xs text-muted mt-0.5">fondo + efectivo − proveedores en efectivo</span></span>
-            <span className="amount text-[20px] tracking-[-0.02em] text-ink">{clp(totales.efectivo_esperado)}</span>
+            <span><span className="block text-base font-semibold text-ink">Efectivo esperado</span><span className="block text-xs text-muted mt-0.5">fondo + efectivo − proveedores en efectivo</span></span>
+            <span className="amount text-xl text-ink">{clp(totales.efectivo_esperado)}</span>
           </div>
           <div className="px-4 py-3.5">
             <div className="flex items-center justify-between gap-3">
-              <span className="text-[15px] font-medium text-ink">¿Contaste la caja?</span>
+              <span className="text-base font-medium text-ink">¿Contaste la caja?</span>
               <div className="grid grid-cols-2 gap-[3px] p-[3px] rounded-[11px] bg-soft border border-hairline" role="radiogroup" aria-label="Conteo de caja">
                 <button type="button" role="radio" aria-checked={!state.contoCaja} disabled={soloLectura} onClick={() => cambiar({ type: 'caja', conto: false, monto: null })}
                   className={`min-h-[38px] min-w-[54px] px-3 rounded-[8px] text-sm transition-colors ${!state.contoCaja ? 'bg-card text-ink font-semibold shadow-card' : 'text-muted font-medium'}`}>No</button>
@@ -264,7 +264,7 @@ export default function CerrarTurno() {
             </div>
             {state.contoCaja && state.efectivoContado != null && (
               <button type="button" disabled={soloLectura} onClick={() => setSheet({ t: 'conteo' })} className="mt-3.5 pt-3.5 border-t border-hairline w-full flex items-center justify-between gap-3 text-left">
-                <span className="text-[13px] text-muted">Contado <b className="font-semibold text-ink tabular-nums">{clp(state.efectivoContado)}</b></span>
+                <span className="text-sm text-muted">Contado <b className="font-semibold text-ink tabular-nums">{clp(state.efectivoContado)}</b></span>
                 <span className={`badge text-xs tabular-nums ${form.diferenciaCaja === 0 ? 'bg-pos-tint text-pos' : 'bg-neg-tint text-neg'}`}>
                   {form.diferenciaCaja === 0 ? 'Cuadra' : `Descuadre ${clpSigno(form.diferenciaCaja ?? 0)}`}
                 </span>
@@ -276,18 +276,18 @@ export default function CerrarTurno() {
 
       {/* Barra fija */}
       {!soloLectura && (
-        <div ref={barRef} className="fixed inset-x-0 above-nav z-30 bg-card border-t border-hairline px-4 pt-3 pb-[max(14px,env(safe-area-inset-bottom))] md:pb-3.5 shadow-[0_-6px_20px_-12px_rgba(16,24,40,.18)] md:left-[236px]">
+        <div ref={barRef} className="fixed inset-x-0 above-nav z-30 bg-card border-t border-hairline px-4 pt-3 pb-[max(14px,env(safe-area-inset-bottom))] md:pb-3.5 shadow-bar md:left-(--sidebar-w)">
           <div className="max-w-2xl mx-auto flex items-center gap-3">
             <div className="flex-1 min-w-0">
-              <p className="text-[10.5px] leading-none font-semibold uppercase tracking-[0.1em] text-muted mb-[5px]">Neto {modo === 'completo' ? 'del día' : 'del turno'}</p>
+              <p className="eyebrow leading-none mb-[5px]">Neto {modo === 'completo' ? 'del día' : 'del turno'}</p>
               <p className={`amount text-amount-sm leading-none ${totales.neto >= 0 ? 'text-ink' : 'text-neg'}`}>{clp(totales.neto)}</p>
               {estadoGuardado && (
-                <p className="flex items-center gap-[5px] text-[11px] text-muted mt-[5px]">
+                <p className="flex items-center gap-[5px] text-xs text-muted mt-[5px]">
                   <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${state.sucio ? 'bg-warn' : 'bg-pos'}`} aria-hidden="true" />{estadoGuardado}
                 </p>
               )}
             </div>
-            <button type="button" onClick={pedirCierre} disabled={form.guardando} className="btn-primary min-h-[50px] rounded-[13px] px-[22px] text-[15px] min-w-[150px]">
+            <button type="button" onClick={pedirCierre} disabled={form.guardando} className="btn-primary min-h-[50px] rounded-[13px] px-[22px] text-base min-w-[150px]">
               {form.guardando ? 'Guardando…' : etiquetaCerrar(modo, state.cerrado)}
             </button>
           </div>

@@ -34,9 +34,9 @@ export function Keypad({ onKey, onAccept, disabled, label }: KeypadProps) {
         {keys.map((k) => (
           <button key={k} type="button" onClick={() => onKey(k)}
             aria-label={k === 'del' ? 'Borrar' : k}
-            className={`h-[54px] [@media(max-height:700px)]:h-[46px] md:h-[52px] rounded-[15px] font-display text-2xl font-semibold tabular-nums text-ink active:scale-95 flex items-center justify-center transition-transform duration-75 ${k === 'del' ? 'bg-soft border border-hairline' : 'bg-card border border-hairline-strong active:bg-soft'}`}>
+            className={`h-[54px] [@media(max-height:700px)]:h-[46px] md:h-[52px] rounded-[15px] font-display text-amount-sm font-semibold tabular-nums text-ink active:scale-95 flex items-center justify-center transition-transform duration-75 ${k === 'del' ? 'bg-soft border border-hairline' : 'bg-card border border-hairline-strong active:bg-soft'}`}>
             {k === 'del' ? (
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="text-ink2">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="text-ink2" aria-hidden="true">
                 <path d="M20 6H9l-5 6 5 6h11a1 1 0 001-1V7a1 1 0 00-1-1zM15 10l-4 4M11 10l4 4" />
               </svg>
             ) : <span className={k === '000' ? 'font-sans text-lg text-ink2' : ''}>{k}</span>}
@@ -44,7 +44,7 @@ export function Keypad({ onKey, onAccept, disabled, label }: KeypadProps) {
         ))}
       </div>
       <button type="button" onClick={onAccept} disabled={disabled}
-        className="h-[50px] rounded-[14px] text-on-solid text-[15px] font-semibold flex items-center justify-center gap-2 mt-3.5 bg-brand hover:bg-brand-hover disabled:bg-muted2/60 disabled:cursor-not-allowed">
+        className="h-[50px] rounded-[14px] text-on-solid text-base font-semibold flex items-center justify-center gap-2 mt-3.5 bg-brand hover:bg-brand-hover disabled:bg-soft disabled:text-muted disabled:border disabled:border-hairline disabled:cursor-not-allowed">
         <Icon name="check" className="w-[18px] h-[18px]" stroke={2.4} />{label}
       </button>
     </div>
@@ -57,7 +57,7 @@ export function AmountDisplay({ digits, sub, color }: { digits: string; sub?: st
   return (
     <div className="rounded-[14px] bg-soft border border-hairline px-4 py-3.5">
       {sub && <p className="eyebrow mb-2">{sub}</p>}
-      <p className={`amount text-hero leading-none tracking-[-0.03em] ${n ? 'text-ink' : 'text-muted2'}`} style={n && color ? { color } : undefined} aria-live="polite">
+      <p className={`amount text-hero leading-none ${n ? 'text-ink' : 'text-muted2'}`} style={n && color ? { color } : undefined} aria-live="polite">
         {clp(n)}
       </p>
     </div>
@@ -83,7 +83,7 @@ export function DesktopAmountInput({ digits, onChange, onEnter, color, label, au
         onKeyDown={(e) => { if (e.key === 'Enter') onEnter?.() }}
         placeholder="$0"
         aria-label={label ?? 'Monto'}
-        className={`w-full bg-transparent border-0 p-0 outline-none focus:ring-0 font-display text-hero leading-none font-bold tracking-[-0.03em] tabular-nums placeholder:text-muted2 ${n ? '' : 'text-muted2'}`}
+        className={`w-full bg-transparent border-0 p-0 outline-none focus:ring-0 font-display text-hero leading-none font-bold tracking-[-0.025em] tabular-nums placeholder:text-muted2 ${n ? '' : 'text-muted2'}`}
         style={n && color ? { color } : undefined}
       />
     </div>

@@ -22,13 +22,13 @@ export function AvatarMenu({ variante = 'avatar' }: { variante?: 'avatar' | 'blo
     <>
       {variante === 'avatar' ? (
         <button type="button" onClick={() => setAbierto(true)} aria-haspopup="dialog" aria-label={`Cuenta de ${usuario?.nombre ?? 'usuario'}`}
-          className="w-10 h-10 rounded-[12px] bg-soft border border-hairline text-ink2 text-sm font-semibold grid place-items-center shrink-0">
+          className="w-10 h-10 rounded-[12px] bg-soft border border-hairline text-ink2 text-md font-semibold grid place-items-center shrink-0">
           {inicial}
         </button>
       ) : (
         <button type="button" onClick={() => setAbierto(true)} aria-haspopup="dialog"
           className="w-full flex items-center gap-3 rounded-[10px] px-[11px] py-2.5 text-left hover:bg-soft">
-          <span className="w-[34px] h-[34px] rounded-[10px] bg-soft border border-hairline text-ink2 text-sm font-semibold grid place-items-center shrink-0" aria-hidden="true">{inicial}</span>
+          <span className="w-[34px] h-[34px] rounded-[10px] bg-soft border border-hairline text-ink2 text-md font-semibold grid place-items-center shrink-0" aria-hidden="true">{inicial}</span>
           <span className="min-w-0 flex-1">
             <span className="block text-sm font-semibold text-ink truncate">{usuario?.nombre ?? 'Cuenta'}</span>
             <span className="block text-xs text-muted truncate">{rol}</span>

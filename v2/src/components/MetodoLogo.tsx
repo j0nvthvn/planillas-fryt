@@ -27,7 +27,7 @@ export function MetodoLogo({ metodo, size = 'md', className = '' }: { metodo: Pi
   const showImg = !!metodo.logo && !imgError
   return (
     // Los logos son PNG pensados para fondo claro: en oscuro la caja sigue clara.
-    <span className={`shrink-0 grid place-items-center border border-hairline ${showImg ? 'bg-card dark:bg-[#F3F4F6]' : 'bg-card'} ${sz.box} ${className}`}>
+    <span className={`shrink-0 grid place-items-center border border-hairline ${showImg ? 'bg-card dark:bg-image-bg' : 'bg-card'} ${sz.box} ${className}`}>
       {showImg ? (
         <img src={metodo.logo ?? ''} alt="" className={`${sz.img} object-contain`} onError={() => setImgError(true)} />
       ) : (

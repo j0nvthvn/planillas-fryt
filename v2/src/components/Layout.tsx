@@ -60,7 +60,7 @@ export default function Layout({ children }: { children: ReactNode }) {
       )}
 
       <div className="flex flex-1 min-h-0 max-w-screen-2xl mx-auto w-full overflow-hidden md:overflow-visible">
-        <aside className="hidden md:flex flex-col w-[236px] shrink-0 border-r border-hairline bg-card sticky top-0 h-screen overflow-y-auto">
+        <aside className="hidden md:flex flex-col w-(--sidebar-w) shrink-0 border-r border-hairline bg-card sticky top-0 h-screen overflow-y-auto">
           <div className="px-5 pt-6 pb-4 mb-2 border-b border-hairline">
             <p className="font-display text-sm font-semibold tracking-[-0.01em] text-ink">FrytControl</p>
             <p className="text-xs text-muted mt-0.5">Minimarket Fryt</p>
@@ -70,7 +70,7 @@ export default function Layout({ children }: { children: ReactNode }) {
               const on = activo(pathname, i.to)
               return (
                 <Link key={i.to} to={i.to} aria-current={on ? 'page' : undefined}
-                  className={`flex w-full items-center gap-3 rounded-[10px] px-[11px] py-[9px] text-[14px] transition-colors ${on ? 'bg-brand-tint text-brand font-semibold' : 'text-ink2 font-medium hover:bg-soft hover:text-ink'}`}>
+                  className={`flex w-full items-center gap-3 rounded-[10px] px-[11px] py-[9px] text-md transition-colors ${on ? 'bg-brand-tint text-brand font-semibold' : 'text-ink2 font-medium hover:bg-soft hover:text-ink'}`}>
                   <Icon name={i.icon} className="w-5 h-5 shrink-0" stroke={on ? 2.1 : 1.8} />{i.label}
                 </Link>
               )

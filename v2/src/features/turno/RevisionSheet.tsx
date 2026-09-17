@@ -39,14 +39,14 @@ export function RevisionSheet({
   return (
     <BottomSheet title={yaCerrado ? 'Revisar la corrección' : 'Revisar antes de cerrar'} onClose={onClose} footer={
       <div className="flex gap-2 pt-1">
-        <button type="button" className="btn-secondary flex-1 min-h-[50px] text-[15px]" onClick={onClose} disabled={guardando}>Revisar</button>
-        <button type="button" className="btn-primary flex-[2] min-h-[50px] text-[15px]" onClick={onConfirmar} disabled={guardando}>
+        <button type="button" className="btn-secondary flex-1 min-h-[50px] text-base" onClick={onClose} disabled={guardando}>Revisar</button>
+        <button type="button" className="btn-primary flex-[2] min-h-[50px] text-base" onClick={onConfirmar} disabled={guardando}>
           {guardando ? 'Guardando…' : etiquetaCerrar(modo, yaCerrado)}
         </button>
       </div>
     }>
       {yaCerrado && (
-        <p className="rounded-[12px] bg-info-tint border border-hairline px-3.5 py-[11px] text-[13px] font-medium text-info">
+        <p className="rounded-[12px] bg-info-tint border border-hairline px-3.5 py-[11px] text-sm font-medium text-info">
           Se guardará una <b>corrección</b>: queda registrada la versión anterior y la nueva.
         </p>
       )}
@@ -54,7 +54,7 @@ export function RevisionSheet({
       {avisos.length > 0 && (
         <ul className="flex flex-col gap-[7px]">
           {avisos.map((a) => (
-            <li key={a.id} className={`flex items-start gap-[9px] rounded-[12px] border border-hairline px-3.5 py-[11px] text-[13px] leading-[1.45] font-medium ${a.tono === 'neg' ? 'bg-neg-tint text-neg' : 'bg-warn-tint text-warn'}`}>
+            <li key={a.id} className={`flex items-start gap-[9px] rounded-[12px] border border-hairline px-3.5 py-[11px] text-sm leading-[1.45] font-medium ${a.tono === 'neg' ? 'bg-neg-tint text-neg' : 'bg-warn-tint text-warn'}`}>
               <Icon name="warning" className="w-[17px] h-[17px] shrink-0 mt-px" />
               <span>{a.texto}</span>
             </li>

@@ -51,7 +51,7 @@ export default function Analisis() {
       <PageHeader eyebrow={rangoLegible(desde, hasta)} title="Análisis"
         action={
           <button type="button" onClick={() => setExportando(true)} disabled={!r}
-            className="btn min-h-[40px] rounded-[11px] px-3 text-[13px] bg-card text-ink2 border border-hairline-strong hover:bg-soft md:min-h-[42px] md:bg-brand md:text-on-solid md:border-brand md:hover:bg-brand-hover">
+            className="btn min-h-[40px] rounded-[11px] px-3 text-sm bg-card text-ink2 border border-hairline-strong hover:bg-soft md:min-h-[42px] md:bg-brand md:text-on-solid md:border-brand md:hover:bg-brand-hover">
             <Icon name="download" className="w-4 h-4" />Exportar
           </button>
         } />
@@ -127,11 +127,11 @@ export default function Analisis() {
                     <div key={m.key} className="flex items-center gap-3 px-[18px] py-2.5 min-h-[60px] border-t border-hairline">
                       <MetodoLogo metodo={m} />
                       <span className="flex-1 min-w-0">
-                        <span className="block text-sm font-medium text-ink truncate">{m.label}</span>
+                        <span className="block text-md font-medium text-ink truncate">{m.label}</span>
                         <span className="block h-1 rounded-full bg-soft mt-1.5 overflow-hidden"><span className="block h-full rounded-full" style={{ width: `${pct}%`, background: colorMetodo(m.color) }} /></span>
                       </span>
                       <span className="text-right shrink-0">
-                        <span className="block cifra text-[15px] text-ink">{clp(monto)}</span>
+                        <span className="block cifra text-base text-ink">{clp(monto)}</span>
                         <span className="block text-[11px] text-muted2 tabular-nums">{pct.toFixed(0)}%</span>
                       </span>
                     </div>
@@ -143,7 +143,7 @@ export default function Analisis() {
                 {r.top_proveedores.length === 0 ? <p className="text-sm text-muted px-[18px] pb-4">Sin compras en el período.</p> : r.top_proveedores.map((p) => (
                   <Link key={p.proveedor_id ?? p.nombre} to={p.proveedor_id ? '/proveedores/$id' : '/proveedores'} params={{ id: p.proveedor_id ?? '' }} className="flex items-center gap-3 px-[18px] py-2 min-h-[54px] border-t border-hairline hover:bg-soft/60">
                     <ProveedorAvatar nombre={p.nombre} imagenUrl={p.imagen_url} size="sm" />
-                    <span className="flex-1 min-w-0"><span className="block text-[13px] font-medium text-ink truncate">{p.nombre}</span><span className="block text-[11px] text-muted mt-0.5">{p.compras} compra{p.compras === 1 ? '' : 's'}</span></span>
+                    <span className="flex-1 min-w-0"><span className="block text-sm font-medium text-ink truncate">{p.nombre}</span><span className="block text-xs text-muted mt-0.5">{p.compras} compra{p.compras === 1 ? '' : 's'}</span></span>
                     <span className="cifra text-sm text-neg">{Number(p.monto) ? '−' : ''}{clp(p.monto)}</span>
                   </Link>
                 ))}
@@ -206,7 +206,7 @@ function Kpi({ label, value, anterior, destacado, invertir, className = '' }: { 
       {destacado && <span className="hidden md:block absolute inset-y-0 left-0 w-[3px] bg-brand" aria-hidden="true" />}
       <p className="text-xs leading-none text-muted mb-[7px] md:mb-[9px]">{label}</p>
       {/* A 375 px una cifra de 7 dígitos en 20 px tocaba el borde. */}
-      <p className={`cifra text-lg min-[390px]:text-[20px] md:text-amount-sm leading-none tracking-[-0.02em] ${destacado ? 'md:font-bold' : ''} ${value < 0 ? 'text-neg' : 'text-ink'}`}>{clp(value)}</p>
+      <p className={`cifra text-lg min-[390px]:text-xl md:text-amount-sm leading-none ${destacado ? 'md:font-bold' : ''} ${value < 0 ? 'text-neg' : 'text-ink'}`}>{clp(value)}</p>
       <div className="mt-2 min-h-[16px]">{invertir ? <DeltaBadge actual={-value} anterior={anterior == null ? null : -anterior} /> : <DeltaBadge actual={value} anterior={anterior} />}</div>
     </div>
   )

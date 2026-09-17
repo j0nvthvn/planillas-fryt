@@ -105,7 +105,7 @@ export function ProveedorSheet({ linea, usados, onSave, onDelete, onClose }: Pro
       {parecido && (
         <div className="flex items-center gap-2 rounded-[12px] bg-warn-tint border border-hairline px-3 py-2 -mt-1">
           <Icon name="info" className="w-[18px] h-[18px] shrink-0 text-warn" />
-          <span className="flex-1 min-w-0 text-[13px] font-medium text-warn">¿Quisiste decir <b>{parecido.nombre}</b>?</span>
+          <span className="flex-1 min-w-0 text-sm font-medium text-warn">¿Quisiste decir <b>{parecido.nombre}</b>?</span>
           <button type="button" onClick={() => elegir(parecido)} className="btn-secondary min-h-[36px] px-3 text-sm shrink-0">Usar ese</button>
         </div>
       )}

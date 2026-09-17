@@ -16,7 +16,7 @@ import { esMetodo, type MetodoKey } from '@/lib/totales'
 import { mensajeDeError } from '@/lib/errorLog'
 
 const FLECHA = 'w-[38px] h-[38px] rounded-[10px] grid place-items-center bg-card border border-hairline-strong text-ink2 hover:bg-soft'
-const ACCION = 'btn min-h-[40px] rounded-[10px] px-3 text-[13px] text-ink2 bg-card border border-hairline-strong hover:bg-soft'
+const ACCION = 'btn min-h-[40px] rounded-[10px] px-3 text-sm text-ink2 bg-card border border-hairline-strong hover:bg-soft'
 
 export default function Planilla() {
   const { fecha } = useSearch({ from: '/app/dia' })
@@ -77,7 +77,7 @@ export default function Planilla() {
         <>
           <section aria-label="Neto del día" className="card mb-3">
             <div className="flex items-center justify-between gap-2.5"><p className="eyebrow">Neto del día</p><EstadoChip estado={r?.estado ?? 'sin_registro'} /></div>
-            <p className={`amount text-amount leading-[1.05] tracking-[-0.03em] mt-2.5 ${Number(r?.neto ?? 0) < 0 ? 'text-neg' : 'text-ink'}`}>{clp(r?.neto ?? 0)}</p>
+            <p className={`amount text-amount leading-[1.05] mt-2.5 ${Number(r?.neto ?? 0) < 0 ? 'text-neg' : 'text-ink'}`}>{clp(r?.neto ?? 0)}</p>
             <div className="flex gap-3 mt-4 pt-3.5 border-t border-hairline">
               <Dato label="Ventas">{clp(r?.total_ventas ?? 0)}</Dato>
               <span className="w-px bg-hairline" aria-hidden="true" />
@@ -132,7 +132,7 @@ function TarjetaTurno({ t, fecha, esDueno, metodos, onDiff, onAccion, puedeUnir,
     <article className="card p-0 overflow-hidden">
       <div className="px-[18px] py-3.5 border-b border-hairline flex items-center justify-between gap-2.5">
         <div className="min-w-0">
-          <h2 className="text-[15px] font-semibold text-ink">{etiquetaModo(turno.modo)}</h2>
+          <h2 className="text-base font-semibold text-ink">{etiquetaModo(turno.modo)}</h2>
           <p className="text-xs text-muted mt-[3px]">{turno.trabajador_nombre ?? turno.usuario_nombre ?? '—'}{turno.ultimo_cierre_en ? ` · cerrado ${horaCorta(turno.ultimo_cierre_en)}` : ''}</p>
         </div>
         <div className="flex flex-col items-end gap-1 shrink-0">
@@ -167,7 +167,7 @@ function TarjetaTurno({ t, fecha, esDueno, metodos, onDiff, onAccion, puedeUnir,
           <Link to="/turno" search={{ fecha, modo: turno.modo }} className={ACCION}><Icon name="pencil" className="w-[15px] h-[15px]" stroke={1.9} />{turno.is_draft ? 'Seguir' : 'Corregir'}</Link>
           {esCompleto && turno.modo === 'completo' && <button type="button" onClick={() => onAccion('dividir')} className={ACCION}><Icon name="split" className="w-[15px] h-[15px]" stroke={1.9} />Dividir en dos turnos</button>}
           {puedeUnir && turno.modo === 'mañana' && <button type="button" onClick={() => onAccion('unir')} className={ACCION}><Icon name="merge" className="w-[15px] h-[15px]" stroke={1.9} />Unir como día completo</button>}
-          <button type="button" onClick={() => onAccion('eliminar')} className="btn min-h-[40px] rounded-[10px] px-3 text-[13px] text-neg hover:bg-neg-tint ml-auto"><Icon name="trash" className="w-[15px] h-[15px]" stroke={1.9} />Eliminar</button>
+          <button type="button" onClick={() => onAccion('eliminar')} className="btn min-h-[40px] rounded-[10px] px-3 text-sm text-neg hover:bg-neg-tint ml-auto"><Icon name="trash" className="w-[15px] h-[15px]" stroke={1.9} />Eliminar</button>
         </div>
       )}
     </article>

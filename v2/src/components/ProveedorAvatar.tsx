@@ -1,6 +1,7 @@
 import { useState } from 'react'
 
-const COLORS = ['#8B5D39', '#1E7A4F', '#33518C', '#B45309', '#0F766E', '#BE185D']
+/** Fondos de avatar: todos dan ≥ 5:1 con la inicial en blanco, en claro y en oscuro. */
+const COLORS = ['#475569', '#047857', '#4F46E5', '#B45309', '#0F766E', '#BE185D']
 
 export function avatarColor(nombre: string): string {
   let h = 0
@@ -8,14 +9,14 @@ export function avatarColor(nombre: string): string {
   return COLORS[h % COLORS.length] ?? COLORS[0]!
 }
 
-const SIZES = { sm: 'w-9 h-9 text-sm', md: 'w-10 h-10 text-base', lg: 'w-16 h-16 text-2xl' }
+const SIZES = { sm: 'w-9 h-9 rounded-[9px] text-sm', md: 'w-10 h-10 rounded-[10px] text-base', lg: 'w-16 h-16 rounded-[14px] text-2xl' }
 
 export function ProveedorAvatar({ nombre = '', imagenUrl, size = 'md' }: { nombre?: string; imagenUrl?: string | null; size?: keyof typeof SIZES }) {
   const [imgError, setImgError] = useState(false)
   // Otra imagen: se vuelve a intentar (ajuste durante el render).
   const [urlVista, setUrlVista] = useState(imagenUrl)
   if (urlVista !== imagenUrl) { setUrlVista(imagenUrl); setImgError(false) }
-  const base = `${SIZES[size]} rounded-[10px] overflow-hidden shrink-0 flex items-center justify-center font-bold text-white`
+  const base = `${SIZES[size]} overflow-hidden shrink-0 flex items-center justify-center font-display font-semibold text-white`
   if (imagenUrl && !imgError) {
     return (
       <div className={`${base} bg-image-bg`}>

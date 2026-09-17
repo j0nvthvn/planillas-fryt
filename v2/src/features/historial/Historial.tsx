@@ -86,7 +86,7 @@ function FilaDia({ d }: { d: VResumenDia }) {
   return (
     <Link to="/dia" search={{ fecha: d.fecha }} className="flex items-center gap-3 px-4 py-2.5 min-h-[72px] hover:bg-soft/60 active:bg-soft">
       <div className={`w-[46px] h-[46px] shrink-0 rounded-[10px] border border-hairline grid place-content-center text-center ${d.tiene_borrador ? 'bg-warn-tint' : 'bg-soft'}`}>
-        <p className="text-[10px] leading-none font-semibold uppercase text-muted">{dia}</p>
+        <p className="text-[11px] leading-none font-semibold uppercase text-muted">{dia}</p>
         <p className="font-display text-lg leading-none font-semibold tabular-nums text-ink mt-[3px]">{Number(d.fecha.slice(8, 10))}</p>
       </div>
       <div className="flex-1 min-w-0">
