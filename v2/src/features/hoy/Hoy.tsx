@@ -161,5 +161,5 @@ export function EstadoChip({ estado }: { estado: string }) {
     completo: { label: 'Completo', cls: 'bg-pos-tint text-pos' },
   }
   const e = map[estado] ?? map.sin_registro!
-  return <span className={`whitespace-nowrap text-xs font-bold uppercase tracking-wide rounded-full px-2.5 py-1 ${e.cls}`}>{e.label}</span>
+  return <span className={`badge ${e.cls}`}>{e.label}</span>
 }

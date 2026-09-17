@@ -8,14 +8,14 @@ export function avatarColor(nombre: string): string {
   return COLORS[h % COLORS.length] ?? COLORS[0]!
 }
 
-const SIZES = { sm: 'w-8 h-8 text-sm', md: 'w-10 h-10 text-base', lg: 'w-16 h-16 text-2xl' }
+const SIZES = { sm: 'w-9 h-9 text-sm', md: 'w-10 h-10 text-base', lg: 'w-16 h-16 text-2xl' }
 
 export function ProveedorAvatar({ nombre = '', imagenUrl, size = 'md' }: { nombre?: string; imagenUrl?: string | null; size?: keyof typeof SIZES }) {
   const [imgError, setImgError] = useState(false)
   // Otra imagen: se vuelve a intentar (ajuste durante el render).
   const [urlVista, setUrlVista] = useState(imagenUrl)
   if (urlVista !== imagenUrl) { setUrlVista(imagenUrl); setImgError(false) }
-  const base = `${SIZES[size]} rounded-xl overflow-hidden shrink-0 flex items-center justify-center font-bold text-white`
+  const base = `${SIZES[size]} rounded-[10px] overflow-hidden shrink-0 flex items-center justify-center font-bold text-white`
   if (imagenUrl && !imgError) {
     return (
       <div className={`${base} bg-image-bg`}>

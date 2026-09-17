@@ -187,7 +187,7 @@ export default function CerrarTurno() {
             return (
               <button key={m.key} type="button" disabled={soloLectura} onClick={() => setSheet({ t: 'venta', key })}
                 className="w-full flex items-center gap-3 px-4 py-3 text-left min-h-[60px] hover:bg-soft/60 disabled:opacity-70">
-                <MetodoLogo metodo={m} active={monto > 0} />
+                <MetodoLogo metodo={m} />
                 <span className="flex-1 min-w-0">
                   <span className="block text-base font-medium text-ink">{m.label}</span>
                   {m.acumulado_diario && modo === 'tarde' ? (

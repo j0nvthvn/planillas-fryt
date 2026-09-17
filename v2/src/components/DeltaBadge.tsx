@@ -6,19 +6,19 @@ import Icon from './Icon'
  * hay %; si cambia el signo (caja negativa → positiva) el % engaña, así que
  * se muestra la diferencia en pesos.
  */
-export function DeltaBadge({ actual, anterior }: { actual: number; anterior: number | null | undefined }) {
+export function DeltaBadge({ actual, anterior, fondo = false }: { actual: number; anterior: number | null | undefined; fondo?: boolean }) {
   if (anterior == null) return null
   if (anterior === 0) {
     if (actual === 0) return null
-    return <span className="text-xs font-semibold text-muted2">nuevo</span>
+    return <span className={`text-xs font-semibold text-muted2 ${fondo ? 'rounded-[7px] bg-soft px-[7px] py-1' : ''}`}>nuevo</span>
   }
   const diff = actual - anterior
   const sube = diff > 0
-  const cls = `inline-flex items-center gap-0.5 text-xs font-bold ${sube ? 'text-pos' : 'text-neg'}`
+  const cls = `inline-flex items-center gap-[3px] text-xs font-semibold tabular-nums ${sube ? 'text-pos' : 'text-neg'} ${fondo ? `rounded-[7px] px-[7px] py-1 ${sube ? 'bg-pos-tint' : 'bg-neg-tint'}` : ''}`
   if ((actual >= 0) !== (anterior >= 0)) {
-    return <span className={cls}><Icon name={sube ? 'caretUp' : 'caretDown'} className="w-3 h-3" stroke={3} />{sube ? '+' : '−'}{clp(Math.abs(diff))}</span>
+    return <span className={cls}><Icon name={sube ? 'caretUp' : 'caretDown'} className="w-[11px] h-[11px]" stroke={3} />{sube ? '+' : '−'}{clp(Math.abs(diff))}</span>
   }
   const pct = (diff / Math.abs(anterior)) * 100
-  if (Math.abs(pct) < 0.5) return <span className="text-xs font-medium text-muted2">≈ igual</span>
-  return <span className={cls}><Icon name={sube ? 'caretUp' : 'caretDown'} className="w-3 h-3" stroke={3} />{Math.abs(pct).toFixed(0)}%</span>
+  if (Math.abs(pct) < 0.5) return <span className={`text-xs font-medium text-muted2 ${fondo ? 'rounded-[7px] bg-soft px-[7px] py-1' : ''}`}>≈ igual</span>
+  return <span className={cls}><Icon name={sube ? 'caretUp' : 'caretDown'} className="w-[11px] h-[11px]" stroke={3} />{Math.abs(pct).toFixed(0)}%</span>
 }
