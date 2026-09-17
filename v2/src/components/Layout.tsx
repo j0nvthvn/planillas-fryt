@@ -62,12 +62,10 @@ export default function Layout({ children }: { children: ReactNode }) {
   const { usuario, esDueno } = useUsuario()
   const online = useOnline()
   const pathname = useRouterState({ select: (s) => s.location.pathname })
-  const conSeccion = useRouterState({ select: (s) => 'seccion' in s.location.search && !!s.location.search.seccion })
   const marcada = seccion(pathname, esDueno)
-  // Barra de estado: índigo donde la banda llega arriba (Hoy y la portada de Ajustes);
-  // en el resto, blanca como la barra del encabezado.
-  const conBanda = pathname === '/' || pathname === '/hoy' || (pathname === '/ajustes' && !conSeccion)
-  useColorBarra(conBanda ? '--saludo-from' : '--card')
+  // Barra de estado: la tapa `franja-barra` y el `theme-color` la sigue; el color
+  // por pantalla lo pone la banda de Hoy y Ajustes (ver `lib/barraEstado`).
+  useColorBarra()
   const items = ITEMS.filter((i) => !i.dueno || esDueno)
   const tabsMovil = items.filter((i) => (esDueno ? TABS_MOVIL_DUENO : TABS_MOVIL_LOCAL).includes(i.to))
   const mitad = Math.ceil(tabsMovil.length / 2)
@@ -92,6 +90,7 @@ export default function Layout({ children }: { children: ReactNode }) {
 
   return (
     <div className="app-shell flex flex-col bg-canvas" data-sin-nav={enfoque || undefined}>
+      <div className="franja-barra" aria-hidden="true" />
       <a href="#contenido" className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-[70] focus:rounded-[10px] focus:bg-card focus:px-4 focus:py-3 focus:text-sm focus:font-semibold focus:text-brand focus:shadow-hero">
         Saltar al contenido
       </a>

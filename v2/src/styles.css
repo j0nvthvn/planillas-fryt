@@ -51,6 +51,9 @@
   --shadow-fab:  0 8px 20px -6px rgba(79, 70, 229, .5);
   --shadow-bar:  0 -6px 20px -12px rgba(16, 24, 40, .18);
   --sidebar-w:   236px;
+  /* Alto de la barra de estado del celular. Como variable (y no `env()` suelto)
+     se puede simular en el navegador y en las pruebas para ver cómo queda. */
+  --safe-top: env(safe-area-inset-top);
   /* Banda del saludo en Hoy: el texto encima es blanco en ambos temas. */
   --saludo-from: #3730A3;
   --saludo-to:   #4F46E5;
@@ -176,7 +179,7 @@
     -webkit-font-smoothing: antialiased;
     overscroll-behavior: none;
     overflow-x: hidden;
-    padding-top: env(safe-area-inset-top);
+    padding-top: var(--safe-top);
     transition: background-color .2s ease, color .2s ease;
   }
   /* Escritorio: la página reserva siempre el ancho de la barra de scroll,
@@ -290,7 +293,10 @@
   }
 }
 
-/* Fondo del saludo de Hoy: degradado de marca con el borde inferior en diagonal. */
+/* Fondo del saludo de Hoy: degradado de marca con el borde inferior en diagonal.
+   En el celular la banda sube hasta el borde de la pantalla y crece `--safe-top`
+   (ver `Banda.tsx`): el trozo que queda bajo la barra de estado lo recorta el
+   `main`, y ahí `franja-barra` repite el mismo degradado, del mismo tamaño. */
 @utility saludo-banda {
   background: linear-gradient(135deg, var(--saludo-from), var(--saludo-to));
   clip-path: polygon(0 0, 100% 0, 100% 64%, 0 100%);
@@ -324,6 +330,26 @@
   .pb-nav { padding-bottom: calc(var(--nav-h) + 16px); }
   .above-nav { bottom: var(--nav-h); }
   @media (min-width: 768px) { .above-nav { bottom: 0; } }
+
+  /* Barra de estado del celular: nada de la app pasa por debajo de la hora y
+     la batería; esta franja fija la tapa siempre. Lleva el fondo de la página,
+     o el degradado de la banda mientras esta cubre el tope (`lib/barraEstado`
+     marca `data-banda` y pone ahí mismo el `theme-color`). */
+  .franja-barra {
+    position: fixed;
+    inset: 0 0 auto 0;
+    z-index: 60;
+    pointer-events: none;
+    height: var(--safe-top);
+    background-color: var(--canvas);
+    transition: background-color .15s ease;
+  }
+  :root[data-banda] .franja-barra {
+    background-image: linear-gradient(135deg, var(--saludo-from), var(--saludo-to));
+    background-repeat: no-repeat;
+    background-size: 100% calc(var(--banda-h, 176px) + var(--safe-top));
+    background-position: 0 0;
+  }
 
   .app-shell { height: 100dvh; overflow: hidden; }
   @media (min-width: 768px) { .app-shell { height: auto; min-height: 100vh; overflow: visible; } }

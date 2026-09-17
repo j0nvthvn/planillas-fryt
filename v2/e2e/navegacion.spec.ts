@@ -90,20 +90,35 @@ test('la flecha vuelve al origen con su filtro, o al Historial si no hay origen'
   await expect(nueva).toHaveURL(/\/historial$/)
 })
 
-test('la barra de estado sigue la pantalla y el tema', async ({ page }) => {
+/**
+ * La barra de estado del celular: la tapa `franja-barra` y el `theme-color` la
+ * sigue, para que el sistema elija íconos que se distingan. Va del color de la
+ * banda mientras esta cubre el tope, y si no, del fondo de la página.
+ */
+test('la barra de estado sigue la banda y el tema', async ({ page }) => {
+  // Ventana baja: así Hoy tiene de sobra para bajar y perder la banda de vista.
+  await page.setViewportSize({ width: 412, height: 480 })
   await entrar(page)
   const colorBarra = page.locator('meta[name="theme-color"]')
+  await expect(page.getByRole('heading', { name: /Hola/ })).toBeVisible()
   await expect(colorBarra).toHaveAttribute('content', '#3730A3')
+
   await barra(page).getByRole('link', { name: 'Historial' }).click()
-  await expect(colorBarra).toHaveAttribute('content', '#FFFFFF')
+  await expect(colorBarra).toHaveAttribute('content', '#F6F7F9')
   await barra(page).getByRole('link', { name: 'Ajustes' }).click()
   await expect(colorBarra).toHaveAttribute('content', '#3730A3')
-  await page.getByRole('link', { name: /Correos/ }).click()
-  await expect(colorBarra).toHaveAttribute('content', '#FFFFFF')
-  await page.getByRole('link', { name: 'Volver' }).click()
+
+  // Al bajar, la banda sale de la pantalla y la barra vuelve al fondo.
+  await main(page).evaluate((el) => { (el as unknown as ConScroll).scrollTop = 600 })
+  await expect.poll(() => scrollDeMain(page)).toBeGreaterThan(220)
+  await expect(colorBarra).toHaveAttribute('content', '#F6F7F9')
+  await main(page).evaluate((el) => { (el as unknown as ConScroll).scrollTop = 0 })
+  await expect(colorBarra).toHaveAttribute('content', '#3730A3')
+
   await page.getByRole('link', { name: /Apariencia/ }).click()
+  await expect(colorBarra).toHaveAttribute('content', '#F6F7F9')
   await page.getByRole('radio', { name: 'oscuro' }).click()
-  await expect(colorBarra).toHaveAttribute('content', '#15181D')
+  await expect(colorBarra).toHaveAttribute('content', '#0B0D10')
   await barra(page).getByRole('link', { name: 'Hoy' }).click()
   await expect(colorBarra).toHaveAttribute('content', '#1E2240')
 })

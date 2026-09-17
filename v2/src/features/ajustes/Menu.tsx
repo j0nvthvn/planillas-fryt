@@ -25,7 +25,7 @@ export function Menu({ activa, abierta }: { activa: Seccion; abierta: boolean })
   const [salir, setSalir] = useState(false)
   return (
     <>
-      <Banda className="h-[196px] md:h-[208px]" />
+      <Banda className="md:h-[208px]" alto={196} />
       <header className="pt-1 mb-7 md:px-5 md:pt-5">
         <div className="flex items-center gap-3 min-w-0">
           <span aria-hidden="true" className="w-12 h-12 rounded-full bg-white/15 ring-2 ring-white/70 text-white text-base font-semibold grid place-items-center shrink-0">{iniciales(usuario?.nombre)}</span>
