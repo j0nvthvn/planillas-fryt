@@ -7,8 +7,9 @@ falta y qué no se debe romper. Luego `docs/plan-v2.md` (plan) y
 Reglas cortas:
 - La app vive en la raíz del repo (`src/`, en `app.frytspa.cl`). La app antigua
   se retiró el 2026-09-17 y se borró del repo el 2026-09-19: su código está en
-  el tag `legacy-final` y en la rama `legacy`, que es la que despliega el
-  proyecto de Vercel `planillas-fryt` (solo redirige).
+  el tag `legacy-final` y en la rama `legacy`. Su proyecto de Vercel
+  (`planillas-fryt`) está congelado con un *Ignored Build Step* y solo sirve
+  el redirect 308 a app.frytspa.cl.
 - Un push a `main` despliega producción: avisar antes.
 - La base todavía guarda "día completo" como `tipo='mañana'` +
   `jornadas.es_turno_unico`, y las ventas como una columna por método. Quitar

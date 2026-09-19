@@ -31,12 +31,16 @@ Para correr la app contra staging: `pnpm dev --mode staging`
 |---|---|---|---|---|
 | `frytcontrol-v2` (`prj_VR9zMl4lzvSeWZXAwJI9cx7IErlh`) | raíz | `main` | **app.frytspa.cl** (y frytcontrol-v2.vercel.app) | **prod** (`.env.production`) |
 | `frytcontrol-v2` previews | raíz | cualquier otra rama | frytcontrol-v2-git-<rama>-… (requiere login en Vercel) | staging (`.env.staging`) |
-| `planillas-fryt` | raíz | **`legacy`** | planillas-fryt.vercel.app | nada: redirige (308) a `app.frytspa.cl` |
+| `planillas-fryt` | raíz | ninguna: **congelado** | planillas-fryt.vercel.app | nada: redirige (308) a `app.frytspa.cl` |
 
-Desde el 2026-09-19 la app vive en la raíz del repo (antes en `v2/`) y el
-proyecto `planillas-fryt` quedó congelado en la rama `legacy`, que es donde
-sobrevive el `vercel.json` con el redirect y el código de la app antigua
-(también en el tag `legacy-final`).
+Desde el 2026-09-19 la app vive en la raíz del repo (antes en `v2/`). El
+proyecto `planillas-fryt` quedó **congelado**: lleva un *Ignored Build Step*
+(`exit 0`, en Settings → Git), así que no construye nada nuevo y se queda
+sirviendo para siempre su último despliegue, el del redirect 308. Se hizo
+así porque su rama de producción seguía siendo `main`, y al mover la app a
+la raíz ese proyecto habría empezado a construir la app en vez de redirigir.
+Para revivirlo: quitar ese comando. El código de la app antigua vive en el
+tag `legacy-final` y en la rama `legacy`.
 
 El entorno lo decide `VERCEL_ENV` en el `buildCommand` de `vercel.json`:
 producción → `--mode production`, preview → `--mode staging`. No hay

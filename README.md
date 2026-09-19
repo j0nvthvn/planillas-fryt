@@ -86,8 +86,8 @@ Proyecto de Vercel `frytcontrol-v2`, *Root Directory* la raíz del repo (ver
 staging (lo decide `VERCEL_ENV`). Variables: `VITE_SUPABASE_URL`,
 `VITE_SUPABASE_ANON_KEY`.
 
-El repo tiene además el proyecto `planillas-fryt`, que despliega la rama
-`legacy` y solo redirige a `app.frytspa.cl`.
+El repo tiene además el proyecto `planillas-fryt`, congelado (*Ignored Build
+Step*): no construye nada y solo sirve el redirect 308 a `app.frytspa.cl`.
 
 ## Base de datos
 
