@@ -10,7 +10,11 @@ import reactRefresh from 'eslint-plugin-react-refresh'
  * exports que rompen el hot reload.
  */
 export default tseslint.config(
-  { ignores: ['dist', 'dev-dist', 'node_modules', 'playwright-report', 'test-results', 'src/lib/database.types.ts'] },
+  // `supabase/` (Deno), `scripts/` (Node suelto) y `docs/` no pasan por este
+  // ESLint: las plantillas de correo las chequea el `tsc` del paso `correos`
+  // en .github/workflows/ci.yml. Antes quedaban fuera porque la app vivía en
+  // v2/ y el lint nunca salía de esa carpeta.
+  { ignores: ['dist', 'dev-dist', 'node_modules', 'playwright-report', 'test-results', 'src/lib/database.types.ts', 'supabase', 'scripts', 'docs'] },
   {
     files: ['**/*.{ts,tsx}'],
     extends: [js.configs.recommended, ...tseslint.configs.recommendedTypeChecked, reactHooks.configs.flat['recommended-latest']],

@@ -1,9 +1,12 @@
-# FrytControl v2
+# FrytControl
 
-App renovada del registro de turnos del Minimarket Fryt. Convive con la app
-actual (raíz del repo): las dos usan la misma base de Supabase y el modelo
-"día completo o dividido" se traduce a `turnos.tipo` + `jornadas.es_turno_unico`
-para que la app actual lo siga mostrando bien.
+App del registro de turnos del Minimarket Fryt, en https://app.frytspa.cl.
+Único frontend desde el 2026-09-17: la app anterior quedó retirada y su código
+está en el tag `legacy-final` y en la rama `legacy`.
+
+El modelo "día completo o dividido" todavía se guarda como `turnos.tipo` +
+`jornadas.es_turno_unico` (la traducción la hacen `guardar_turno` y `v_turnos`).
+Simplificar eso es la parte de esquema de la Fase 5, aún pendiente.
 
 ## Stack
 
@@ -11,7 +14,7 @@ para que la app actual lo siga mostrando bien.
 - TanStack Router (rutas en `src/router.tsx`, search params con zod)
 - TanStack Query con persistencia en IndexedDB (pantallas instantáneas,
   refresco al volver a la app; sin realtime)
-- Tailwind v4 con los tokens "Cálido Editorial" en `src/styles.css`
+- Tailwind v4 con los tokens del rediseño Fintech en `src/styles.css`
 - PWA (`vite-plugin-pwa`, aviso "Hay una versión nueva"); fuentes alojadas en
   el repo (`@fontsource`), sin depender de Google Fonts
 - ESLint (flat config, reglas con tipos) y Playwright para el e2e
@@ -38,7 +41,8 @@ SMOKE_EMAIL=duena@test.local SMOKE_PASSWORD=<.env.staging.local> \
 ```
 
 La primera vez, `pnpm exec playwright install chromium`. En cada push, GitHub
-Actions corre lint, tipos, tests y build (`.github/workflows/v2.yml`).
+Actions corre lint, tipos, tests, build y las pruebas de las plantillas de
+correo (`.github/workflows/ci.yml`).
 
 ## Estructura
 
@@ -72,8 +76,18 @@ Las lecturas usan `v_turnos`, `v_resumen_dia` y `resumen_periodo`.
 
 ## Deploy
 
-Proyecto de Vercel aparte con *Root Directory* `v2` (ver `vercel.json`).
-Variables: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`.
+Proyecto de Vercel `frytcontrol-v2`, *Root Directory* la raíz del repo (ver
+`vercel.json`): `main` despliega producción y las demás ramas, previews contra
+staging (lo decide `VERCEL_ENV`). Variables: `VITE_SUPABASE_URL`,
+`VITE_SUPABASE_ANON_KEY`.
+
+El repo tiene además el proyecto `planillas-fryt`, que despliega la rama
+`legacy` y solo redirige a `app.frytspa.cl`.
+
+## Base de datos
+
+`supabase/` (migraciones, edge functions y pruebas pgTAP) vive en este mismo
+repo y es compartido: ver `docs/operacion.md`.
 
 ## Accesibilidad
 

@@ -7,7 +7,7 @@ Contexto general en `ESTADO.md`; reglas de diseño en `plan-v2.md` (§2.5).
 
 ## Aplicado
 
-### Base accesible (`v2/src/styles.css`)
+### Base accesible (`src/styles.css`)
 
 - **Foco visible global**: una regla `:focus-visible` con el color de marca,
   para todo lo enfocable (filas de ventas y proveedores, pestañas, chips,

@@ -3,10 +3,9 @@
   "configurations": [
     {
       "name": "dev",
-      "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev"],
-      "port": 5183,
-      "runtimeArgs": ["run", "dev", "--", "--port", "5183"]
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["dev", "--port", "5183"],
+      "port": 5183
     }
   ]
 }

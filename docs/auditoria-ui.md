@@ -14,7 +14,7 @@ tokens y contraste, accesibilidad, consistencia y colores de método.
   - antes: **15 fallas de contraste serias** y 1 `aria-hidden-focus` (el SVG
     enfocable de recharts dentro de un contenedor oculto);
   - ahora: **0 violaciones**.
-  - Queda como `v2/e2e/a11y.spec.ts`, que falla con violaciones serias o críticas.
+  - Queda como `e2e/a11y.spec.ts`, que falla con violaciones serias o críticas.
 - Capturas lado a lado antes/después con Playwright: Pixel 7, 320 px y
   escritorio, en claro y oscuro.
 - Teclado: el primer Tab lleva a «Saltar al contenido», las flechas cambian

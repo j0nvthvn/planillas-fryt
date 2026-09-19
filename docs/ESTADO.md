@@ -2,7 +2,7 @@
 
 Documento para quien continúe el trabajo, sea persona o modelo. Resume qué
 es el sistema, qué se hizo, en qué punto está cada fase y qué falta, con las
-reglas que no se deben romper. Última actualización: **2026-09-17**.
+reglas que no se deben romper. Última actualización: **2026-09-19**.
 
 Documentos complementarios:
 - `docs/plan-v2.md`: el plan completo por fases (con encabezado de estado).
@@ -11,7 +11,7 @@ Documentos complementarios:
 - `docs/cambio-fase4.md`: guion de la noche del cambio (Fase 4).
 - `docs/limpieza-datos-2026-09.sql`: consultas de limpieza y de comparación.
 - `docs/mejoras-ux.md`: mejoras de UI/UX de la v2 (tipografía, accesibilidad, flujo y la revisión móvil con capturas del 2026-09-16): qué se aplicó y qué quedó pendiente.
-- `v2/README.md`: la app nueva (stack, estructura, cómo correrla).
+- `README.md`: la app (stack, estructura, cómo correrla).
 
 ## 1. Qué es esto
 
@@ -23,16 +23,16 @@ y Jonathan (desarrollador, `jonathan.flores@mail.udp.cl`, también rol dueño).
 Hay una cuenta trabajador (`diegoflores@gmail.com`) casi sin uso.
 
 Desde el **2026-09-17** la única app en uso es la v2, en
-**https://app.frytspa.cl**, sobre la base de sa-east-1. La app actual quedó
-retirada: su dirección redirige a la nueva.
+**https://app.frytspa.cl**, sobre la base de sa-east-1. La app antigua quedó
+retirada (su dirección redirige) y el **2026-09-19** se borró del repo.
 
-| App | Carpeta | URL | Estado |
+| App | Dónde | URL | Estado |
 |---|---|---|---|
-| Antigua (v1) | raíz del repo (`src/`) | https://planillas-fryt.vercel.app | **Retirada** (2026-09-17): redirige con 308 a app.frytspa.cl. El código se borra en la Fase 5. |
-| Nueva (v2) | `v2/` | https://app.frytspa.cl (también frytcontrol-v2.vercel.app) | **Principal** desde el 2026-09-17. |
+| FrytControl (v2) | raíz del repo (`src/`) | https://app.frytspa.cl (también frytcontrol-v2.vercel.app) | **La única**, desde el 2026-09-17. Vive en la raíz desde el 2026-09-19 (antes en `v2/`). |
+| Antigua (v1) | tag `legacy-final`, rama `legacy` | https://planillas-fryt.vercel.app | **Retirada** (2026-09-17) y fuera del repo (2026-09-19). La rama `legacy` es la que despliega el redirect 308 a app.frytspa.cl. |
 
-**Regla de oro:** hasta la Fase 5, todo cambio de base de datos sigue siendo
-aditivo, para poder volver atrás (ver `docs/cambio-fase4.md` → "Volver
+**Regla de oro:** mientras no se haga la parte de esquema de la Fase 5, todo
+cambio de base de datos sigue siendo aditivo, para poder volver atrás (ver `docs/cambio-fase4.md` → "Volver
 atrás"). Un push a `main` despliega producción: se avisa antes.
 
 ## 2. Infraestructura
@@ -43,15 +43,15 @@ atrás"). Un push a `main` despliega producción: se avisa antes.
 | Supabase prod anterior | `kfmwhtbvgqurnpotypii` (us-east-2) | **Pausado** el 2026-09-17 con los datos a esa fecha. No borrar antes del 2026-10-17. El plan gratis admite 2 proyectos activos: prod y staging. |
 | Supabase staging | `psdhhwcxjcobwxjiemrr` (sa-east-1), misma org | Copia de prod del 2026-09-16 con los mismos ids, esquema completo. Se pausa tras 7 días sin uso; basta reactivarlo. |
 | Vercel team | `team_K2vm0PJ0CZxXz4pp3MD3ndxe` (hobby) | |
-| Vercel `planillas-fryt` | `prj_j5ZCp5g9YamCQKQy8Bthbzzjt6BZ` | App actual. Rama `main`, Root Directory raíz. |
-| Vercel `frytcontrol-v2` | `prj_VR9zMl4lzvSeWZXAwJI9cx7IErlh` | v2. Rama de producción `main`, Root Directory `v2`. Producción → prod; previews (p. ej. rama `v2`) → staging, decidido por `VERCEL_ENV` en `v2/vercel.json`. Las previews piden login de Vercel. |
-| GitHub | `j0nvthvn/planillas-fryt` | `main` es la rama de verdad. Un push a `main` despliega **las dos apps**. |
+| Vercel `planillas-fryt` | `prj_j5ZCp5g9YamCQKQy8Bthbzzjt6BZ` | Solo el redirect 308. Rama **`legacy`** (desde el 2026-09-19), Root Directory raíz. |
+| Vercel `frytcontrol-v2` | `prj_VR9zMl4lzvSeWZXAwJI9cx7IErlh` | La app. Rama de producción `main`, Root Directory **la raíz** (desde el 2026-09-19). Producción → prod; previews → staging, decidido por `VERCEL_ENV` en `vercel.json`. Las previews piden login de Vercel. |
+| GitHub | `j0nvthvn/planillas-fryt` | `main` es la rama de verdad: un push despliega producción. La rama `legacy` está congelada. |
 | Dominio | `frytspa.cl` (DNS en Cloudflare) | `app` → Vercel (DNS only). Registros de Resend en `send`, `resend._domainkey` y `_dmarc`. |
 | Resend | dominio `frytspa.cl` verificado | Correos desde `avisos@frytspa.cl` con el diseño Fintech: cierre, diario (apagado por defecto), semanal y mensual, a las 08:00 de Chile; cada persona elige en Ajustes → Correos. Ver `docs/operacion.md` → "Correos". |
 
 Credenciales y dónde están (nunca en el repo, salvo anon keys):
-- `.env.local` (raíz) y `v2/.env.local`: prod. `v2/.env.production` y `v2/.env.staging` **sí** se versionan (URL + anon key, públicas por diseño; RLS protege los datos).
-- `.env.staging.local` y `v2/.env.staging.local`: staging + `STAGING_PASSWORD`, contraseña única de todas las cuentas de staging (las 3 reales + `duena@test.local` / `local@test.local`). Los hashes de prod no se copiaron.
+- `.env.local`: prod. `.env.production` y `.env.staging` **sí** se versionan (URL + anon key, públicas por diseño; RLS protege los datos).
+- `.env.staging.local`: staging + `STAGING_PASSWORD`, contraseña única de todas las cuentas de staging (las 3 reales + `duena@test.local` / `local@test.local`). Los hashes de prod no se copiaron.
 - Supabase CLI: `pnpm exec supabase` logueada con la cuenta correcta. Al 2026-09-17 sigue **linkeada al prod anterior (pausado)**: usar `--project-ref aecopggpahxjaglakqwd` o `supabase link` de nuevo.
 - `~/.config/frytcontrol/migracion.env` (fuera del repo, 600): cadenas del session pooler de ambas bases y la API key de Resend. El usuario tiene las contraseñas. El secreto `SUPABASE_DB_URL` de GitHub apunta a la base nueva.
 
@@ -79,12 +79,12 @@ Credenciales y dónde están (nunca en el repo, salvo anon keys):
 - Incidente ya corregido: el backfill de `proveedor_id` tocó `updated_at`; se restauró desde el respaldo y la migración ahora desactiva esos triggers.
 
 ### Fase 2 — App v2: **hecha** (2026-09-16/17; ajustes móviles 2026-09-16)
-- `v2/`: Vite 7, React 19, TS estricto, TanStack Router + Query (persistencia IndexedDB), Tailwind v4, PWA. Pantallas: Login, Hoy, Cerrar turno, Planilla del día, Historial, Análisis, Proveedores, Ajustes.
+- La app (hoy en la raíz, entonces en `v2/`): Vite 7, React 19, TS estricto, TanStack Router + Query (persistencia IndexedDB), Tailwind v4, PWA. Pantallas: Login, Hoy, Cerrar turno, Planilla del día, Historial, Análisis, Proveedores, Ajustes.
 - Diseño inicial decidido con la dueña/Jonathan: identidad café cálida (reemplazada por el rediseño Fintech, ver abajo), móvil primero, camino "A" (cifra al frente) + teclado encadenado + planilla en cuaderno. Exploraciones: https://claude.ai/artifact/VibHvxrnP7PXgWvAVUifqa
 - Verificación: `pnpm lint`, `pnpm typecheck`, `pnpm test` (90 unitarios), `pnpm build`, `pnpm e2e` (Playwright contra staging) y 6 tests de integración contra staging (`src/test/integracion.staging.test.ts`, requiere `SMOKE_PASSWORD`).
 - **Mejoras del 2026-09-17** (detalle y pendientes en `docs/mejoras-ux.md`): hoja de revisión antes de cerrar y conteo de caja por billetes —las dos atacan lo medido en prod: 25 % de cierres son correcciones y no hay ningún conteo registrado—, aviso de proveedor parecido, base accesible (foco visible, `prefers-reduced-motion`, hojas como `<dialog>`, nada bajo 12 px, contrastes), escala tipográfica en tokens y fuentes alojadas en el repo.
 - **Exportación** (detalle en `docs/mejoras-ux.md`): Análisis → Exportar ofrece un Excel con varias hojas, un CSV por turno (igual al de la app actual), un CSV de compras a proveedores y un reporte imprimible o PDF (`/analisis/reporte`). En el celular el archivo se comparte. Corrige el CSV por día anterior, que duplicaba el fondo en "Efectivo esperado" y omitía métodos inactivos.
-- **Ingeniería:** ESLint (flat config con reglas de tipos), GitHub Actions (`.github/workflows/v2.yml`: lint + tipos + tests + build en cada push/PR) y Playwright (`v2/e2e/`, el cierre completo y la exportación contra staging; requiere `pnpm exec playwright install chromium`).
+- **Ingeniería:** ESLint (flat config con reglas de tipos), GitHub Actions (`.github/workflows/ci.yml`, antes `v2.yml`: lint + tipos + tests + build en cada push/PR) y Playwright (`e2e/`, el cierre completo y la exportación contra staging; requiere `pnpm exec playwright install chromium`).
 - **Ajustes móviles** (commit `33f27f4`, en producción; detalle en `docs/mejoras-ux.md` → "Móvil"): revisión con capturas de Playwright en Pixel 7 (claro/oscuro) e iPhone SE contra staging. Fechas sin "De" en mayúscula (`mayusculaInicial`) y negativos como "−$404.199" en `clp`; `BottomSheet` con `footer` fijo (teclado, conteo y revisión siempre a la vista); sin botón flotante en Cerrar turno; Historial agrupado por mes con filas que caben en 375 px; Análisis con fechas a todo lo ancho y rango siempre válido (`ajustarRango`); Ajustes apilado; esqueletos de carga (`Esqueleto.tsx`) en vez de spinner; login con "Ingresando…" y `?volver=`; color de los métodos aclarado en oscuro (`colorMetodo` + `--metodo-mezcla`). Cierra los tres pendientes que tenía `mejoras-ux.md`.
 - **Selección de texto bloqueada** en toda la interfaz, sin el menú de copiar al mantener presionado (`styles.css`, capa base). Solo los campos de texto se seleccionan. Reemplaza la utilidad `no-select`: antes se podían copiar montos para WhatsApp, y ahora para eso está Compartir.
 - **Rediseño Fintech** (rama `rediseno-fintech`; handoff en `docs/design_handoff_rediseno_fintech/`; detalle en `docs/mejoras-ux.md` → "Rediseño Fintech"): se reemplaza la piel café por gris/blanco/indigo, Inter + Inter Tight (solo subconjunto latino) y cifras tabulares. Sin cambios de flujo, rutas, consultas ni textos de dominio. Revisado con capturas en Pixel 7 (claro/oscuro), iPhone SE y escritorio contra staging; `pnpm e2e` sin cambios de selectores.
@@ -94,7 +94,7 @@ Credenciales y dónde están (nunca en el repo, salvo anon keys):
   - Radios con flechas.
   - Regiones vivas y foco al navegar.
   - Utilitarios compartidos.
-  - axe en `v2/e2e/a11y.spec.ts`: 0 violaciones (antes, 15).
+  - axe en `e2e/a11y.spec.ts`: 0 violaciones (antes, 15).
   - Migración `20260919000000_colores_metodos_fintech.sql` aplicada en staging y en prod (2026-09-17, vía MCP, versión registrada con el nombre del archivo).
 - **Encabezado al estilo Mercado Pago** (commit `c180116`, 2026-09-17, en producción):
   - Hoy lleva logo, "Hola, <nombre>" y fecha sobre una banda índigo con borde diagonal (`SaludoHeader` + `Banda`; el contenedor necesita `relative isolate`). La cuenta del local cierra sesión desde ahí.
@@ -141,31 +141,28 @@ Credenciales y dónde están (nunca en el repo, salvo anon keys):
 - **Correos rediseñados** (2026-09-17, rama `correos`): plantillas Fintech en `supabase/functions/_shared/correo/`, resumen mensual, preferencias por persona (`correo_destinatarios`), hora configurable con el horario de verano resuelto (`programar_resumenes`, un cron por hora) y pruebas desde Ajustes → Correos. pgTAP 30/30 (`supabase/tests/correos.test.sql`).
 - **Pendiente:** confirmar el primer día (entrada de la dueña en `app.frytspa.cl`, correo del primer cierre, resumen diario de las 12:00 UTC, `logs_error`). Reinstalar la PWA desde la dirección nueva en el celular del local. Re-linkear la CLI al proyecto nuevo.
 
-### Fase 5 — Contracción: **no iniciada**
-Decidido: empezar tras ≈1 semana estable con la v2 (la app antigua ya está retirada), es decir, desde el 2026-09-24: tag `legacy-final`, mover `v2/` a la raíz, `turnos.tipo` admite `'completo'`, ventas por filas, quitar triggers de compatibilidad, realtime y `replica identity full`. Detalle en `docs/plan-v2.md`.
+### Fase 5 — Contracción: **a medias** (repo hecho el 2026-09-19; esquema pendiente)
+- **Hecho (sin tocar la base):** tag `legacy-final` y rama `legacy` con el último estado de la app antigua; la v1 borrada del repo (7.461 líneas: `src/` viejo, `index.html`, configs de Vite/Tailwind/PostCSS, `public/`, `vercel.json` del redirect y `scripts/smoke-legacy.mjs`); `v2/` movido a la raíz con un solo `package.json` (que conserva la devDependency `supabase`, la CLI que usan `scripts/test-db.sh`, `scripts/migrar-region.sh` y el simulacro de respaldo), un `.gitignore`, un `pnpm-lock.yaml` y un `pnpm-workspace.yaml`; `.github/workflows/v2.yml` → `ci.yml` sin `working-directory` ni rutas `../`, y corriendo también `periodo.test.ts`, que antes no se ejecutaba en ninguna parte.
+- **Pendiente (toca la base, por eso va aparte):** quitar realtime y `replica identity full` —cuyo único consumidor era la v1, así que sale sin tocar el frontend—, `turnos.tipo = 'completo'` y eliminar `jornadas.es_turno_unico`, ventas por filas (`ventas_turno_metodo`), eliminar `proveedores_turno.nombre` y sus tres triggers de compatibilidad, y las políticas por `usuario_id` + `get_my_rol`. Detalle en `docs/plan-v2.md`.
 
 ## 5. Cómo trabajar en este repo
 
 ```sh
-# app actual (raíz)
+# la app (raíz del repo)
 pnpm install && pnpm dev                       # prod (.env.local)  |  pnpm dev --mode staging
+pnpm lint && pnpm typecheck && pnpm test && pnpm build
+pnpm e2e                                       # Playwright contra staging (usa STAGING_PASSWORD)
+# mirar la interfaz: pnpm dev --mode staging --port 5174 y un script de Playwright
+# (devices Pixel 7 / iPhone SE) que importe node_modules/@playwright/test por ruta absoluta
 
 # base local (Docker) y tests de migraciones
 pnpm exec supabase start -x studio,imgproxy,inbucket,mailpit,logflare,vector,edge-runtime,realtime,storage-api,supavisor,pg_prove
 ./scripts/test-db.sh                           # reset → seed sucio → migraciones → pgTAP
-
-# v2
-cd v2 && pnpm install && pnpm dev --mode staging
-pnpm lint && pnpm typecheck && pnpm test && pnpm build
-pnpm e2e                                       # Playwright contra staging (usa STAGING_PASSWORD)
-# mirar la interfaz: pnpm dev --mode staging --port 5174 y un script de Playwright
-# (devices Pixel 7 / iPhone SE) que importe v2/node_modules/@playwright/test por ruta absoluta
 SMOKE_EMAIL=duena@test.local SMOKE_PASSWORD=<.env.staging.local> pnpm vitest run --mode staging src/test/integracion.staging.test.ts
 ```
 
-- Migraciones nuevas: archivo en `supabase/migrations/` (idempotente), probar con `scripts/test-db.sh`, aplicar en staging y luego en prod (MCP `apply_migration` o `supabase db push` con la CLI linkeada), y registrar la versión en `supabase_migrations.schema_migrations` con el nombre del archivo si se aplicó por MCP. Regenerar tipos: `pnpm exec supabase gen types typescript --linked --schema public > v2/src/lib/database.types.ts`.
-- Nunca correr `scripts/smoke-legacy.mjs` contra prod (escribe datos; el script lo rechaza). Contra staging está bien: limpia lo que crea.
-- Commits en español con prefijo tipo (`feat(v2):`, `fix(db):`), firmados con `Co-Authored-By` del modelo. Push a `main` solo cuando la app actual pueda recibir lo que lleva.
+- Migraciones nuevas: archivo en `supabase/migrations/` (idempotente), probar con `scripts/test-db.sh`, aplicar en staging y luego en prod (MCP `apply_migration` o `supabase db push` con la CLI linkeada), y registrar la versión en `supabase_migrations.schema_migrations` con el nombre del archivo si se aplicó por MCP. Regenerar tipos: `pnpm exec supabase gen types typescript --linked --schema public > src/lib/database.types.ts`.
+- Commits en español con prefijo tipo (`feat:`, `fix(db):`), firmados con `Co-Authored-By` del modelo. Un push a `main` despliega producción: avisar antes.
 - Antes de tocar prod: exportar las tablas (JSON vía MCP o `supabase db query --linked`) como respaldo; el plan gratis no tiene backups.
 
 ## 6. Avisos y trampas conocidas
