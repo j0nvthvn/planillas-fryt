@@ -1,120 +1,14 @@
 import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { cargarTurnosDia, guardarTurno, ErrorGuardado, type Modo, type TurnoConLineas, type VTurno } from './api'
-import { leerBorradorLocal, guardarBorradorLocal, borrarBorradorLocal, type BorradorLocal } from './borradorLocal'
+import { cargarTurnosDia, guardarTurno, ErrorGuardado, type Modo, type VTurno } from './api'
+import { leerBorradorLocal, guardarBorradorLocal, borrarBorradorLocal } from './borradorLocal'
 import { marcarInicio, registrarCierre } from './metricas'
-import type { Conteo } from './conteo'
+import {
+  cargaInicial, debeAutoguardar, debeEnviarAlSalir, inicial, reducer, tieneContenido,
+  type Accion, type FormState,
+} from './estadoTurno'
 import { qk } from '@/lib/query'
-import { totalesTurno, VENTAS_VACIAS, type MetodoKey, type ProveedorLinea, type Ventas } from '@/lib/totales'
-import { toNum } from '@/lib/format'
-
-export interface LineaForm extends ProveedorLinea {
-  /** id local estable para la lista (las filas nuevas no tienen id de base). */
-  key: string
-}
-
-export interface FormState {
-  cargado: boolean
-  turnoId: string | null
-  /** El turno existe en la base y ya no es borrador. */
-  cerrado: boolean
-  baseUpdatedAt: string | null
-  trabajadorId: string | null
-  fondoInicial: number
-  ventas: Ventas
-  proveedores: LineaForm[]
-  contoCaja: boolean
-  efectivoContado: number | null
-  /** Desglose por denominaciones, solo local (ver borradorLocal). */
-  desgloseConteo: Conteo | null
-  /** Hubo cambios desde la última sincronización con el servidor. */
-  sucio: boolean
-}
-
-type Accion =
-  | { type: 'cargar'; state: Partial<FormState> }
-  | { type: 'venta'; key: MetodoKey; monto: number }
-  | { type: 'proveedor'; linea: LineaForm }
-  | { type: 'quitarProveedor'; key: string }
-  | { type: 'trabajador'; id: string | null }
-  | { type: 'fondo'; monto: number }
-  | { type: 'caja'; conto: boolean; monto: number | null; desglose?: Conteo | null }
-  | { type: 'sincronizado'; turno: VTurno; sucio: boolean }
-
-const inicial: FormState = {
-  cargado: false, turnoId: null, cerrado: false, baseUpdatedAt: null, trabajadorId: null, fondoInicial: 0,
-  ventas: { ...VENTAS_VACIAS }, proveedores: [], contoCaja: false, efectivoContado: null, desgloseConteo: null, sucio: false,
-}
-
-function reducer(s: FormState, a: Accion): FormState {
-  switch (a.type) {
-    case 'cargar': return { ...inicial, ...a.state, cargado: true, sucio: false }
-    case 'venta': return { ...s, ventas: { ...s.ventas, [a.key]: a.monto }, sucio: true }
-    case 'proveedor': {
-      const existe = s.proveedores.some((p) => p.key === a.linea.key)
-      return { ...s, sucio: true, proveedores: existe ? s.proveedores.map((p) => (p.key === a.linea.key ? a.linea : p)) : [...s.proveedores, a.linea] }
-    }
-    case 'quitarProveedor': return { ...s, sucio: true, proveedores: s.proveedores.filter((p) => p.key !== a.key) }
-    case 'trabajador': return { ...s, trabajadorId: a.id, sucio: true }
-    case 'fondo': return { ...s, fondoInicial: a.monto, sucio: true }
-    case 'caja': return { ...s, contoCaja: a.conto, efectivoContado: a.conto ? a.monto : null, desgloseConteo: a.conto ? (a.desglose ?? null) : null, sucio: true }
-    case 'sincronizado': return {
-      ...s,
-      turnoId: a.turno.id,
-      baseUpdatedAt: a.turno.updated_at,
-      // Si el usuario siguió escribiendo mientras viajaba la petición, sigue
-      // habiendo cambios pendientes (a.sucio = true) y el próximo autoguardado
-      // los manda; antes se marcaba limpio y esos cambios quedaban solo en el
-      // dispositivo hasta el cierre (Hoy mostraba datos viejos).
-      sucio: a.sucio,
-    }
-  }
-}
-
-let seq = 0
-export const nuevaKey = () => `l${Date.now().toString(36)}${(seq++).toString(36)}`
-
-function desdeServidor(t: TurnoConLineas): Partial<FormState> {
-  const v = t.turno
-  return {
-    turnoId: v.id,
-    cerrado: !v.is_draft,
-    baseUpdatedAt: v.updated_at,
-    trabajadorId: v.trabajador_id,
-    fondoInicial: toNum(v.fondo_inicial),
-    ventas: {
-      efectivo: toNum(v.efectivo), getnet: toNum(v.getnet), mercadopago: toNum(v.mercadopago),
-      edenred: toNum(v.edenred), amipass: toNum(v.amipass), transferencia: toNum(v.transferencia),
-    },
-    proveedores: t.proveedores.map((p) => ({
-      key: p.id, id: p.id, proveedor_id: p.proveedor_id, nombre: p.nombre, monto: toNum(p.monto),
-      forma_pago: p.forma_pago === 'transferencia' ? 'transferencia' : 'efectivo',
-    })),
-    contoCaja: v.efectivo_contado != null,
-    efectivoContado: v.efectivo_contado,
-    desgloseConteo: null,
-  }
-}
-
-function desdeLocal(b: BorradorLocal, servidor: TurnoConLineas | undefined): Partial<FormState> {
-  return {
-    turnoId: servidor?.turno.id ?? null,
-    cerrado: servidor ? !servidor.turno.is_draft : false,
-    baseUpdatedAt: servidor?.turno.updated_at ?? b.baseUpdatedAt,
-    trabajadorId: b.trabajadorId,
-    fondoInicial: b.fondoInicial,
-    ventas: { ...VENTAS_VACIAS, ...b.ventas },
-    proveedores: b.proveedores.map((p) => ({ ...p, key: p.id ?? nuevaKey() })),
-    contoCaja: b.contoCaja,
-    efectivoContado: b.efectivoContado,
-    desgloseConteo: b.desgloseConteo ?? null,
-    sucio: true,
-  }
-}
-
-export function tieneContenido(s: FormState): boolean {
-  return Object.values(s.ventas).some((v) => v > 0) || s.proveedores.some((p) => p.monto > 0)
-}
+import { totalesTurno } from '@/lib/totales'
 
 export interface Conflicto { actual: VTurno }
 
@@ -126,10 +20,10 @@ interface Opciones {
 }
 
 /**
- * Estado del formulario de cierre para (fecha, modo):
- *  - carga el turno del servidor y el borrador local y usa el más reciente;
+ * Conecta el estado del formulario (`estadoTurno.ts`, sin React) con la red:
+ *  - carga el turno del servidor y el borrador local y usa el que corresponda;
  *  - cada cambio se guarda al instante en el dispositivo;
- *  - con contenido y conexión, borrador en el servidor con debounce de 3 s;
+ *  - con contenido y conexión, borrador en el servidor con debounce;
  *  - `cerrar()` hace todo en una llamada (guardar_turno con cerrar:true).
  */
 export function useTurnoForm({ fecha, modo, fondoPorDefecto, online }: Opciones) {
@@ -163,11 +57,9 @@ export function useTurnoForm({ fecha, modo, fondoPorDefecto, online }: Opciones)
       const local = await leerBorradorLocal(fecha, modo)
       if (!vivo) return
       listo = true
-      const servidorMs = servidor ? new Date(servidor.turno.updated_at ?? 0).getTime() : 0
-      const usarLocal = !!local && (!servidor || servidor.turno.is_draft) && local.guardadoEn > servidorMs
-      if (usarLocal && local) dispatch({ type: 'cargar', state: desdeLocal(local, servidor) })
-      else if (servidor) { dispatch({ type: 'cargar', state: desdeServidor(servidor) }); void borrarBorradorLocal(fecha, modo) }
-      else dispatch({ type: 'cargar', state: { fondoInicial: fondoPorDefecto } })
+      const { state: inicio, descartarLocal } = cargaInicial({ servidor, local, fondoPorDefecto })
+      dispatch({ type: 'cargar', state: inicio })
+      if (descartarLocal) void borrarBorradorLocal(fecha, modo)
     })()
     return () => {
       vivo = false
@@ -219,11 +111,7 @@ export function useTurnoForm({ fecha, modo, fondoPorDefecto, online }: Opciones)
   const programarAutosave = useCallback(() => {
     if (timer.current) clearTimeout(timer.current)
     timer.current = setTimeout(() => {
-      const s = stateRef.current
-      // Con un borrador ya creado en el servidor se sincroniza todo, incluso
-      // dejar un monto en 0 (antes "sin contenido" = no enviar, y el servidor
-      // conservaba el valor anterior). Sin borrador aún, se espera al primer dato.
-      if (!s.sucio || s.cerrado || !online || guardando || !(tieneContenido(s) || s.turnoId)) return
+      if (!debeAutoguardar(stateRef.current, { online, guardando })) return
       void sincronizar(false)
     }, 1500)
   }, [online, sincronizar, guardando])
@@ -232,11 +120,8 @@ export function useTurnoForm({ fecha, modo, fondoPorDefecto, online }: Opciones)
   const sincronizarRef = useRef(sincronizar)
   sincronizarRef.current = sincronizar
 
-  // Al salir de la pantalla (o al irse a segundo plano) no se espera el
-  // debounce: lo pendiente se manda ya, para que Hoy lo muestre al llegar.
   const flush = useCallback(() => {
-    const s = stateRef.current
-    if (s.sucio && !s.cerrado && navigator.onLine && (tieneContenido(s) || s.turnoId)) {
+    if (debeEnviarAlSalir(stateRef.current, navigator.onLine)) {
       if (timer.current) clearTimeout(timer.current)
       void sincronizarRef.current(false)
     }
@@ -288,7 +173,7 @@ export function useTurnoForm({ fecha, modo, fondoPorDefecto, online }: Opciones)
   /** Ante un conflicto: insistir con lo local (sin versión base). */
   const sobrescribir = useCallback(async (cerrarTambien: boolean) => {
     setConflicto(null)
-    dispatch({ type: 'cargar', state: { ...stateRef.current, baseUpdatedAt: null, sucio: true } })
+    dispatch({ type: 'cargar', state: { ...stateRef.current, baseUpdatedAt: null } })
     stateRef.current = { ...stateRef.current, baseUpdatedAt: null, sucio: true }
     setGuardando(true)
     try { return await sincronizar(cerrarTambien) } finally { setGuardando(false) }
