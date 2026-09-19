@@ -6,7 +6,7 @@ import type { MetodoKey } from '@/lib/totales'
 import type { Modo } from './api'
 import { etiquetaCerrar } from './modo'
 import { avisosCierre, type DatosRevision } from './revision'
-import type { LineaForm } from './useTurnoForm'
+import type { LineaForm } from './estadoTurno'
 
 interface Props {
   modo: Modo
