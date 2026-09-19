@@ -5,7 +5,8 @@
 > - Fase 1: migraciones 1.1–1.4 probadas en local (62 pgTAP), en staging `psdhhwcxjcobwxjiemrr` (sa-east-1, copia real de prod, humo 60/60) y **aplicadas en prod** el 2026-09-16: 0 diferencias entre `turno_totales` y los cierres. Ver `docs/operacion.md` (estado de producción).
 > - Fase 2 (app v2): código en `v2/` (stack 2.1, pantallas 2.4, tokens 2.5). Typecheck, tests unitarios y build en verde. Desplegada en https://frytcontrol-v2.vercel.app (proyecto `frytcontrol-v2`, rama `v2`, apunta a staging). Diseño (2.5) decidido el 2026-09-16: identidad café, móvil primero, camino "A" (cifra al frente) + teclado encadenado entre métodos + planilla del día en formato cuaderno; exploraciones en https://claude.ai/artifact/VibHvxrnP7PXgWvAVUifqa. Pendiente: prueba manual en el celular, Playwright.
 > - Fase 3 (piloto): preparada el 2026-09-16 (`docs/piloto-v2.md`): el deploy de producción de `frytcontrol-v2` apunta a prod y las previews a staging, decidido por `VERCEL_ENV` en `v2/vercel.json`; errores de la v2 marcados `v2:` en `logs_error`; tiempo de cierre medido en el dispositivo. Semana A automática: 0 diferencias en 59 días. `main` pusheado el 2026-09-16 con autorización del usuario: https://frytcontrol-v2.vercel.app apunta a prod (semana A en curso) y la app actual se desplegó con el arreglo de frontend.
-> - Fases 4–5: no iniciadas.
+> - Fase 4 (cambio definitivo y migración a sa-east-1): **hecha** el 2026-09-17. Ver `docs/ESTADO.md`.
+> - Fase 5 (contracción): **a medias** desde el 2026-09-19. Hecha la parte de repo (v1 fuera, app en la raíz, CI arreglado); pendiente toda la parte de esquema, que sigue abajo.
 
 ## Contexto
 
@@ -164,7 +165,8 @@ La app actual queda intacta en la raíz y en `planillas-fryt.vercel.app`.
 
 ## Fase 5 — Contracción (≈1 mes sin usar la app actual)
 
-- Tag `legacy-final`; borrar la app actual de la raíz; mover `v2/` a la raíz (Root Directory en Vercel).
+- ~~Tag `legacy-final`; borrar la app actual de la raíz; mover `v2/` a la raíz (Root Directory en Vercel).~~ **Hecho el 2026-09-19.** El redirect 308 y el código de la v1 viven ahora en la rama `legacy`, que es la que despliega el proyecto `planillas-fryt`.
+- Lo que sigue toca la base y va aparte, con pgTAP + staging + respaldo. El primero de la lista es el más barato: **quitar realtime y `replica identity full`** (`20260605060523_enable_turnos_realtime_conflicts.sql:78-113`), cuyo único consumidor era `useJornadaRealtime.js` de la v1; sale sin tocar una línea del frontend.
 - `turnos.tipo` admite `'completo'`; migrar `mañana + es_turno_unico` → `completo`; `turnos.fecha` directo con índice único parcial; eliminar `jornadas` (mover `dias_turno_unico`/excepciones a configuración).
 - Ventas como filas `ventas_turno_metodo(turno_id, metodo_key, monto)`; eliminar columnas fijas.
 - `proveedores_turno.nombre` → eliminar; retirar triggers de compatibilidad.

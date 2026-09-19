@@ -1,5 +1,0 @@
-# v2 es un paquete independiente del resto del repo (la app actual vive en
-# la raíz). Este archivo hace que pnpm lo trate como su propia raíz.
-packages: []
-allowBuilds:
-  esbuild: true

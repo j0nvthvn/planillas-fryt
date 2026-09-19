@@ -22,22 +22,26 @@ de prod al 2026-09-16 (mismos ids), los logos y estas cuentas:
 - Correos: sin secretos en Vault → `invocar_edge_function` solo deja un
   WARNING; no sale ningún correo desde staging.
 
-Para correr la app actual contra staging: `pnpm dev --mode staging`
+Para correr la app contra staging: `pnpm dev --mode staging`
 (Vite lee `.env.staging.local`).
 
-### App v2 en Vercel
+### La app en Vercel
 
 | Proyecto Vercel | Root Directory | Rama | URL | Apunta a |
 |---|---|---|---|---|
-| `planillas-fryt` | raíz | `main` | planillas-fryt.vercel.app | nada: redirige (308) a `app.frytspa.cl` (app antigua retirada) |
-| `frytcontrol-v2` (`prj_VR9zMl4lzvSeWZXAwJI9cx7IErlh`) | `v2` | `main` | **app.frytspa.cl** (y frytcontrol-v2.vercel.app) | **prod** (`v2/.env.production`) |
-| `frytcontrol-v2` previews | `v2` | cualquier otra rama (p. ej. `v2`) | frytcontrol-v2-git-<rama>-… (requiere login en Vercel) | staging (`v2/.env.staging`) |
+| `frytcontrol-v2` (`prj_VR9zMl4lzvSeWZXAwJI9cx7IErlh`) | raíz | `main` | **app.frytspa.cl** (y frytcontrol-v2.vercel.app) | **prod** (`.env.production`) |
+| `frytcontrol-v2` previews | raíz | cualquier otra rama | frytcontrol-v2-git-<rama>-… (requiere login en Vercel) | staging (`.env.staging`) |
+| `planillas-fryt` | raíz | **`legacy`** | planillas-fryt.vercel.app | nada: redirige (308) a `app.frytspa.cl` |
 
-El entorno lo decide `VERCEL_ENV` en el `buildCommand` de `v2/vercel.json`:
+Desde el 2026-09-19 la app vive en la raíz del repo (antes en `v2/`) y el
+proyecto `planillas-fryt` quedó congelado en la rama `legacy`, que es donde
+sobrevive el `vercel.json` con el redirect y el código de la app antigua
+(también en el tag `legacy-final`).
+
+El entorno lo decide `VERCEL_ENV` en el `buildCommand` de `vercel.json`:
 producción → `--mode production`, preview → `--mode staging`. No hay
-variables en el dashboard. Un push a `main` despliega las dos apps
-(`planillas-fryt` y `frytcontrol-v2`), así que `main` se pushea solo
-cuando la app actual puede recibir lo que lleva.
+variables en el dashboard. Un push a `main` despliega producción, así que se
+avisa antes.
 
 > La cuenta de la CLI (`supabase login`) es distinta de la organización que
 > tiene prod y staging (`ccfgqstvcbxhllxvuivx`), así que `link`/`db push`
@@ -107,20 +111,17 @@ El script resetea la base local hasta la Fase 0, carga
 `supabase/tests/seed_test.sql` (datos con los mismos problemas que
 prod: proveedores duplicados, día completo, borrador, corrección),
 aplica las migraciones de la Fase 1 encima y corre los tests pgTAP de
-`supabase/tests/*.test.sql`. Para probar la app actual contra esa base:
+`supabase/tests/*.test.sql`. Para probar la app contra esa base:
 
 ```sh
-# Checklist de humo automatizado (las mismas consultas/escrituras que
-# hacen las pantallas de la app actual; nunca contra producción). Usa una
-# fecha aleatoria de 2027 y nombres de proveedor únicos, y limpia al final,
-# así se puede correr también contra staging sin tocar los datos copiados:
-SUPABASE_URL=http://127.0.0.1:54321 SUPABASE_ANON_KEY=<ANON_KEY que imprime supabase start> \
-SMOKE_EMAIL=duena@test.local SMOKE_PASSWORD=password123 node scripts/smoke-legacy.mjs
-
-# O a mano en el navegador:
 VITE_SUPABASE_URL=http://127.0.0.1:54321 VITE_SUPABASE_ANON_KEY=<ANON_KEY> pnpm dev
 # usuarios: duena@test.local / local@test.local, clave password123
 ```
+
+El humo automatizado de la app antigua (`scripts/smoke-legacy.mjs`, 60
+comprobaciones) se borró con ella el 2026-09-19; está en el tag
+`legacy-final` por si hiciera falta comprobar compatibilidad hacia atrás
+antes de la parte de esquema de la Fase 5.
 
 Nota: en producción, 93 turnos cerrados antes de julio de 2026 no tienen
 fila en `turno_cierres` (se marcaron cerrados por migración, antes de que
@@ -231,7 +232,7 @@ esquema del repo sigue reproduciendo prod.
   su rol `postgres`; si `--disable-triggers` falla por permisos, cargar
   por tablas en orden de FKs como en "Copiar datos de prod a otro
   proyecto") → subir `logos/` con `scripts/copiar-logos.mjs` → cambiar
-  URL y anon key en Vercel (las dos apps) y en `v2/.env.production`. Las
+  URL y anon key en Vercel y en `.env.production`. Las
   contraseñas de `auth.users` viajan en el dump, así que las cuentas
   siguen funcionando.
 

@@ -105,6 +105,9 @@ jobs:
         with:
           node-version: 24
           cache: pnpm
+      # Instala el proyecto entero solo para tener la CLI de Supabase
+      # (devDependency del package.json de la raíz) en node_modules/.bin,
+      # que es lo que usan los scripts de scripts/respaldo/.
       - run: pnpm install --frozen-lockfile
 
       - name: Herramientas

@@ -1,5 +1,5 @@
 // Formato de montos y fechas de los correos. Mismo criterio que
-// v2/src/lib/format.ts (la app): "−$800" y no "$-800", fechas en es-CL
+// src/lib/format.ts (la app): "−$800" y no "$-800", fechas en es-CL
 // con mayúscula solo al inicio. TypeScript puro: lo usan las edge
 // functions (Deno) y scripts/correos (Node).
 
