@@ -1,15 +1,13 @@
 import { useEffect } from 'react'
-import { useQuery } from '@tanstack/react-query'
 import { Link, useSearch } from '@tanstack/react-router'
 import Icon from '@/components/Icon'
 import Spinner from '@/components/Spinner'
 import { DeltaBadge } from '@/components/DeltaBadge'
-import { supabase } from '@/lib/supabase'
-import { qk } from '@/lib/query'
 import { clp, fechaCorta, fechaHora, ajustarRango } from '@/lib/format'
 import { mensajeDeError } from '@/lib/errorLog'
+import { useResumenPeriodo } from '@/features/analisis/api'
 import { useDatosExportacion } from './datos'
-import { tablaCuadre, tablaDiasCompacta, tablaMetodos, tablaPorProveedor, type Resumen, type Tabla, type Valor, type TipoColumna } from './tablas'
+import { tablaCuadre, tablaDiasCompacta, tablaMetodos, tablaPorProveedor, type Tabla, type Valor, type TipoColumna } from './tablas'
 
 /**
  * Reporte del período para imprimir o guardar como PDF (desde el diálogo de
@@ -19,14 +17,7 @@ import { tablaCuadre, tablaDiasCompacta, tablaMetodos, tablaPorProveedor, type R
 export default function Reporte() {
   const search = useSearch({ from: '/analisis/reporte' })
   const { desde, hasta } = ajustarRango(search.desde, search.hasta)
-  const resumen = useQuery({
-    queryKey: qk.resumenPeriodo(desde, hasta),
-    queryFn: async (): Promise<Resumen> => {
-      const { data, error } = await supabase.rpc('resumen_periodo', { p_desde: desde, p_hasta: hasta })
-      if (error) throw error
-      return data as unknown as Resumen
-    },
-  })
+  const resumen = useResumenPeriodo(desde, hasta)
   const datos = useDatosExportacion(desde, hasta)
 
   useEffect(() => {
@@ -63,10 +54,10 @@ export default function Reporte() {
           : !r || !d ? <Spinner /> : (
           <>
             <section className="grid grid-cols-2 md:grid-cols-4 print:grid-cols-4 gap-2 mb-2">
-              <Kpi label="Ventas" value={r.totales.total_ventas} anterior={r.anterior.total_ventas} />
-              <Kpi label="Proveedores" value={r.totales.total_proveedores} anterior={r.anterior.total_proveedores} menosEsMejor />
-              <Kpi label="Neto" value={r.totales.neto} anterior={r.anterior.neto} />
-              <Kpi label="Efectivo neto" value={r.totales.efectivo_neto} anterior={r.anterior.efectivo_neto} />
+              <KpiImpreso label="Ventas" value={r.totales.total_ventas} anterior={r.anterior.total_ventas} />
+              <KpiImpreso label="Proveedores" value={r.totales.total_proveedores} anterior={r.anterior.total_proveedores} menosEsMejor />
+              <KpiImpreso label="Neto" value={r.totales.neto} anterior={r.anterior.neto} />
+              <KpiImpreso label="Efectivo neto" value={r.totales.efectivo_neto} anterior={r.anterior.efectivo_neto} />
             </section>
             <p className="text-xs text-muted mb-5">
               {r.totales.dias_con_registro} día{r.totales.dias_con_registro === 1 ? '' : 's'} con registro
@@ -87,7 +78,7 @@ export default function Reporte() {
   )
 }
 
-function Kpi({ label, value, anterior, menosEsMejor }: { label: string; value: number; anterior: number; menosEsMejor?: boolean }) {
+function KpiImpreso({ label, value, anterior, menosEsMejor }: { label: string; value: number; anterior: number; menosEsMejor?: boolean }) {
   return (
     <div className="rounded-[12px] border border-hairline bg-card px-3 py-2 print:break-inside-avoid">
       <p className="text-xs text-muted">{label}</p>

@@ -10,7 +10,7 @@ export type Proveedor = Tables<'proveedores_frecuentes'> & { usos: number }
 /* ───────── métodos de pago ───────── */
 export function useMetodos(soloActivos = true) {
   return useQuery({
-    queryKey: [...qk.metodos, soloActivos],
+    queryKey: qk.metodos(soloActivos),
     staleTime: 1000 * 60 * 30,
     queryFn: async (): Promise<MetodoPago[]> => {
       let q = supabase.from('metodos_pago').select('*').order('orden')
@@ -25,13 +25,13 @@ export function useMetodos(soloActivos = true) {
 export async function actualizarMetodo(key: string, cambios: Partial<Pick<MetodoPago, 'label' | 'sub' | 'orden' | 'activo' | 'color' | 'acumulado_diario'>>) {
   const { error } = await supabase.from('metodos_pago').update(cambios).eq('key', key)
   if (error) throw error
-  await queryClient.invalidateQueries({ queryKey: qk.metodos })
+  await queryClient.invalidateQueries({ queryKey: qk.metodos() })
 }
 
 /* ───────── trabajadores ───────── */
 export function useTrabajadores(soloActivos = true) {
   return useQuery({
-    queryKey: [...qk.trabajadores, soloActivos],
+    queryKey: qk.trabajadores(soloActivos),
     staleTime: 1000 * 60 * 30,
     queryFn: async (): Promise<Trabajador[]> => {
       let q = supabase.from('trabajadores').select('*').order('orden').order('nombre')
@@ -46,19 +46,19 @@ export function useTrabajadores(soloActivos = true) {
 export async function crearTrabajador(nombre: string) {
   const { error } = await supabase.from('trabajadores').insert({ nombre: nombre.trim() })
   if (error) throw error
-  await queryClient.invalidateQueries({ queryKey: qk.trabajadores })
+  await queryClient.invalidateQueries({ queryKey: qk.trabajadores() })
 }
 
 export async function actualizarTrabajador(id: string, cambios: Partial<Pick<Trabajador, 'nombre' | 'activo' | 'orden'>>) {
   const { error } = await supabase.from('trabajadores').update(cambios).eq('id', id)
   if (error) throw error
-  await queryClient.invalidateQueries({ queryKey: qk.trabajadores })
+  await queryClient.invalidateQueries({ queryKey: qk.trabajadores() })
 }
 
 export async function eliminarTrabajador(id: string) {
   const { error } = await supabase.from('trabajadores').delete().eq('id', id)
   if (error) throw error
-  await queryClient.invalidateQueries({ queryKey: qk.trabajadores })
+  await queryClient.invalidateQueries({ queryKey: qk.trabajadores() })
 }
 
 /* ───────── catálogo de proveedores ───────── */
@@ -116,7 +116,7 @@ export async function fusionarProveedores(origen: string, destino: string) {
   const { error } = await supabase.rpc('fusionar_proveedores', { p_origen: origen, p_destino: destino })
   if (error) throw error
   await queryClient.invalidateQueries({ queryKey: qk.catalogo })
-  await queryClient.invalidateQueries({ queryKey: ['proveedor-historial'] })
+  await queryClient.invalidateQueries({ queryKey: qk.todoProveedorHistorial })
 }
 
 export async function subirLogo(proveedorId: string, nombre: string, archivo: File): Promise<string> {
@@ -183,8 +183,8 @@ export function useGuardarConfig() {
     },
     onSuccess: (c) => {
       queryClient.setQueryData(qk.config, c)
-      void queryClient.invalidateQueries({ queryKey: ['resumen-dia'] })
-      void queryClient.invalidateQueries({ queryKey: ['historial'] })
+      void queryClient.invalidateQueries({ queryKey: qk.todosResumenDia })
+      void queryClient.invalidateQueries({ queryKey: qk.todoHistorial })
     },
   })
 }

@@ -42,17 +42,25 @@ export const persister = createAsyncStoragePersister({
 export const qk = {
   usuario: (id: string) => ['usuario', id] as const,
   config: ['config'] as const,
-  metodos: ['metodos'] as const,
-  trabajadores: ['trabajadores'] as const,
+  // Con argumento: la lista completa y la de solo activos son dos consultas.
+  // El prefijo (`qk.metodos()`) invalida las dos de una vez.
+  metodos: (soloActivos?: boolean) => (soloActivos === undefined ? (['metodos'] as const) : (['metodos', soloActivos] as const)),
+  trabajadores: (soloActivos?: boolean) => (soloActivos === undefined ? (['trabajadores'] as const) : (['trabajadores', soloActivos] as const)),
   catalogo: ['catalogo'] as const,
   resumenDia: (fecha: string) => ['resumen-dia', fecha] as const,
+  /** Prefijos, para invalidar todas las fechas o todos los rangos de una vez. */
+  todosResumenDia: ['resumen-dia'] as const,
   turnosDia: (fecha: string) => ['turnos-dia', fecha] as const,
   cierresTurno: (turnoId: string) => ['cierres', turnoId] as const,
   borradores: ['borradores'] as const,
   historial: (filtro: string) => ['historial', filtro] as const,
+  todoHistorial: ['historial'] as const,
   resumenPeriodo: (desde: string, hasta: string) => ['resumen-periodo', desde, hasta] as const,
+  todosResumenPeriodo: ['resumen-periodo'] as const,
   exportacion: (desde: string, hasta: string) => ['exportacion', desde, hasta] as const,
+  todaExportacion: ['exportacion'] as const,
   proveedorHistorial: (id: string) => ['proveedor-historial', id] as const,
+  todoProveedorHistorial: ['proveedor-historial'] as const,
   papelera: ['papelera'] as const,
   usuarios: ['usuarios'] as const,
   errores: ['errores'] as const,
@@ -65,9 +73,9 @@ export const qk = {
 export function invalidarDia(fecha: string) {
   void queryClient.invalidateQueries({ queryKey: qk.resumenDia(fecha) })
   void queryClient.invalidateQueries({ queryKey: qk.turnosDia(fecha) })
-  void queryClient.invalidateQueries({ queryKey: ['historial'] })
-  void queryClient.invalidateQueries({ queryKey: ['resumen-periodo'] })
-  void queryClient.invalidateQueries({ queryKey: ['exportacion'] })
+  void queryClient.invalidateQueries({ queryKey: qk.todoHistorial })
+  void queryClient.invalidateQueries({ queryKey: qk.todosResumenPeriodo })
+  void queryClient.invalidateQueries({ queryKey: qk.todaExportacion })
   void queryClient.invalidateQueries({ queryKey: qk.borradores })
   void queryClient.invalidateQueries({ queryKey: qk.catalogo })
 }

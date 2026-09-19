@@ -33,7 +33,9 @@ export interface TurnoConLineas {
   proveedores: ProveedorTurno[]
 }
 
-const TURNO_ORDEN: Record<string, number> = { 'mañana': 0, 'tarde': 1 }
+/** La mañana antes que la tarde; cualquier otro tipo, al final. */
+export const TURNO_ORDEN: Record<string, number> = { 'mañana': 0, 'tarde': 1 }
+export const ordenTurno = (tipo: string) => TURNO_ORDEN[tipo] ?? 9
 
 /* ───────── lecturas ───────── */
 export function useResumenDia(fecha: string) {
@@ -58,7 +60,7 @@ export async function cargarTurnosDia(fecha: string): Promise<TurnoConLineas[]> 
     lineas = data
   }
   return (turnos as VTurno[])
-    .sort((a, b) => (TURNO_ORDEN[a.tipo] ?? 0) - (TURNO_ORDEN[b.tipo] ?? 0))
+    .sort((a, b) => ordenTurno(a.tipo) - ordenTurno(b.tipo))
     .map((turno) => ({ turno, proveedores: lineas.filter((l) => l.turno_id === turno.id) }))
 }
 
