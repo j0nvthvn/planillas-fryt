@@ -6,15 +6,14 @@ import Spinner from '@/components/Spinner'
 import Icon from '@/components/Icon'
 import { ProveedorAvatar } from '@/components/ProveedorAvatar'
 import { BottomSheet } from '@/components/BottomSheet'
-import { useToast } from '@/components/Toast'
+import { useAccion } from '@/hooks/useAccion'
 import { useCatalogo, crearProveedor } from '@/features/catalogo/api'
 import { normalizar } from '@/features/turno/parecido'
-import { mensajeDeError } from '@/lib/errorLog'
 
 export default function Proveedores() {
   const catalogo = useCatalogo()
   const navigate = useNavigate()
-  const toast = useToast()
+  const run = useAccion()
   const [q, setQ] = useState('')
   const [nuevo, setNuevo] = useState<string | null>(null)
   const [verInactivos, setVerInactivos] = useState(false)
@@ -43,11 +42,12 @@ export default function Proveedores() {
   async function crear() {
     if (!nuevo?.trim()) return
     setCreando(true)
-    try {
+    await run(async () => {
       const p = await crearProveedor(nuevo)
       setNuevo(null)
       void navigate({ to: '/proveedores/$id', params: { id: p.id } })
-    } catch (e) { toast.error(mensajeDeError(e)) } finally { setCreando(false) }
+    })
+    setCreando(false)
   }
 
   return (
