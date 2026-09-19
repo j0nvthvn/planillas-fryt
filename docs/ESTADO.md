@@ -150,6 +150,7 @@ Credenciales y dónde están (nunca en el repo, salvo anon keys):
   - `features/hoy/estadoDia.ts` y `features/analisis/rango.ts`, con pruebas; `diasExportables` le pone nombre al predicado que estaba tres veces con dos semánticas distintas.
   - Un arreglo de paso: Hoy usaba `resumen.isPending && turnos.isPending`, así que se pintaba a medias mientras faltaba una de las dos consultas.
   - Verificación: lint sin errores, tipos, **155 unitarios** (antes 109), build y `pnpm e2e` 12/12 con axe en 0 violaciones contra staging.
+- **En producción** (2026-09-19): `main` en `5745d4d` desplegado en app.frytspa.cl. Comprobado ahí mismo con la cuenta de Jonathan: Hoy, Análisis (rango, KPIs, métodos, top proveedores) y Ajustes → Correos, sin errores de consola y con `logs_error` en 0 en las últimas 24 h. `planillas-fryt.vercel.app` sigue devolviendo 308.
 - **Pendiente (toca la base, por eso va aparte):** quitar realtime y `replica identity full` —cuyo único consumidor era la v1, así que sale sin tocar el frontend—, `turnos.tipo = 'completo'` y eliminar `jornadas.es_turno_unico`, ventas por filas (`ventas_turno_metodo`), eliminar `proveedores_turno.nombre` y sus tres triggers de compatibilidad, y las políticas por `usuario_id` + `get_my_rol`. Detalle en `docs/plan-v2.md`.
 
 ## 5. Cómo trabajar en este repo
