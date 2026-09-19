@@ -29,7 +29,7 @@ retirada (su dirección redirige) y el **2026-09-19** se borró del repo.
 | App | Dónde | URL | Estado |
 |---|---|---|---|
 | FrytControl (v2) | raíz del repo (`src/`) | https://app.frytspa.cl (también frytcontrol-v2.vercel.app) | **La única**, desde el 2026-09-17. Vive en la raíz desde el 2026-09-19 (antes en `v2/`). |
-| Antigua (v1) | tag `legacy-final`, rama `legacy` | https://planillas-fryt.vercel.app | **Retirada** (2026-09-17) y fuera del repo (2026-09-19). La rama `legacy` es la que despliega el redirect 308 a app.frytspa.cl. |
+| Antigua (v1) | tag `legacy-final`, rama `legacy` | https://planillas-fryt.vercel.app | **Retirada** (2026-09-17) y fuera del repo (2026-09-19). Su proyecto de Vercel quedó congelado sirviendo el redirect 308 a app.frytspa.cl. |
 
 **Regla de oro:** mientras no se haga la parte de esquema de la Fase 5, todo
 cambio de base de datos sigue siendo aditivo, para poder volver atrás (ver `docs/cambio-fase4.md` → "Volver
@@ -43,7 +43,7 @@ atrás"). Un push a `main` despliega producción: se avisa antes.
 | Supabase prod anterior | `kfmwhtbvgqurnpotypii` (us-east-2) | **Pausado** el 2026-09-17 con los datos a esa fecha. No borrar antes del 2026-10-17. El plan gratis admite 2 proyectos activos: prod y staging. |
 | Supabase staging | `psdhhwcxjcobwxjiemrr` (sa-east-1), misma org | Copia de prod del 2026-09-16 con los mismos ids, esquema completo. Se pausa tras 7 días sin uso; basta reactivarlo. |
 | Vercel team | `team_K2vm0PJ0CZxXz4pp3MD3ndxe` (hobby) | |
-| Vercel `planillas-fryt` | `prj_j5ZCp5g9YamCQKQy8Bthbzzjt6BZ` | Solo el redirect 308. Rama **`legacy`** (desde el 2026-09-19), Root Directory raíz. |
+| Vercel `planillas-fryt` | `prj_j5ZCp5g9YamCQKQy8Bthbzzjt6BZ` | Solo el redirect 308. **Congelado** el 2026-09-19 con un *Ignored Build Step* (`exit 0`): no vuelve a construir y sirve para siempre su último despliegue. |
 | Vercel `frytcontrol-v2` | `prj_VR9zMl4lzvSeWZXAwJI9cx7IErlh` | La app. Rama de producción `main`, Root Directory **la raíz** (desde el 2026-09-19). Producción → prod; previews → staging, decidido por `VERCEL_ENV` en `vercel.json`. Las previews piden login de Vercel. |
 | GitHub | `j0nvthvn/planillas-fryt` | `main` es la rama de verdad: un push despliega producción. La rama `legacy` está congelada. |
 | Dominio | `frytspa.cl` (DNS en Cloudflare) | `app` → Vercel (DNS only). Registros de Resend en `send`, `resend._domainkey` y `_dmarc`. |
@@ -142,7 +142,7 @@ Credenciales y dónde están (nunca en el repo, salvo anon keys):
 - **Pendiente:** confirmar el primer día (entrada de la dueña en `app.frytspa.cl`, correo del primer cierre, resumen diario de las 12:00 UTC, `logs_error`). Reinstalar la PWA desde la dirección nueva en el celular del local. Re-linkear la CLI al proyecto nuevo.
 
 ### Fase 5 — Contracción: **a medias** (repo hecho el 2026-09-19; esquema pendiente)
-- **Hecho (sin tocar la base):** tag `legacy-final` y rama `legacy` con el último estado de la app antigua; la v1 borrada del repo (7.461 líneas: `src/` viejo, `index.html`, configs de Vite/Tailwind/PostCSS, `public/`, `vercel.json` del redirect y `scripts/smoke-legacy.mjs`); `v2/` movido a la raíz con un solo `package.json` (que conserva la devDependency `supabase`, la CLI que usan `scripts/test-db.sh`, `scripts/migrar-region.sh` y el simulacro de respaldo), un `.gitignore`, un `pnpm-lock.yaml` y un `pnpm-workspace.yaml`; `.github/workflows/v2.yml` → `ci.yml` sin `working-directory` ni rutas `../`, y corriendo también `periodo.test.ts`, que antes no se ejecutaba en ninguna parte.
+- **Hecho (sin tocar la base):** tag `legacy-final` y rama `legacy` con el último estado de la app antigua (su proyecto de Vercel quedó congelado con un *Ignored Build Step*, sirviendo el redirect); la v1 borrada del repo (7.461 líneas: `src/` viejo, `index.html`, configs de Vite/Tailwind/PostCSS, `public/`, `vercel.json` del redirect y `scripts/smoke-legacy.mjs`); `v2/` movido a la raíz con un solo `package.json` (que conserva la devDependency `supabase`, la CLI que usan `scripts/test-db.sh`, `scripts/migrar-region.sh` y el simulacro de respaldo), un `.gitignore`, un `pnpm-lock.yaml` y un `pnpm-workspace.yaml`; `.github/workflows/v2.yml` → `ci.yml` sin `working-directory` ni rutas `../`, y corriendo también `periodo.test.ts`, que antes no se ejecutaba en ninguna parte.
 - **Limpieza interna de la app** (2026-09-19, mismo pase): el patrón de la casa —lógica pura en un `.ts` al lado de la pantalla, con test— se aplicó donde faltaba.
   - `features/turno/estadoTurno.ts`: el reducer del cierre, los dos orígenes (servidor y borrador del dispositivo), la regla de cuál gana (`cargaInicial`) y las condiciones de envío salen de `useTurnoForm`, que era el módulo de mayor riesgo y el único grande sin pruebas. 26 pruebas nuevas.
   - `features/ajustes/paneles/`: las nueve secciones eran un archivo de 399 líneas; sus consultas y escrituras (incluida una que vivía dentro de un `onClick` en el JSX) están en `features/ajustes/api.ts`, y las cuatro variantes de `run` son ahora `hooks/useAccion.ts`.
