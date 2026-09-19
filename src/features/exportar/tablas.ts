@@ -82,11 +82,22 @@ function etiquetaFormaPago(f: string): string {
   return f === 'efectivo' ? 'Efectivo' : f === 'transferencia' ? 'Transferencia' : f
 }
 
+/**
+ * Los días que se muestran en una exportación: los que tuvieron movimiento
+ * y también aquellos en que el local no abrió, que van con montos en cero y
+ * su motivo (si no, faltarían fechas en el Excel sin explicación).
+ *
+ * Es a propósito distinta de `diasConRegistro` (features/analisis/resumen.ts),
+ * que deja fuera los días sin abrir porque esos no promedian ni compiten por
+ * "el peor día".
+ */
+export function diasExportables<T extends { turnos?: number | null; cerrado?: boolean | null }>(dias: readonly T[]): T[] {
+  return dias.filter((d) => toNum(d.turnos) > 0 || !!d.cerrado)
+}
+
 /** Una fila por día con registro. Por día va el efectivo neto: el esperado suma dos fondos cuando hay mañana y tarde. */
 export function tablaDias(dias: readonly VResumenDia[], metodos: readonly MetodoInfo[]): Tabla {
-  // Los días en que el local no abrió van con montos en cero y su motivo:
-  // si no, faltarían fechas en el Excel sin explicación.
-  const conRegistro = dias.filter((d) => toNum(d.turnos) > 0 || d.cerrado)
+  const conRegistro = diasExportables(dias)
   const ms = metodosConVentas(metodos, conRegistro)
   const filas = conRegistro.map((d): Valor[] => [
     d.fecha,
@@ -263,7 +274,7 @@ export function tablaDiasCompacta(dias: readonly VResumenDia[]): Tabla {
       { titulo: 'Estado', tipo: 'texto' },
       monto('Ventas'), monto('Proveedores'), monto('Neto'), monto('Efectivo neto'),
     ],
-    filas: dias.filter((d) => toNum(d.turnos) > 0 || d.cerrado).map((d) => [
+    filas: diasExportables(dias).map((d) => [
       d.fecha, etiquetaEstadoDia(d.estado), toNum(d.total_ventas), toNum(d.total_proveedores), toNum(d.neto), toNum(d.efectivo_neto),
     ]),
   }, 2)

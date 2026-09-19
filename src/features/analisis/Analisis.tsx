@@ -9,6 +9,7 @@ import { ProveedorAvatar } from '@/components/ProveedorAvatar'
 import { MetodoLogo } from '@/components/MetodoLogo'
 import { useMetodos } from '@/features/catalogo/api'
 import { useResumenPeriodo } from './api'
+import { rangoLegible } from './rango'
 import { clp, clpCorto, clpEje, fechaISO, hoy, ajustarRango, sumarDias, fechaDiaMes } from '@/lib/format'
 import { porMetodo } from '@/lib/metodos'
 import { ExportarSheet } from '@/features/exportar/ExportarSheet'
@@ -184,16 +185,6 @@ export default function Analisis() {
       {exportando && r && <ExportarSheet resumen={r} onClose={() => setExportando(false)} />}
     </div>
   )
-}
-
-/** "10 – 16 septiembre"; si cruza meses o años, se nombran los dos. */
-function rangoLegible(desde: string, hasta: string): string {
-  const f = (d: string, o: Intl.DateTimeFormatOptions) => new Date(d + 'T12:00:00').toLocaleDateString('es-CL', o)
-  const anio = desde.slice(0, 4) !== hasta.slice(0, 4) || hasta.slice(0, 4) !== hoy().slice(0, 4)
-  if (desde === hasta) return f(desde, { day: 'numeric', month: 'long', ...(anio ? { year: 'numeric' } : {}) })
-  if (desde.slice(0, 7) === hasta.slice(0, 7)) return `${f(desde, { day: 'numeric' })} – ${f(hasta, { day: 'numeric', month: 'long', ...(anio ? { year: 'numeric' } : {}) })}`
-  const o: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'short', ...(anio ? { year: 'numeric' } : {}) }
-  return `${f(desde, o)} – ${f(hasta, o)}`
 }
 
 /** Tooltip del gráfico con los tokens del tema (el de recharts venía en gris sobre gris). */

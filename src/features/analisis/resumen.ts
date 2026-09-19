@@ -8,6 +8,10 @@ export type DiaGrafico = VResumenDia & { label: string; neto: number; total_vent
  * movimiento. Quedan fuera tanto los días en que el local no abrió como las
  * jornadas que existen pero sin turnos, que si no aparecían como "el peor
  * día del período" con $0.
+ *
+ * La exportación usa otra regla a propósito (`diasExportables`, en
+ * features/exportar/tablas.ts): ahí los días sin abrir sí aparecen, con
+ * montos en cero y su motivo.
  */
 export function diasConRegistro<T extends { turnos?: number | null }>(dias: readonly T[]): T[] {
   return dias.filter((d) => Number(d.turnos ?? 0) > 0)

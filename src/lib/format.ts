@@ -37,7 +37,7 @@ export function clpEje(maxAbs: number): (v: number) => string {
   }
 }
 
-function fechaLocal(fecha: string): Date {
+export function fechaLocal(fecha: string): Date {
   // "YYYY-MM-DD" a mediodía local: nunca cambia de día por zona horaria.
   return new Date(fecha + 'T12:00:00')
 }

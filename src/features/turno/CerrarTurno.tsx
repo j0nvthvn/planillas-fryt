@@ -14,12 +14,13 @@ import { MODOS, etiquetaModo, useResumenDia, type Modo } from './api'
 import { modoPorDefecto, modosDisponibles, etiquetaCerrar, tituloCierre } from './modo'
 import { useTurnoForm } from './useTurnoForm'
 import { useQuitarMarcaDia } from './useQuitarMarcaDia'
+import { FechaSheet } from './FechaSheet'
 import type { LineaForm } from './estadoTurno'
 import { ProveedorSheet } from './ProveedorSheet'
 import { MontoSheet } from './MontoSheet'
 import { ConteoSheet } from './ConteoSheet'
 import { RevisionSheet } from './RevisionSheet'
-import { clp, clpSigno, fechaLegible, hoy, diaSemana, sumarDias, fechaDiaMes, iniciales } from '@/lib/format'
+import { clp, clpSigno, fechaLegible, hoy, diaSemana, fechaDiaMes, iniciales } from '@/lib/format'
 import { esMetodo, type MetodoKey } from '@/lib/totales'
 import { montoDe } from '@/lib/metodos'
 
@@ -374,15 +375,7 @@ export default function CerrarTurno() {
           onAccept={(monto) => { cambiar({ type: 'caja', conto: true, monto, desglose: null }); setSheet(null) }} onClose={() => setSheet(null)} />
       )}
       {sheet?.t === 'fecha' && (
-        <BottomSheet title="Cambiar fecha" onClose={() => setSheet(null)}>
-          <div className="flex items-center gap-2">
-            <button type="button" className="btn-secondary" onClick={() => void navigate({ to: '/turno', search: { fecha: sumarDias(fecha, -1) } })} aria-label="Día anterior"><Icon name="chevL" /></button>
-            <input type="date" aria-label="Fecha del turno" className="input flex-1 text-center" value={fecha} max={hoy()}
-              onChange={(e) => { if (e.target.value) void navigate({ to: '/turno', search: { fecha: e.target.value } }) }} />
-            <button type="button" className="btn-secondary" disabled={fecha >= hoy()} onClick={() => void navigate({ to: '/turno', search: { fecha: sumarDias(fecha, 1) } })} aria-label="Día siguiente"><Icon name="chevR" /></button>
-          </div>
-          <button type="button" className="btn-primary btn-lg w-full" onClick={() => setSheet(null)}>Listo</button>
-        </BottomSheet>
+        <FechaSheet fecha={fecha} onFecha={(f) => void navigate({ to: '/turno', search: { fecha: f } })} onClose={() => setSheet(null)} />
       )}
 
       {revisar && (
