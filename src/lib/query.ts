@@ -56,6 +56,7 @@ export const qk = {
   papelera: ['papelera'] as const,
   usuarios: ['usuarios'] as const,
   errores: ['errores'] as const,
+  metricasCierre: ['metricas-cierre'] as const,
   destinatarios: ['destinatarios'] as const,
   ajustesCorreo: ['ajustes-correo'] as const,
 }
