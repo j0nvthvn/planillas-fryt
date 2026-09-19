@@ -5,8 +5,9 @@ import Icon from '@/components/Icon'
 import { EsqueletoContenido } from '@/components/Esqueleto'
 import { Dato, EstadoChip } from '@/components/Dato'
 import { useUsuario } from '@/hooks/useUsuario'
-import { useResumenDia, useTurnosDia, useBorradores, etiquetaModo, type Modo } from '@/features/turno/api'
+import { useResumenDia, useTurnosDia, useBorradores, etiquetaModo } from '@/features/turno/api'
 import { useQuitarMarcaDia } from '@/features/turno/useQuitarMarcaDia'
+import { estadoDia } from './estadoDia'
 import { useConfig, useMetodos } from '@/features/catalogo/api'
 import { mayusculaInicial, fechaDiaMes, hoy, clp, clpSigno, diaSemana, sumarDias, horaCorta } from '@/lib/format'
 import { porMetodo } from '@/lib/metodos'
@@ -36,20 +37,8 @@ export default function Hoy() {
   const r = resumen.data
   const lista = turnos.data ?? []
   const diaUnico = config.diasTurnoUnico.includes(diaSemana(fecha))
-  const hayManana = lista.some((t) => t.turno.tipo === 'mañana')
-  const hayTarde = lista.some((t) => t.turno.tipo === 'tarde')
-  const esCompleto = lista.some((t) => t.turno.modo === 'completo')
-  const borradorHoy = lista.find((t) => t.turno.is_draft)
-
-  // El local no abrió: no hay caja que cerrar, así que no va el botón.
   const noAbrio = r?.cerrado === true
-
-  let cta: { label: string; modo: Modo } | null
-  if (noAbrio) cta = null
-  else if (borradorHoy) cta = { label: borradorHoy.turno.modo === 'completo' ? 'Terminar de cerrar el día' : `Terminar de cerrar la ${borradorHoy.turno.modo}`, modo: borradorHoy.turno.modo }
-  else if (!lista.length) cta = { label: 'Cerrar el día', modo: 'completo' }
-  else if (hayManana && !hayTarde && !esCompleto && !diaUnico) cta = { label: 'Cerrar turno tarde', modo: 'tarde' }
-  else cta = null
+  const { turnosEsperados, pendiente, hayBorrador, cta } = estadoDia({ turnos: lista, noAbrio, diaUnico })
 
   const borradoresViejos = (borradores.data ?? []).filter((b) => b.fecha !== fecha)
   const totalVentas = Number(r?.total_ventas ?? 0)
@@ -57,8 +46,6 @@ export default function Hoy() {
   const neto = Number(r?.neto ?? 0)
   const ra = resumenAyer.data
   const hayAyer = !!ra && (ra.turnos ?? 0) > 0
-  const turnosEsperados = diaUnico || esCompleto ? 1 : 2
-  const pendiente: Modo | null = diaUnico || esCompleto || !lista.length ? null : !hayManana ? 'mañana' : !hayTarde ? 'tarde' : null
   const metodosVisibles = verMetodos ? ventas : ventas.slice(0, 3)
 
   return (
@@ -79,7 +66,9 @@ export default function Hoy() {
         </AvisoAmbar>
       )}
 
-      {resumen.isPending && turnos.isPending ? <EsqueletoContenido sinTitulo /> : (
+      {/* `||`: mientras falte cualquiera de las dos, el esqueleto. Con `&&` la
+          pantalla se pintaba a medias, con el día sin sus turnos. */}
+      {resumen.isPending || turnos.isPending ? <EsqueletoContenido sinTitulo /> : (
         <>
           {/* La cifra al frente */}
           <section aria-labelledby="hoy-neto" className="card pb-4 mb-3">
@@ -117,7 +106,7 @@ export default function Hoy() {
             </div>
           ) : cta ? (
             <button type="button" onClick={() => void navigate({ to: '/turno', search: { fecha, modo: cta.modo } })} className="btn-primary w-full min-h-[52px] text-base rounded-[14px] mb-3">
-              <Icon name={borradorHoy ? 'check' : cta.modo === 'tarde' ? 'moon' : 'plus'} className="w-[18px] h-[18px]" stroke={2.4} />{cta.label}
+              <Icon name={hayBorrador ? 'check' : cta.modo === 'tarde' ? 'moon' : 'plus'} className="w-[18px] h-[18px]" stroke={2.4} />{cta.label}
             </button>
           ) : (
             <div className="mb-3 rounded-[14px] bg-pos-tint border border-pos-border px-4 py-3 min-h-[52px] flex items-center justify-between gap-3">

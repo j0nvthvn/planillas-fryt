@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { VResumenDia, VTurno } from '@/features/turno/api'
-import { metodosConVentas, tablaCompras, tablaCuadre, tablaDias, tablaIndicadores, tablaMetodos, tablaPorProveedor, tablaTurnos, variacion, type Compra, type MetodoInfo, type Resumen } from './tablas'
+import { diasExportables, metodosConVentas, tablaCompras, tablaCuadre, tablaDias, tablaIndicadores, tablaMetodos, tablaPorProveedor, tablaTurnos, variacion, type Compra, type MetodoInfo, type Resumen } from './tablas'
 
 const METODOS: MetodoInfo[] = [
   { key: 'efectivo', label: 'Efectivo', activo: true },
@@ -149,5 +149,16 @@ describe('resumen', () => {
   it('variacion', () => {
     expect(variacion(50, 100)).toBe(-0.5)
     expect(variacion(5, 0)).toBeNull()
+  })
+})
+
+describe('diasExportables', () => {
+  it('incluye los días con movimiento y los que el local no abrió, y deja fuera las jornadas vacías', () => {
+    const dias = [
+      { fecha: '2026-09-01', turnos: 2, cerrado: false },
+      { fecha: '2026-09-02', turnos: 0, cerrado: true },
+      { fecha: '2026-09-03', turnos: 0, cerrado: false },
+    ]
+    expect(diasExportables(dias).map((d) => d.fecha)).toEqual(['2026-09-01', '2026-09-02'])
   })
 })
