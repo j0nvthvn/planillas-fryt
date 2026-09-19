@@ -1,20 +1,21 @@
-import { useState, type ReactNode } from 'react'
+import { useState } from 'react'
 import { AvisoAmbar } from '@/components/Aviso'
 import { Link, useNavigate } from '@tanstack/react-router'
 import Icon from '@/components/Icon'
 import { EsqueletoContenido } from '@/components/Esqueleto'
+import { Dato, EstadoChip } from '@/components/Dato'
 import { useUsuario } from '@/hooks/useUsuario'
-import { useResumenDia, useTurnosDia, useBorradores, etiquetaModo, etiquetaEstado, marcarDiaCerrado, type Modo } from '@/features/turno/api'
+import { useResumenDia, useTurnosDia, useBorradores, etiquetaModo, type Modo } from '@/features/turno/api'
+import { useQuitarMarcaDia } from '@/features/turno/useQuitarMarcaDia'
 import { useConfig, useMetodos } from '@/features/catalogo/api'
 import { mayusculaInicial, fechaDiaMes, hoy, clp, clpSigno, diaSemana, sumarDias, horaCorta } from '@/lib/format'
+import { porMetodo } from '@/lib/metodos'
 import { SaludoHeader } from '@/components/SaludoHeader'
 import { BarraMetodos } from '@/components/BarraMetodos'
 import { MetodoLogo } from '@/components/MetodoLogo'
 import { DeltaBadge } from '@/components/DeltaBadge'
 import { DiaCerradoSheet } from '@/components/DiaCerradoSheet'
 import { ConfirmDialog } from '@/components/ConfirmDialog'
-import { useToast } from '@/components/Toast'
-import { mensajeDeError } from '@/lib/errorLog'
 
 export default function Hoy() {
   const fecha = hoy()
@@ -30,8 +31,7 @@ export default function Hoy() {
   const [verMetodos, setVerMetodos] = useState(false)
   const [marcando, setMarcando] = useState(false)
   const [quitando, setQuitando] = useState(false)
-  const [ocupado, setOcupado] = useState(false)
-  const toast = useToast()
+  const quitarMarca = useQuitarMarcaDia(fecha)
 
   const r = resumen.data
   const lista = turnos.data ?? []
@@ -53,16 +53,13 @@ export default function Hoy() {
 
   const borradoresViejos = (borradores.data ?? []).filter((b) => b.fecha !== fecha)
   const totalVentas = Number(r?.total_ventas ?? 0)
-  const porMetodo = (metodos.data ?? [])
-    .map((m) => ({ ...m, monto: Number((r as unknown as Record<string, unknown>)?.[m.key] ?? 0) }))
-    .filter((m) => m.monto > 0)
-    .sort((a, b) => b.monto - a.monto)
+  const ventas = porMetodo(r, metodos.data)
   const neto = Number(r?.neto ?? 0)
   const ra = resumenAyer.data
   const hayAyer = !!ra && (ra.turnos ?? 0) > 0
   const turnosEsperados = diaUnico || esCompleto ? 1 : 2
   const pendiente: Modo | null = diaUnico || esCompleto || !lista.length ? null : !hayManana ? 'mañana' : !hayTarde ? 'tarde' : null
-  const metodosVisibles = verMetodos ? porMetodo : porMetodo.slice(0, 3)
+  const metodosVisibles = verMetodos ? ventas : ventas.slice(0, 3)
 
   return (
     <div className="relative isolate max-w-2xl mx-auto">
@@ -145,7 +142,7 @@ export default function Hoy() {
                 <h2 id="hoy-metodos" className="text-md font-medium text-ink2">Ventas por método</h2>
                 <span className="cifra text-xl text-ink">{clp(totalVentas)}</span>
               </div>
-              <BarraMetodos metodos={porMetodo} className="mt-3.5" />
+              <BarraMetodos metodos={ventas} className="mt-3.5" />
             </div>
             {metodosVisibles.map((m) => (
               <div key={m.key} className="flex items-center gap-3 px-[18px] py-2.5 min-h-[60px] border-t border-hairline">
@@ -155,14 +152,14 @@ export default function Hoy() {
                 <span className="cifra text-base text-ink min-[360px]:min-w-[86px] text-right">{clp(m.monto)}</span>
               </div>
             ))}
-            {porMetodo.length > 3 && (
+            {ventas.length > 3 && (
               <button type="button" onClick={() => setVerMetodos((v) => !v)} aria-expanded={verMetodos}
                 className="w-full flex items-center justify-center gap-1.5 min-h-[52px] border-t border-hairline text-sm font-semibold text-brand hover:bg-soft">
-                {verMetodos ? 'Ver menos' : `Ver los ${porMetodo.length} métodos`}
+                {verMetodos ? 'Ver menos' : `Ver los ${ventas.length} métodos`}
                 <Icon name={verMetodos ? 'caretUp' : 'caretDown'} className="w-3.5 h-3.5" stroke={2.2} />
               </button>
             )}
-            {porMetodo.length === 0 && <p className="text-sm text-muted text-center py-4 border-t border-hairline">Sin ventas registradas todavía</p>}
+            {ventas.length === 0 && <p className="text-sm text-muted text-center py-4 border-t border-hairline">Sin ventas registradas todavía</p>}
           </section>
           )}
 
@@ -201,19 +198,9 @@ export default function Hoy() {
         <ConfirmDialog
           title="¿Quitar la marca?"
           message="El día vuelve a quedar sin registro y podrás cerrarlo normalmente."
-          confirmLabel="Quitar marca" loading={ocupado}
+          confirmLabel="Quitar marca" loading={quitarMarca.ocupado}
           onCancel={() => setQuitando(false)}
-          onConfirm={() => void (async () => {
-            setOcupado(true)
-            try {
-              await marcarDiaCerrado(fecha, false)
-              setQuitando(false)
-            } catch (e) {
-              toast.error(mensajeDeError(e, 'No se pudo quitar la marca'))
-            } finally {
-              setOcupado(false)
-            }
-          })()}
+          onConfirm={() => void quitarMarca.quitar().then((ok) => { if (ok) setQuitando(false) })}
         />
       )}
     </div>
@@ -238,18 +225,4 @@ function CajaTurno({ esperado, contado, diferencia, ancha }: { esperado: number 
       {!ancha && badge && <span className="flex mt-1.5">{badge}</span>}
     </span>
   )
-}
-
-export function Dato({ label, className = 'text-ink', children }: { label: string; className?: string; children: ReactNode }) {
-  return (
-    <div className="flex-1 min-w-0">
-      <p className="text-xs leading-none text-muted mb-[5px]">{label}</p>
-      <p className={`cifra text-sm min-[360px]:text-base leading-none truncate ${className}`}>{children}</p>
-    </div>
-  )
-}
-
-export function EstadoChip({ estado }: { estado: string }) {
-  const e = etiquetaEstado(estado)
-  return <span className={`badge ${e.cls}`}>{e.chip}</span>
 }

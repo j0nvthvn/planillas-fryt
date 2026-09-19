@@ -10,9 +10,10 @@ import { useOnline } from '@/hooks/useOnline'
 import { useRovingRadio } from '@/hooks/useRovingRadio'
 import { useUsuario } from '@/hooks/useUsuario'
 import { useConfig, useMetodos, useTrabajadores } from '@/features/catalogo/api'
-import { MODOS, etiquetaModo, marcarDiaCerrado, useResumenDia, type Modo } from './api'
+import { MODOS, etiquetaModo, useResumenDia, type Modo } from './api'
 import { modoPorDefecto, modosDisponibles, etiquetaCerrar, tituloCierre } from './modo'
 import { useTurnoForm } from './useTurnoForm'
+import { useQuitarMarcaDia } from './useQuitarMarcaDia'
 import type { LineaForm } from './estadoTurno'
 import { ProveedorSheet } from './ProveedorSheet'
 import { MontoSheet } from './MontoSheet'
@@ -20,7 +21,7 @@ import { ConteoSheet } from './ConteoSheet'
 import { RevisionSheet } from './RevisionSheet'
 import { clp, clpSigno, fechaLegible, hoy, diaSemana, sumarDias, fechaDiaMes, iniciales } from '@/lib/format'
 import { esMetodo, type MetodoKey } from '@/lib/totales'
-import { mensajeDeError } from '@/lib/errorLog'
+import { montoDe } from '@/lib/metodos'
 
 export default function CerrarTurno() {
   const search = useSearch({ from: '/app/turno' })
@@ -38,7 +39,7 @@ export default function CerrarTurno() {
   // llenar la planilla, porque al guardar la base lo rechaza (23514).
   const resumenDia = useResumenDia(fecha)
   const noAbrio = resumenDia.data?.cerrado === true
-  const [quitandoMarca, setQuitandoMarca] = useState(false)
+  const quitarMarca = useQuitarMarcaDia(fecha)
 
   // Primero se necesita el día para decidir el modo por defecto.
   const form = useTurnoForm({ fecha, modo: search.modo ?? 'completo', fondoPorDefecto: config.fondoCajaInicial, online })
@@ -81,7 +82,7 @@ export default function CerrarTurno() {
   }, [state.cargado])
 
   const soloLectura = state.cerrado && !esDueno
-  const turnoManana = form.dia.find((t) => t.turno.tipo === 'mañana')?.turno as unknown as Record<string, number | null> | undefined
+  const turnoManana = form.dia.find((t) => t.turno.tipo === 'mañana')?.turno
   // «¿Contaste la caja?»: Sí abre el conteo; No lo borra.
   const cajaRadio = useRovingRadio([false, true], state.contoCaja, (conto) => {
     if (conto) setSheet({ t: 'conteo' })
@@ -137,15 +138,10 @@ export default function CerrarTurno() {
         <div role="status" className="mb-4 aviso bg-warn-tint text-warn flex flex-wrap items-center gap-x-2 gap-y-1">
           <span>Este día está marcado como <b>sin abrir</b>.</span>
           {esDueno && (
-            <button type="button" disabled={quitandoMarca}
-              onClick={() => void (async () => {
-                setQuitandoMarca(true)
-                try { await marcarDiaCerrado(fecha, false) }
-                catch (e) { toast.error(mensajeDeError(e, 'No se pudo quitar la marca')) }
-                finally { setQuitandoMarca(false) }
-              })()}
+            <button type="button" disabled={quitarMarca.ocupado}
+              onClick={() => void quitarMarca.quitar()}
               className="hit font-bold underline">
-              {quitandoMarca ? 'Un momento…' : 'Quitar la marca y registrar'}
+              {quitarMarca.ocupado ? 'Un momento…' : 'Quitar la marca y registrar'}
             </button>
           )}
         </div>
@@ -229,7 +225,7 @@ export default function CerrarTurno() {
                 <span className="flex-1 min-w-0">
                   <span className="block text-base font-medium text-ink">{m.label}</span>
                   {m.acumulado_diario && modo === 'tarde' ? (
-                    <span className="block text-xs text-muted tabular-nums mt-0.5">Mañana {clp(turnoManana?.[key] ?? 0)} · total del día {clp(Number(turnoManana?.[key] ?? 0) + monto)}</span>
+                    <span className="block text-xs text-muted tabular-nums mt-0.5">Mañana {clp(montoDe(turnoManana, key))} · total del día {clp(montoDe(turnoManana, key) + monto)}</span>
                   ) : m.sub && <span className="block text-xs text-muted mt-0.5">{m.sub}</span>}
                 </span>
                 <span className={`cifra text-lg ${monto ? 'text-ink' : 'text-muted2'}`}>{clp(monto)}</span>
@@ -345,7 +341,7 @@ export default function CerrarTurno() {
         const prox = activos[idx + 1]
         // Máquina con total del día y estamos cerrando la tarde: se escribe el
         // total y la hoja deriva la parte de la tarde (total − mañana).
-        const mananaMonto = modo === 'tarde' ? Number(turnoManana?.[sheet.key] ?? 0) : null
+        const mananaMonto = modo === 'tarde' ? montoDe(turnoManana, sheet.key) : null
         const acumulado = m?.acumulado_diario && mananaMonto != null ? { manana: mananaMonto } : undefined
         return (
           <MontoSheet title={m?.label ?? sheet.key} sub={acumulado ? 'La máquina muestra el total del día' : m?.sub ?? undefined} valor={state.ventas[sheet.key]}

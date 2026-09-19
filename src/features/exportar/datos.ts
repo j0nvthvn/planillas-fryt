@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
 import { qk } from '@/lib/query'
-import type { VTurno } from '@/features/turno/api'
+import { ordenTurno, type VTurno } from '@/features/turno/api'
 import type { Compra, MetodoInfo } from './tablas'
 
 export interface DatosExportacion {
@@ -28,8 +28,6 @@ export function useDatosExportacion(desde: string, hasta: string) {
   return useQuery(opcionesDatos(desde, hasta))
 }
 
-const ORDEN_TURNO: Record<string, number> = { 'mañana': 0, 'tarde': 1 }
-
 /**
  * Todo lo que no trae `resumen_periodo`: los turnos del período (sin los
  * eliminados, que `v_turnos` ya excluye), sus compras a proveedores con el
@@ -49,7 +47,7 @@ export async function cargarExportacion(desde: string, hasta: string): Promise<D
     for (const p of data) {
       const t = porId.get(p.turno_id)
       if (!t) continue
-      compras.push({ fecha: t.fecha, modo: t.modo, proveedor: p.catalogo?.nombre ?? p.nombre, forma_pago: p.forma_pago, monto: Number(p.monto), orden: `${t.fecha}|${ORDEN_TURNO[t.tipo] ?? 9}|${p.creado_en}` })
+      compras.push({ fecha: t.fecha, modo: t.modo, proveedor: p.catalogo?.nombre ?? p.nombre, forma_pago: p.forma_pago, monto: Number(p.monto), orden: `${t.fecha}|${ordenTurno(t.tipo)}|${p.creado_en}` })
     }
   }
   compras.sort((a, b) => a.orden.localeCompare(b.orden))
@@ -72,7 +70,7 @@ async function cargarTurnos(desde: string, hasta: string): Promise<VTurno[]> {
     if (data.length < PAGINA) break
   }
   // "tipo" ordena alfabéticamente (mañana < tarde), pero se asegura igual.
-  return filas.sort((a, b) => a.fecha.localeCompare(b.fecha) || (ORDEN_TURNO[a.tipo] ?? 9) - (ORDEN_TURNO[b.tipo] ?? 9))
+  return filas.sort((a, b) => a.fecha.localeCompare(b.fecha) || ordenTurno(a.tipo) - ordenTurno(b.tipo))
 }
 
 async function cargarMetodos(): Promise<MetodoInfo[]> {

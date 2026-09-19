@@ -8,11 +8,13 @@ import { CorreccionModal } from '@/components/CorreccionModal'
 import { useToast } from '@/components/Toast'
 import { useUsuario } from '@/hooks/useUsuario'
 import { useMetodos } from '@/features/catalogo/api'
-import { useResumenDia, useTurnosDia, useCierres, guardarTurno, eliminarTurno, marcarDiaCerrado, etiquetaModo, type TurnoConLineas } from '@/features/turno/api'
-import { EstadoChip, Dato } from '@/features/hoy/Hoy'
+import { useResumenDia, useTurnosDia, useCierres, guardarTurno, eliminarTurno, etiquetaModo, type TurnoConLineas } from '@/features/turno/api'
+import { useQuitarMarcaDia } from '@/features/turno/useQuitarMarcaDia'
+import { EstadoChip, Dato } from '@/components/Dato'
 import { Ledger, LedgerHead, LedgerLine, LedgerTotal } from '@/components/Ledger'
 import { clp, clpSigno, fechaSinAnio, sumarDias, hoy, horaCorta } from '@/lib/format'
-import { esMetodo, type MetodoKey } from '@/lib/totales'
+import { esMetodo } from '@/lib/totales'
+import { montoDe } from '@/lib/metodos'
 import { mensajeDeError } from '@/lib/errorLog'
 import { DiaCerradoSheet } from '@/components/DiaCerradoSheet'
 
@@ -32,6 +34,7 @@ export default function Planilla() {
   const [marcando, setMarcando] = useState(false)
   const [quitando, setQuitando] = useState(false)
   const [ocupado, setOcupado] = useState(false)
+  const quitarMarca = useQuitarMarcaDia(fecha)
 
   const lista = turnos.data ?? []
   const r = resumen.data
@@ -134,19 +137,9 @@ export default function Planilla() {
         <ConfirmDialog
           title="¿Quitar la marca?"
           message="El día vuelve a quedar sin registro y podrás registrarlo normalmente."
-          confirmLabel="Quitar marca" loading={ocupado}
+          confirmLabel="Quitar marca" loading={quitarMarca.ocupado}
           onCancel={() => setQuitando(false)}
-          onConfirm={() => void (async () => {
-            setOcupado(true)
-            try {
-              await marcarDiaCerrado(fecha, false)
-              setQuitando(false)
-            } catch (e) {
-              toast.error(mensajeDeError(e, 'No se pudo quitar la marca'))
-            } finally {
-              setOcupado(false)
-            }
-          })()}
+          onConfirm={() => void quitarMarca.quitar().then((ok) => { if (ok) setQuitando(false) })}
         />
       )}
     </div>
@@ -164,7 +157,6 @@ function TarjetaTurno({ t, fecha, esDueno, metodos, onDiff, onAccion, puedeUnir,
   onDiff: () => void; onAccion: (a: 'dividir' | 'unir' | 'eliminar') => void; puedeUnir: boolean; esCompleto: boolean
 }) {
   const { turno, proveedores } = t
-  const v = turno as unknown as Record<string, number | null>
   return (
     <article className="card p-0 overflow-hidden">
       <div className="px-[18px] py-3.5 border-b border-hairline flex items-center justify-between gap-2.5">
@@ -182,8 +174,9 @@ function TarjetaTurno({ t, fecha, esDueno, metodos, onDiff, onAccion, puedeUnir,
       <div className="px-[18px] pt-1.5 pb-3.5">
         <Ledger>
           <LedgerHead label="Ventas" />
-          {metodos.filter((m) => esMetodo(m.key) && (v[m.key] ?? 0) > 0).map((m) => (
-            <LedgerLine key={m.key} label={m.label} value={v[m.key as MetodoKey]} />
+          {/* En el orden del catálogo, no por monto: es la planilla del día. */}
+          {metodos.filter((m) => esMetodo(m.key) && montoDe(turno, m.key) > 0).map((m) => (
+            <LedgerLine key={m.key} label={m.label} value={montoDe(turno, m.key)} />
           ))}
           <LedgerTotal label="Total ventas" value={Number(turno.total_ventas ?? 0)} size="sm" />
           {proveedores.length > 0 && <LedgerHead label="Proveedores" />}

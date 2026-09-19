@@ -1,5 +1,4 @@
 import { useMemo, useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
 import { Link, useNavigate, useSearch } from '@tanstack/react-router'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, ReferenceLine } from 'recharts'
 import PageHeader from '@/components/PageHeader'
@@ -9,11 +8,10 @@ import { DeltaBadge } from '@/components/DeltaBadge'
 import { ProveedorAvatar } from '@/components/ProveedorAvatar'
 import { MetodoLogo } from '@/components/MetodoLogo'
 import { useMetodos } from '@/features/catalogo/api'
-import { supabase } from '@/lib/supabase'
-import { qk } from '@/lib/query'
+import { useResumenPeriodo } from './api'
 import { clp, clpCorto, clpEje, fechaISO, hoy, ajustarRango, sumarDias, fechaDiaMes } from '@/lib/format'
+import { porMetodo } from '@/lib/metodos'
 import { ExportarSheet } from '@/features/exportar/ExportarSheet'
-import type { Resumen } from '@/features/exportar/tablas'
 import type { VResumenDia } from '@/features/turno/api'
 import { colorMetodo } from '@/lib/theme'
 import { BarraMetodos } from '@/components/BarraMetodos'
@@ -32,14 +30,7 @@ export default function Analisis() {
   const navigate = useNavigate()
   const { desde, hasta } = search.desde && search.hasta ? ajustarRango(search.desde, search.hasta) : rango('7')
   const metodos = useMetodos()
-  const q = useQuery({
-    queryKey: qk.resumenPeriodo(desde, hasta),
-    queryFn: async (): Promise<Resumen> => {
-      const { data, error } = await supabase.rpc('resumen_periodo', { p_desde: desde, p_hasta: hasta })
-      if (error) throw error
-      return data as unknown as Resumen
-    },
-  })
+  const q = useResumenPeriodo(desde, hasta)
   const r = q.data
   const dias = useMemo(() => (r?.dias ?? []).map((d) => ({ ...d, label: fechaDiaMes(d.fecha).replace(/,|\s\S+$/g, ''), neto: Number(d.neto), total_ventas: Number(d.total_ventas) })), [r])
   const presetActivo = (['7', '30', 'mes'] as const).find((p) => { const x = rango(p); return x.desde === desde && x.hasta === hasta })
@@ -55,10 +46,7 @@ export default function Analisis() {
   const intervaloX = Math.max(0, Math.ceil(dias.length / (escritorio ? 8 : 6)) - 1)
   const formatoY = clpEje(Math.max(0, ...dias.map((d) => Math.abs(d.neto))))
   const irADia = (fecha: string) => void navigate({ to: '/dia', search: { fecha } })
-  const porMetodo = (metodos.data ?? [])
-    .map((m) => ({ ...m, monto: Number(r?.totales[m.key] ?? 0) }))
-    .filter((m) => m.monto > 0)
-    .sort((a, b) => b.monto - a.monto)
+  const ventas = porMetodo(r?.totales, metodos.data)
   const totalProveedores = Number(r?.totales.total_proveedores ?? 0)
 
   return (
@@ -152,10 +140,10 @@ export default function Analisis() {
                     <h2 className="text-sm font-medium text-ink">Ventas por método</h2>
                     <span className="cifra text-sm text-ink2">{clp(r.totales.total_ventas)}</span>
                   </div>
-                  <BarraMetodos metodos={porMetodo} className="mt-3" />
+                  <BarraMetodos metodos={ventas} className="mt-3" />
                 </div>
-                {porMetodo.length === 0 && <p className="text-sm text-muted text-center py-4 border-t border-hairline">Sin ventas en el período.</p>}
-                {porMetodo.map((m) => {
+                {ventas.length === 0 && <p className="text-sm text-muted text-center py-4 border-t border-hairline">Sin ventas en el período.</p>}
+                {ventas.map((m) => {
                   const pct = r.totales.total_ventas ? (m.monto / r.totales.total_ventas) * 100 : 0
                   return (
                     <div key={m.key} className="flex items-center gap-3 px-[18px] py-2.5 min-h-[60px] border-t border-hairline">
