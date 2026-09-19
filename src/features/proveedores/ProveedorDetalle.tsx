@@ -7,20 +7,19 @@ import Icon from '@/components/Icon'
 import { ProveedorAvatar } from '@/components/ProveedorAvatar'
 import { BottomSheet } from '@/components/BottomSheet'
 import { ConfirmDialog } from '@/components/ConfirmDialog'
-import { useToast } from '@/components/Toast'
+import { useAccion } from '@/hooks/useAccion'
 import { useCatalogo, actualizarProveedor, eliminarProveedor, fusionarProveedores, subirLogo } from '@/features/catalogo/api'
 import { normalizar } from '@/features/turno/parecido'
 import { supabase } from '@/lib/supabase'
 import { qk } from '@/lib/query'
 import { clp, fechaDiaMes } from '@/lib/format'
-import { mensajeDeError } from '@/lib/errorLog'
 
 interface Compra { id: string; monto: number; forma_pago: string; creado_en: string; turno: { tipo: string; deleted_at: string | null; jornada: { fecha: string } | null } | null }
 
 export default function ProveedorDetalle() {
   const { id } = useParams({ from: '/app/proveedores/$id' })
   const navigate = useNavigate()
-  const toast = useToast()
+  const run = useAccion()
   const catalogo = useCatalogo()
   const prov = catalogo.data?.find((p) => p.id === id)
   const [renombrar, setRenombrar] = useState<string | null>(null)
@@ -50,7 +49,9 @@ export default function ProveedorDetalle() {
 
   async function correr(fn: () => Promise<void>, ok: string) {
     setOcupado(true)
-    try { await fn(); toast.ok(ok) } catch (e) { toast.error(mensajeDeError(e)) } finally { setOcupado(false); setConfirmar(null) }
+    await run(fn, ok)
+    setOcupado(false)
+    setConfirmar(null)
   }
 
   if (catalogo.isPending) return <Spinner />
