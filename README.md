@@ -48,12 +48,15 @@ correo (`.github/workflows/ci.yml`).
 
 ```
 src/
-  lib/        supabase, tipos, query client, auth (sesión como store), formato, totales
+  lib/        supabase, tipos, query client, auth (sesión como store), formato,
+              totales y métodos (una columna por método hasta la Fase 5)
   components/ Layout, BottomSheet, Keypad, Toast, PageHeader, …
+  hooks/      sesión, conexión, accion (ejecutar y avisar), tema, media queries
   features/
     auth/       Login
     hoy/        Hoy: estado del día, borradores olvidados, acción principal
-    turno/      Cerrar turno: useTurnoForm (borrador local + autoguardado),
+    turno/      Cerrar turno: estadoTurno.ts (estado puro del formulario, con
+                pruebas) + useTurnoForm (borrador local + autoguardado),
                 reglas de modo (modo.ts), hojas de proveedor/monto, conteo de
                 caja por billetes (conteo.ts + ConteoSheet), revisión previa
                 al cierre (revision.ts + RevisionSheet), aviso de proveedor
@@ -62,7 +65,9 @@ src/
     historial/  v_resumen_dia con filtros e infinite scroll
     analisis/   resumen_periodo, KPIs con variación, gráfico, top proveedores, CSV
     proveedores/ catálogo: renombrar, logo, fusionar, activar, historial
-    ajustes/    general, trabajadores, métodos de pago, papelera, cuentas, errores
+    ajustes/    menú + una pantalla por sección en paneles/ (general,
+                trabajadores, métodos de pago, correos, papelera, cuentas,
+                errores, apariencia), con su api.ts
 ```
 
 Toda escritura de un turno pasa por la RPC `guardar_turno` (una transacción).
