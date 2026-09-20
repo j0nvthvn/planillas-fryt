@@ -1,0 +1,69 @@
+{
+  "pkg": "frytcontrol",
+  "globalName": "FrytControl",
+  "projectId": "4b6bf2d0-0fe5-480f-bf31-f9dfa4d23d2c",
+  "shape": "package",
+  "srcDir": "src",
+  "tsconfig": "tsconfig.app.json",
+  "cssEntry": ".design-sync/dist-css/styles.css",
+  "extraFonts": [
+    ".design-sync/fonts.css"
+  ],
+  "guidelinesGlob": [],
+  "docsDir": ".design-sync/docs",
+  "componentSrcMap": {
+    "AvisoAmbar": "src/components/Aviso.tsx",
+    "Banda": "src/components/Banda.tsx",
+    "BarraMetodos": "src/components/BarraMetodos.tsx",
+    "BottomSheet": "src/components/BottomSheet.tsx",
+    "ConfirmDialog": "src/components/ConfirmDialog.tsx",
+    "Dato": "src/components/Dato.tsx",
+    "EstadoChip": "src/components/Dato.tsx",
+    "DeltaBadge": "src/components/DeltaBadge.tsx",
+    "EsqueletoContenido": "src/components/Esqueleto.tsx",
+    "EsqueletoPagina": "src/components/Esqueleto.tsx",
+    "Icon": "src/components/Icon.tsx",
+    "Keypad": "src/components/Keypad.tsx",
+    "AmountDisplay": "src/components/Keypad.tsx",
+    "DesktopAmountInput": "src/components/Keypad.tsx",
+    "PayToggle": "src/components/Keypad.tsx",
+    "Ledger": "src/components/Ledger.tsx",
+    "LedgerHead": "src/components/Ledger.tsx",
+    "LedgerLine": "src/components/Ledger.tsx",
+    "LedgerTotal": "src/components/Ledger.tsx",
+    "MetodoLogo": "src/components/MetodoLogo.tsx",
+    "MontoInput": "src/components/MontoInput.tsx",
+    "HoraInput": "src/components/MontoInput.tsx",
+    "PageHeader": "src/components/PageHeader.tsx",
+    "ProveedorAvatar": "src/components/ProveedorAvatar.tsx",
+    "Spinner": "src/components/Spinner.tsx",
+    "ToastProvider": "src/components/Toast.tsx"
+  },
+  "dtsPropsFor": {
+    "DeltaBadge": "  /** Cifra del período actual. */\n  actual: number;\n  /** Cifra del período anterior; sin dato (`null`/`undefined`) no se muestra nada. */\n  anterior: number | null | undefined;\n  /** Con fondo: píldora sobre la tarjeta, en vez de texto suelto. */\n  fondo?: boolean;\n  /** En gastos, bajar es la buena noticia: se da vuelta solo el color. */\n  menosEsMejor?: boolean;",
+    "EsqueletoPagina": "  // No recibe props."
+  },
+  "extraEntries": [
+    "./.design-sync/proveedor.tsx"
+  ],
+  "provider": {
+    "component": "ProveedorPreview"
+  },
+  "overrides": {
+    "BottomSheet": {
+      "cardMode": "single",
+      "primaryStory": "ConPie",
+      "viewport": "420x760"
+    },
+    "ConfirmDialog": {
+      "cardMode": "single",
+      "primaryStory": "Peligrosa",
+      "viewport": "420x760"
+    },
+    "ToastProvider": {
+      "cardMode": "single",
+      "primaryStory": "Ok"
+    }
+  },
+  "readmeHeader": ".design-sync/conventions.md"
+}

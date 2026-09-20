@@ -1,0 +1,20 @@
+// Barril de entrada para design-sync: reexporta solo los componentes
+// autónomos de src/components (los acoplados al router, a la sesión o a la
+// API quedan fuera a propósito). No lo usa la app.
+export { AvisoAmbar } from '@/components/Aviso'
+export { Banda } from '@/components/Banda'
+export { BarraMetodos } from '@/components/BarraMetodos'
+export { BottomSheet } from '@/components/BottomSheet'
+export { ConfirmDialog } from '@/components/ConfirmDialog'
+export { Dato, EstadoChip } from '@/components/Dato'
+export { DeltaBadge } from '@/components/DeltaBadge'
+export { EsqueletoContenido, EsqueletoPagina } from '@/components/Esqueleto'
+export { default as Icon } from '@/components/Icon'
+export { Keypad, AmountDisplay, DesktopAmountInput, PayToggle, applyKey, digitosANumero, numeroADigitos } from '@/components/Keypad'
+export { Ledger, LedgerHead, LedgerLine, LedgerTotal } from '@/components/Ledger'
+export { MetodoLogo } from '@/components/MetodoLogo'
+export { MontoInput, HoraInput } from '@/components/MontoInput'
+export { default as PageHeader } from '@/components/PageHeader'
+export { ProveedorAvatar } from '@/components/ProveedorAvatar'
+export { default as Spinner } from '@/components/Spinner'
+export { ToastProvider, useToast } from '@/components/Toast'

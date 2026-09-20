@@ -1,0 +1,15 @@
+/* Entrada de CSS para design-sync: los mismos tokens y utilidades que la app,
+   más las clases que usan las vistas previas. Se compila a
+   .design-sync/dist-css/styles.css con el CLI de Tailwind. */
+@import "../src/styles.css";
+@source "../src";
+@source "./previews";
+
+/* Tailwind v4 solo emite lo que ve usado. Las pantallas que arme el agente de
+   diseño usan clases que no están en src/, así que el vocabulario del sistema
+   se deja fijado acá para que siempre viaje en el CSS. */
+@source inline("{btn,btn-primary,btn-secondary,btn-danger,btn-ghost,btn-lg,btn-bar,aviso,input,card,card-hero,eyebrow,amount,cifra,label,badge,badge-sm,segmented,segmented-item,segmented-item-on,row,hit,tile,borde-marca,mascara-derecha}");
+@source inline("{bg,text,border}-{brand,brand-hover,brand-tint,canvas,card,hairline,hairline-strong,control-border,soft,ink,ink2,muted,muted2,pos,pos-tint,pos-border,neg,neg-tint,warn,warn-tint,info,info-tint,image-bg,cash,wire,on-solid}");
+@source inline("text-{xs,sm,md,base,lg,xl,2xl,amount-sm,amount,amount-lg,hero}");
+@source inline("font-{sans,display}");
+@source inline("shadow-{card,hero,fab,bar}");

@@ -13,5 +13,15 @@ supabase/.branches
 .codegraph
 /deno.lock
 
+# design-sync (scripts montados y salida regenerable)
+.ds-sync/
+ds-bundle/
+.design-sync/.cache/
+.design-sync/learnings/
+.design-sync/node_modules
+.design-sync/dist-css/
+types/
+/index.d.ts
+
 # Las maquetas se versionan en el repo que las consume, no acá.
 maquetas/salida/

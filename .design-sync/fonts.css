@@ -1,0 +1,16 @@
+/* Las mismas familias que sirve la app (solo el subconjunto latino), con
+   rutas que el conversor puede resolver desde el repo. */
+@font-face {
+  font-family: 'Inter Variable';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 900;
+  src: url('../node_modules/@fontsource-variable/inter/files/inter-latin-wght-normal.woff2') format('woff2-variations');
+}
+@font-face {
+  font-family: 'Inter Tight Variable';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 900;
+  src: url('../node_modules/@fontsource-variable/inter-tight/files/inter-tight-latin-wght-normal.woff2') format('woff2-variations');
+}
