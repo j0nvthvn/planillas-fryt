@@ -12,3 +12,6 @@ supabase/.temp
 supabase/.branches
 .codegraph
 /deno.lock
+
+# Las maquetas se versionan en el repo que las consume, no acá.
+maquetas/salida/
