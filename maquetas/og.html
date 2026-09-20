@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<style>
+  /* La fuente y la maqueta las inyecta render.mjs como data URI: así la
+     composición se captura con setContent, sin servidor ni red. */
+  @font-face {
+    font-family: 'Inter Tight';
+    font-style: normal;
+    font-weight: 100 900;
+    font-display: block;
+    src: url('__FUENTE__') format('woff2-variations');
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    width: 1200px; height: 630px; overflow: hidden;
+    display: flex; align-items: center; gap: 64px;
+    padding: 0 0 0 80px;
+    font-family: 'Inter Tight', system-ui, sans-serif;
+    /* Los mismos tokens que la landing en claro. */
+    background: #F6F7F9;
+    color: #0F1115;
+  }
+  .texto { flex: 1; min-width: 0; }
+  .marca { display: flex; align-items: center; gap: 16px; margin-bottom: 28px; }
+  .marca img { width: 64px; height: 64px; border-radius: 50%; }
+  .marca span { font-size: 40px; font-weight: 700; letter-spacing: -.03em; }
+  h1 { font-size: 52px; line-height: 1.12; font-weight: 700; letter-spacing: -.035em; }
+  p { margin-top: 24px; font-size: 26px; line-height: 1.4; color: #626B7F; font-weight: 500; }
+  .barra { margin-top: 36px; width: 96px; height: 8px; border-radius: 99px; background: #4F46E5; }
+  /* El teléfono asomando por el borde: se ve la app, no un rectángulo suelto. */
+  .telefono {
+    width: 340px; height: 736px; flex: none; margin-top: 150px;
+    border-radius: 44px; overflow: hidden;
+    border: 10px solid #15181D;
+    box-shadow: 0 40px 80px rgba(15, 17, 21, .22);
+    background: #fff;
+  }
+  .telefono img { width: 100%; display: block; }
+</style>
+</head>
+<body>
+  <div class="texto">
+    <div class="marca"><img src="__LOGO__" alt="" /><span>FrytControl</span></div>
+    <h1>El cierre de caja del Minimarket&nbsp;Fryt, en el celular del local.</h1>
+    <p>Ventas por método de pago, proveedores pagados y conteo de caja, día a día.</p>
+    <div class="barra"></div>
+  </div>
+  <div class="telefono"><img src="__MAQUETA__" alt="" /></div>
+</body>
+</html>
