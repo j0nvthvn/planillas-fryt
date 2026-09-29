@@ -32,6 +32,34 @@ async function entrar(page: Page) {
   await expect(page).toHaveURL(/\/hoy/)
 }
 
+/**
+ * La caché de React Query se persiste en IndexedDB con un throttle de 1 s
+ * (src/lib/query.ts). Un `page.goto` recarga la app entera: si llega antes
+ * de que se guarde, se restaura el día como estaba antes de la mutación
+ * (fresco para staleTime, así que no se vuelve a pedir). Se espera a que
+ * la copia persistida tenga el estado nuevo del día.
+ */
+async function esperarCachePersistida(page: Page, cerrado: boolean) {
+  // Texto y no función: el tsconfig de e2e no trae los tipos del DOM.
+  await page.waitForFunction(`new Promise((listo) => {
+    const abrir = indexedDB.open('keyval-store')
+    abrir.onerror = () => listo(false)
+    abrir.onsuccess = () => {
+      try {
+        const leer = abrir.result.transaction('keyval').objectStore('keyval').get('frytcontrol-v2-query')
+        leer.onerror = () => listo(false)
+        leer.onsuccess = () => {
+          try {
+            const dia = JSON.parse(leer.result).clientState.queries
+              .find((q) => q.queryKey[0] === 'resumen-dia' && q.queryKey[1] === ${JSON.stringify(FECHA)})
+            listo(dia?.state.data?.cerrado === ${cerrado})
+          } catch { listo(false) }
+        }
+      } catch { listo(false) }
+    }
+  })`)
+}
+
 test('marcar un día sin abrir, verlo en la planilla y quitar la marca', async ({ page }) => {
   await entrar(page)
 
@@ -49,12 +77,14 @@ test('marcar un día sin abrir, verlo en la planilla y quitar la marca', async (
   await expect(page.getByRole('button', { name: 'Quitar marca' })).toBeVisible()
   await expect(page.getByText('Feriado', { exact: true })).toBeVisible()
   await expect(page.getByText('No abrió', { exact: true })).toBeVisible()
+  await esperarCachePersistida(page, true)
 
   // 4. Cerrar turno avisa antes de que la dueña llene la planilla entera.
   await page.goto(`/turno?fecha=${FECHA}&modo=completo`)
   await expect(page.getByText('Este día está marcado como')).toBeVisible()
   await page.getByRole('button', { name: 'Quitar la marca y registrar' }).click()
   await expect(page.getByText('Este día está marcado como')).toBeHidden()
+  await esperarCachePersistida(page, false)
 
   // 5. Sin la marca, el día vuelve a estar en blanco.
   await page.goto(`/dia?fecha=${FECHA}`)
