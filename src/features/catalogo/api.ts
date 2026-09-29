@@ -117,6 +117,7 @@ export async function fusionarProveedores(origen: string, destino: string) {
   if (error) throw error
   await queryClient.invalidateQueries({ queryKey: qk.catalogo })
   await queryClient.invalidateQueries({ queryKey: qk.todoProveedorHistorial })
+  await queryClient.invalidateQueries({ queryKey: qk.todasComprasProveedores })
 }
 
 export async function subirLogo(proveedorId: string, nombre: string, archivo: File): Promise<string> {

@@ -103,7 +103,20 @@ const analisisRoute = createRoute({
   component: Analisis,
 })
 
-const proveedoresRoute = createRoute({ getParentRoute: () => appRoute, path: '/proveedores', beforeLoad: soloDueno, component: Proveedores })
+const proveedoresRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: '/proveedores',
+  beforeLoad: soloDueno,
+  validateSearch: z.object({
+    q: z.string().optional(),
+    estado: z.enum(['activos', 'inactivos', 'todos']).optional(),
+    uso: z.enum(['todos', 'con', 'sin']).optional(),
+    orden: z.enum(['uso', 'monto', 'az', 'nuevos']).optional(),
+    desde: fechaSchema.optional(),
+    hasta: fechaSchema.optional(),
+  }),
+  component: Proveedores,
+})
 const proveedorRoute = createRoute({ getParentRoute: () => appRoute, path: '/proveedores/$id', beforeLoad: soloDueno, component: ProveedorDetalle })
 
 const ajustesRoute = createRoute({

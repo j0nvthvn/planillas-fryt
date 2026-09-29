@@ -61,6 +61,8 @@ export const qk = {
   todaExportacion: ['exportacion'] as const,
   proveedorHistorial: (id: string) => ['proveedor-historial', id] as const,
   todoProveedorHistorial: ['proveedor-historial'] as const,
+  comprasProveedores: (desde: string, hasta: string) => ['compras-proveedores', desde, hasta] as const,
+  todasComprasProveedores: ['compras-proveedores'] as const,
   papelera: ['papelera'] as const,
   usuarios: ['usuarios'] as const,
   errores: ['errores'] as const,
@@ -78,4 +80,5 @@ export function invalidarDia(fecha: string) {
   void queryClient.invalidateQueries({ queryKey: qk.todaExportacion })
   void queryClient.invalidateQueries({ queryKey: qk.borradores })
   void queryClient.invalidateQueries({ queryKey: qk.catalogo })
+  void queryClient.invalidateQueries({ queryKey: qk.todasComprasProveedores })
 }
