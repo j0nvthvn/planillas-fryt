@@ -40,8 +40,8 @@ export function Usuarios() {
           <label className="block"><span className="label">Correo</span>
             <input className="input" type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} required autoComplete="off" /></label>
           <label className="block"><span className="label">Contraseña</span>
-            <input className="input" type="password" minLength={8} value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} required autoComplete="new-password" aria-describedby="cuenta-clave-ayuda" /></label>
-          <p id="cuenta-clave-ayuda" className="text-xs text-muted -mt-1.5">Mínimo 8 caracteres.</p>
+            <input className="input" type="password" minLength={10} value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} required autoComplete="new-password" aria-describedby="cuenta-clave-ayuda" /></label>
+          <p id="cuenta-clave-ayuda" className="text-xs text-muted -mt-1.5">Mínimo 10 caracteres.</p>
           <div className="flex gap-2"><button type="button" className="btn-secondary btn-lg flex-1" onClick={() => setForm(null)}>Cancelar</button><button type="submit" className="btn-primary btn-lg flex-1" disabled={ocupado}>{ocupado ? 'Creando…' : 'Crear cuenta'}</button></div>
         </form>
       ) : <button type="button" className="btn-secondary w-full" onClick={() => setForm({ nombre: '', email: '', password: '' })}><Icon name="plus" className="w-4 h-4" />Nueva cuenta</button>}

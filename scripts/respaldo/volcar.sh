@@ -25,7 +25,9 @@ pg sh -c 'pg_dump "$PGURL" -Fc --schema=public --schema=auth --schema=storage -f
 
 echo "▸ manifiesto"
 pg sh -c 'psql "$PGURL" -v ON_ERROR_STOP=1 -qtA' < scripts/respaldo/manifiesto.sql > "$out/manifiesto.json"
-cat "$out/manifiesto.json"
+# Solo los conteos: las sumas de dinero viajan dentro de la copia cifrada
+# y no se imprimen (los logs de Actions de un repo público son públicos).
+jq -c .filas "$out/manifiesto.json"
 
 if [ -n "${SUPABASE_URL:-}" ]; then
   echo "▸ logos"
