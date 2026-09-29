@@ -389,7 +389,8 @@ Estado: aplicada en staging y en prod el 2026-09-29 (~01:00 UTC) vía
 MCP, con la versión del archivo en `schema_migrations`; la huella de
 políticas y funciones es idéntica a la de la base local donde pasan los
 tests. `desactivar-usuario` y la `crear-usuario` nueva están desplegadas
-en **staging** (probadas de punta a punta); en prod falta desplegarlas.
+en staging (probadas de punta a punta) y en prod (2026-09-29, verificado:
+CORS solo para la app y 401 sin sesión).
 En prod se borró la cuenta de prueba sin perfil (`us***@test.com`) y se
 bloqueó en Auth la cuenta de trabajador desactivada.
 
@@ -406,7 +407,10 @@ Lo que no cabe en una migración y se revisa a mano en cada entorno:
 - "Desactivar" en Ajustes → Cuentas usa la edge function
   `desactivar-usuario`, que además banea la cuenta en Auth. **Desplegarla
   antes de publicar la app** que la usa:
-  `pnpm exec supabase functions deploy desactivar-usuario --project-ref <ref>`.
+  `pnpm exec supabase functions deploy desactivar-usuario --project-ref <ref> --use-api`
+  (`--use-api` empaqueta en el servidor: con Podman y SELinux en
+  Enforcing, el contenedor local no puede leer el repo y falla con
+  "entrypoint path does not exist").
 - Cuentas de Auth sin fila en `usuarios` (no deberían existir):
   `select id, email from auth.users u where not exists (select 1 from public.usuarios x where x.id = u.id);`
 - Los logs de GitHub Actions del repo son públicos: los scripts de
