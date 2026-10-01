@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { etiquetaEstado } from '@/features/turno/api'
+import { etiquetaEstado } from '@/features/turno/estado'
 
 /** Cifra con su etiqueta, dentro de una fila de datos (Hoy y la planilla). */
 export function Dato({ label, className = 'text-ink', children }: { label: string; className?: string; children: ReactNode }) {
