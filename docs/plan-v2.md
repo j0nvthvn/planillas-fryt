@@ -1,6 +1,12 @@
 # Plan: FrytControl v2 — renovación sin interrumpir la app actual
 
-> **Estado al 2026-09-16**
+> **Estado actual (2026-10-01):** la v2 es la única app y vive en la raíz.
+> La seguridad del PR #10 está publicada. La contracción sigue pendiente:
+> conservar `jornadas` y permisos del trabajador, y ejecutar por etapas según
+> `docs/plan-accion.md`. Las referencias a v1, `v2/` y regiones anteriores
+> en las fases 0–4 describen la ejecución histórica, no la operación actual.
+
+> **Estado histórico al 2026-09-16**
 > - Fase 0: **aplicada en prod** (baseline, grants, hardening) el 2026-09-16. Correos (`correos_seguros` + edge functions) pospuestos por decisión del usuario hasta tener dominio en Resend. Frontend: los arreglos están commiteados pero **no pusheados/desplegados**. Pendiente: limpieza de datos con la dueña (`docs/limpieza-datos-2026-09.sql`), activar *leaked password protection*.
 > - Fase 1: migraciones 1.1–1.4 probadas en local (62 pgTAP), en staging `psdhhwcxjcobwxjiemrr` (sa-east-1, copia real de prod, humo 60/60) y **aplicadas en prod** el 2026-09-16: 0 diferencias entre `turno_totales` y los cierres. Ver `docs/operacion.md` (estado de producción).
 > - Fase 2 (app v2): código en `v2/` (stack 2.1, pantallas 2.4, tokens 2.5). Typecheck, tests unitarios y build en verde. Desplegada en https://frytcontrol-v2.vercel.app (proyecto `frytcontrol-v2`, rama `v2`, apunta a staging). Diseño (2.5) decidido el 2026-09-16: identidad café, móvil primero, camino "A" (cifra al frente) + teclado encadenado entre métodos + planilla del día en formato cuaderno; exploraciones en https://claude.ai/artifact/VibHvxrnP7PXgWvAVUifqa. Pendiente: prueba manual en el celular, Playwright.
@@ -165,12 +171,17 @@ La app actual queda intacta en la raíz y en `planillas-fryt.vercel.app`.
 
 ## Fase 5 — Contracción (≈1 mes sin usar la app actual)
 
-- ~~Tag `legacy-final`; borrar la app actual de la raíz; mover `v2/` a la raíz (Root Directory en Vercel).~~ **Hecho el 2026-09-19.** El redirect 308 y el código de la v1 viven ahora en la rama `legacy`, que es la que despliega el proyecto `planillas-fryt`.
+- ~~Tag `legacy-final`; borrar la app actual de la raíz; mover `v2/` a la raíz (Root Directory en Vercel).~~ **Hecho el 2026-09-19.** El código de la v1 vive en la rama `legacy`; el proyecto `planillas-fryt` está congelado y sirve su último despliegue con redirect 308.
 - Lo que sigue toca la base y va aparte, con pgTAP + staging + respaldo. El primero de la lista es el más barato: **quitar realtime y `replica identity full`** (`20260605060523_enable_turnos_realtime_conflicts.sql:78-113`), cuyo único consumidor era `useJornadaRealtime.js` de la v1; sale sin tocar una línea del frontend.
-- `turnos.tipo` admite `'completo'`; migrar `mañana + es_turno_unico` → `completo`; `turnos.fecha` directo con índice único parcial; eliminar `jornadas` (mover `dias_turno_unico`/excepciones a configuración).
+- `turnos.tipo` admite `'completo'`; migrar `mañana + es_turno_unico` → `completo`.
+  Conservar `jornadas`, su fecha y las marcas «No abrió» (decisión 2026-10-01).
+  Retirar `es_turno_unico` solo al terminar la transición de consumidores.
 - Ventas como filas `ventas_turno_metodo(turno_id, metodo_key, monto)`; eliminar columnas fijas.
 - `proveedores_turno.nombre` → eliminar; retirar triggers de compatibilidad.
-- Quitar publicación realtime y `replica identity full`; políticas basadas en `usuario_id` que ya no aplican; `get_my_rol`.
+- Retirar solo las cuatro tablas publicadas por la v1 de `supabase_realtime`,
+  restaurar `replica identity default` y conservar otras publicaciones.
+  Mantener los permisos por propiedad y pertenencia activa; retirar
+  `get_my_rol` solo si se confirma que no tiene dependencias.
 
 ---
 

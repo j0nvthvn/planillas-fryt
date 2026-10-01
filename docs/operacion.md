@@ -47,12 +47,11 @@ producción → `--mode production`, preview → `--mode staging`. No hay
 variables en el dashboard. Un push a `main` despliega producción, así que se
 avisa antes.
 
-> La cuenta de la CLI (`supabase login`) es distinta de la organización que
-> tiene prod y staging (`ccfgqstvcbxhllxvuivx`), así que `link`/`db push`
-> no aplican por ahora. Las migraciones se aplicaron con el MCP de
-> Supabase, por lotes, y `supabase_migrations.schema_migrations` se dejó
-> con las versiones de los archivos del repo. Cuando la CLI tenga acceso
-> a esa organización, `supabase migration list` debe salir alineado.
+> Acceso de CLI recuperado el 2026-10-01; enlazada a producción nueva.
+> Antes de aplicar, comparar el historial remoto con los archivos locales.
+> En staging se retiró solo el registro duplicado `20260916043424` de
+> `metodos_acumulado_diario`; se conserva el canónico `20260917000000`.
+> La reparación del historial no modificó esquema ni datos.
 
 Variables del frontend (Vercel → Settings → Environment Variables, y
 `.env.local` local — **nunca** se versiona):
@@ -66,15 +65,35 @@ VITE_SUPABASE_ANON_KEY=<anon key>
 
 La CLI viene como devDependency: `pnpm exec supabase …`.
 
+**Verificado el 2026-10-01:** conector y CLI tienen acceso a la organización
+correcta. Staging se reactivó con autorización para pausar temporalmente
+`te-toco`. Tras las comprobaciones se pausó staging y Supabase aceptó la
+reactivación de `te-toco`. Base local: 197 pgTAP; Playwright remoto: 12/12. No sustituir los
+proyectos por `fryt-spa`.
+
+Auth en ambos entornos: `enable_signup=false`,
+`minimum_password_length=10`, aplicado mediante un config parcial con
+`config diff` previo. Las propiedades no declaradas se conservaron;
+verificación posterior sin diferencias en las dos propiedades.
+La protección contra contraseñas filtradas requiere Pro y no está
+habilitada en el plan gratuito. Respaldo e integridad del 2026-10-01 y
+simulacro manual de restauración en verde. Seguimiento vigente:
+`docs/plan-accion.md`.
+
 ```sh
 pnpm exec supabase login            # una vez por máquina (abre el navegador)
 pnpm exec supabase link --project-ref aecopggpahxjaglakqwd   # prod (hasta el 2026-09-17 estaba linkeada al prod anterior)
 pnpm exec supabase migration list   # compara repo vs. proyecto
 pnpm exec supabase db push          # aplica migraciones pendientes
-pnpm exec supabase functions deploy # despliega las 3 edge functions
+pnpm exec supabase functions deploy # despliega las edge functions del repo
 ```
 
-### Estado de producción (2026-09-16)
+### Registro histórico de producción (2026-09-16)
+
+Esta sección registra el estado de ese día. No describe las migraciones
+pendientes actuales; las de correos y seguridad se aplicaron después,
+como se documenta en sus secciones. Comparar la historia remota con los
+archivos del repo antes de proponer cualquier `db push`.
 
 Fase 0 (baseline, grants, hardening) y Fase 1 (catálogo de proveedores,
 trabajadores/métodos, totales/vistas, `guardar_turno`) **aplicadas en
@@ -244,7 +263,7 @@ esquema del repo sigue reproduciendo prod.
 
 `public.auditoria` guarda cada cambio real (y cada borrado) en
 `jornadas`, `turnos`, `ventas_turno`, `proveedores_turno`,
-`turno_cierres` (solo borrados), `proveedores_frecuentes`,
+`turno_cierres` (inserciones y borrados desde la migración de seguridad), `proveedores_frecuentes`,
 `trabajadores`, `metodos_pago` y `configuracion`: fila `antes`,
 `despues`, `usuario_id` y `en`. Las reescrituras sin cambios del
 autoguardado de la app actual no se registran. Solo la dueña puede
@@ -374,7 +393,47 @@ Las llaves **no** están en el repo ni en las definiciones de la base.
   en prod): "SECURITY DEFINER ejecutable por authenticated" en
   `cerrar_turno`, `corregir_turno`, `fusionar_proveedores`, `es_dueno`,
   `get_my_rol`, `verificar_integridad` — son las RPC que se llaman a propósito y validan el
-  rol por dentro.
+  rol por dentro. Desde `20260929000000_seguridad.sql` se suma
+  `es_miembro_activo`, que es el mismo caso.
+
+### Auditoría del 2026-09-28 (`20260929000000_seguridad.sql`)
+
+Toda política exige `es_miembro_activo()` (fila en `usuarios` con
+`activo`) y `es_dueno()` exige además `activo`: una cuenta de Auth sin
+perfil o desactivada no ve nada. `cerrar_turno` solo cierra borradores
+(rehacer un cierre es una corrección de la dueña). Pruebas en
+`supabase/tests/seguridad.test.sql`.
+
+Estado: aplicada en staging y en prod el 2026-09-29 (~01:00 UTC) vía
+MCP, con la versión del archivo en `schema_migrations`; la huella de
+políticas y funciones es idéntica a la de la base local donde pasan los
+tests. `desactivar-usuario` y la `crear-usuario` nueva están desplegadas
+en staging (probadas de punta a punta) y en prod (2026-09-29, verificado:
+CORS solo para la app y 401 sin sesión).
+En prod se borró la cuenta de prueba sin perfil (`us***@test.com`) y se
+bloqueó en Auth la cuenta de trabajador desactivada.
+
+Lo que no cabe en una migración y se revisa a mano en cada entorno:
+
+- Authentication → Sign In / Providers: **"Allow new users to sign up"
+  apagado**. Las cuentas solo se crean con `crear-usuario`.
+- Authentication → Providers → Email: mínimo de contraseña 10 y
+  *Leaked password protection* activado.
+- Settings → API → *Exposed schemas*: solo `public` y `graphql_public`.
+  pg_net le da EXECUTE a PUBLIC sobre `net.*` desde `supabase_admin` y
+  el rol de las migraciones no puede revocarlo; lo que protege es que
+  `net` no esté expuesto.
+- "Desactivar" en Ajustes → Cuentas usa la edge function
+  `desactivar-usuario`, que además banea la cuenta en Auth. **Desplegarla
+  antes de publicar la app** que la usa:
+  `pnpm exec supabase functions deploy desactivar-usuario --project-ref <ref> --use-api`
+  (`--use-api` empaqueta en el servidor: con Podman y SELinux en
+  Enforcing, el contenedor local no puede leer el repo y falla con
+  "entrypoint path does not exist").
+- Cuentas de Auth sin fila en `usuarios` (no deberían existir):
+  `select id, email from auth.users u where not exists (select 1 from public.usuarios x where x.id = u.id);`
+- Los logs de GitHub Actions del repo son públicos: los scripts de
+  respaldo solo imprimen conteos, nunca sumas de dinero ni fechas.
 
 ## Checklist de humo de la app actual
 

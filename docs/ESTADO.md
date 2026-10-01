@@ -2,7 +2,43 @@
 
 Documento para quien continúe el trabajo, sea persona o modelo. Resume qué
 es el sistema, qué se hizo, en qué punto está cada fase y qué falta, con las
-reglas que no se deben romper. Última actualización: **2026-09-19**.
+reglas que no se deben romper. Última actualización: **2026-10-01**.
+
+### Verificación del 2026-10-01
+
+- PR #10 de seguridad fusionado en `main` (`2e1679c`): CI y Vercel en verde;
+  `app.frytspa.cl` responde 200 con CSP y los headers de seguridad nuevos.
+- Base local: `./scripts/test-db.sh`, **197/197 pgTAP**. Respaldo de hoy e
+  integridad en verde; simulacro manual **exitoso** (ejecución `36896940247`).
+- PR #11 fusionado en `main` (`e14a5f7`) y **en producción** desde las
+  18:28 UTC (despliegue `dpl_7uTxrAK5eiSu4i7KnKhzCbFHif8A`, CI en verde):
+  `/dia` sin fecha redirige al día actual de Chile y las fechas imposibles
+  tienen un mensaje en español.
+- Staging se reactivó tras autorización para pausar temporalmente `te-toco`.
+  Playwright: **12/12** pruebas móviles aprobadas. Se corrigió la lectura
+  de «No abrió» tras restaurar una caché persistida reciente (también en
+  producción con el PR #11).
+- Revisión posterior al despliegue: lint (0 errores, 5 advertencias ya
+  existentes), tipos, 163 unitarios y build en verde sobre `e14a5f7`. En
+  producción, `verificar_integridad()` sin hallazgos, 0 errores en
+  `logs_error` en 7 días, sin borradores abiertos y advisors solo con lo
+  ya conocido (funciones `security definer` a propósito, `correos_enviados`
+  sin políticas porque solo la usa el servicio, contraseñas filtradas).
+- Auth en producción y staging: registro público desactivado y mínimo de
+  contraseña 10, aplicado con configuración parcial y verificado por CLI.
+  Protección contra contraseñas filtradas requiere Pro; no disponible en
+  el plan gratuito actual.
+- El usuario confirmó las siete fechas históricas como «No abrió» el
+  1 de octubre de 2026; consulta de producción: seis ya marcadas y solo
+  falta el **1 de enero de 2026** (Año Nuevo), sin turnos activos. No se modificaron marcas ni motivos.
+- Migraciones de producción alineadas hasta `20261001173149_retirar_realtime_v1`.
+  CLI enlazada al proyecto de producción y acceso remoto comprobado.
+- Completadas las pruebas remotas, staging se pausó y se solicitó la
+  reactivación de `te-toco`, aceptada por Supabase.
+- Realtime v1 retirado en local, staging y producción; publicación
+  conservada. Huellas y conteos de las cuatro tablas y los cierres idénticos
+  antes y después. Reversión documentada en el plan de acción.
+- Seguimiento y condiciones para continuar: `docs/plan-accion.md`.
 
 Documentos complementarios:
 - `docs/plan-v2.md`: el plan completo por fases (con encabezado de estado).
@@ -52,7 +88,9 @@ atrás"). Un push a `main` despliega producción: se avisa antes.
 Credenciales y dónde están (nunca en el repo, salvo anon keys):
 - `.env.local`: prod. `.env.production` y `.env.staging` **sí** se versionan (URL + anon key, públicas por diseño; RLS protege los datos).
 - `.env.staging.local`: staging + `STAGING_PASSWORD`, contraseña única de todas las cuentas de staging (las 3 reales + `duena@test.local` / `local@test.local`). Los hashes de prod no se copiaron.
-- Supabase CLI: `pnpm exec supabase` logueada con la cuenta correcta. Al 2026-09-17 sigue **linkeada al prod anterior (pausado)**: usar `--project-ref aecopggpahxjaglakqwd` o `supabase link` de nuevo.
+- Supabase: conector con acceso a la organización real tras reinstalar el
+  2026-10-01; CLI enlazada a producción y acceso comprobado. No usar el
+  proyecto `fryt-spa` como sustituto. Ver `docs/operacion.md` → CLI de Supabase.
 - `~/.config/frytcontrol/migracion.env` (fuera del repo, 600): cadenas del session pooler de ambas bases y la API key de Resend. El usuario tiene las contraseñas. El secreto `SUPABASE_DB_URL` de GitHub apunta a la base nueva.
 
 ## 3. Modelo de datos (lo esencial)
@@ -117,7 +155,7 @@ Credenciales y dónde están (nunca en el repo, salvo anon keys):
   - La leyenda del gráfico decía "día cerrado" para los días **con** registro; ahora dice "día con registro".
   - Verificación: pgTAP 151/151 (`supabase/tests/dias_cerrados.test.sql`, 31 casos), 109 unitarios, `pnpm e2e` 12/12 con axe en 0 violaciones, y revisión con capturas en Pixel 7 contra staging.
   - **En producción** (2026-09-17): migración aplicada en staging y prod (huella de `jornadas` idéntica antes y después, `verificar_integridad()` sin errores), `enviar-resumen-periodico` redesplegada —lleva `_shared/correo/` adentro— y la app en `app.frytspa.cl` con el commit `cd7a303`. El aviso nuevo de integridad ya detecta el domingo 6 de septiembre sin registro ni marca.
-  - **Pendiente con la dueña:** marcar las 7 fechas históricas (7, 21 y 28 de junio, 12 y 16 de julio, 6 de septiembre, y el 1 de enero con su jornada vacía) desde la app, para que queden en `auditoria` con su autor y su motivo.
+  - **Confirmadas por el usuario el 2026-10-01, pendientes de marcar:** las 7 fechas históricas (7, 21 y 28 de junio, 12 y 16 de julio, 6 de septiembre, y el 1 de enero con su jornada vacía), desde la app para que queden en `auditoria` con su autor y su motivo. No inventar un motivo que no se haya indicado.
 - **Pendiente:** revisar en un celular real (Safari de iOS con su barra inferior): altura de las hojas y encabezado pegajoso del Historial.
 
 ### Fase 3 — Piloto en paralelo: **hecha** (2026-09-16/17; semanas B y C abreviadas a pedido del usuario)
@@ -139,7 +177,11 @@ Credenciales y dónde están (nunca en el repo, salvo anon keys):
 - `main` en `778a48e`: `v2/.env.production` → proyecto nuevo, `vercel.json` de la raíz redirige a `app.frytspa.cl` y `respaldo.yml` usa la URL nueva. Respaldo manual en verde contra la base nueva.
 - Prod anterior pausado (sus crons y trigger viejos quedaron intactos, no corren; definiciones en `~/.config/frytcontrol/prod-viejo-correos.json`). Staging reactivado.
 - **Correos rediseñados** (2026-09-17, rama `correos`): plantillas Fintech en `supabase/functions/_shared/correo/`, resumen mensual, preferencias por persona (`correo_destinatarios`), hora configurable con el horario de verano resuelto (`programar_resumenes`, un cron por hora) y pruebas desde Ajustes → Correos. pgTAP 30/30 (`supabase/tests/correos.test.sql`).
-- **Pendiente:** confirmar el primer día (entrada de la dueña en `app.frytspa.cl`, correo del primer cierre, resumen diario de las 12:00 UTC, `logs_error`). Reinstalar la PWA desde la dirección nueva en el celular del local. Re-linkear la CLI al proyecto nuevo.
+- **Verificaciones del cambio sin constancia de cierre:** entrada de la dueña,
+  recepción de correos y revisión de `logs_error`. La hora vigente es la de
+  `configuracion.correos_hora` en Chile, y el diario parte apagado; no asumir
+  un envío diario fijo a las 12:00 UTC. Confirmar también la PWA del local.
+  Recuperar acceso a la organización real antes de re-linkear la CLI.
 
 ### Fase 5 — Contracción: **a medias** (repo hecho el 2026-09-19; esquema pendiente)
 - **Hecho (sin tocar la base):** tag `legacy-final` y rama `legacy` con el último estado de la app antigua (su proyecto de Vercel quedó congelado con un *Ignored Build Step*, sirviendo el redirect); la v1 borrada del repo (7.461 líneas: `src/` viejo, `index.html`, configs de Vite/Tailwind/PostCSS, `public/`, `vercel.json` del redirect y `scripts/smoke-legacy.mjs`); `v2/` movido a la raíz con un solo `package.json` (que conserva la devDependency `supabase`, la CLI que usan `scripts/test-db.sh`, `scripts/migrar-region.sh` y el simulacro de respaldo), un `.gitignore`, un `pnpm-lock.yaml` y un `pnpm-workspace.yaml`; `.github/workflows/v2.yml` → `ci.yml` sin `working-directory` ni rutas `../`, y corriendo también `periodo.test.ts`, que antes no se ejecutaba en ninguna parte.
@@ -150,7 +192,11 @@ Credenciales y dónde están (nunca en el repo, salvo anon keys):
   - `features/hoy/estadoDia.ts` y `features/analisis/rango.ts`, con pruebas; `diasExportables` le pone nombre al predicado que estaba tres veces con dos semánticas distintas.
   - Un arreglo de paso: Hoy usaba `resumen.isPending && turnos.isPending`, así que se pintaba a medias mientras faltaba una de las dos consultas.
   - Verificación: lint sin errores, tipos, **155 unitarios** (antes 109), build y `pnpm e2e` 12/12 con axe en 0 violaciones contra staging.
-- **Pendiente (toca la base, por eso va aparte):** quitar realtime y `replica identity full` —cuyo único consumidor era la v1, así que sale sin tocar el frontend—, `turnos.tipo = 'completo'` y eliminar `jornadas.es_turno_unico`, ventas por filas (`ventas_turno_metodo`), eliminar `proveedores_turno.nombre` y sus tres triggers de compatibilidad, y las políticas por `usuario_id` + `get_my_rol`. Detalle en `docs/plan-v2.md`.
+- **Pendiente (toca la base):** retirar Realtime de la v1, representar
+  `turnos.tipo = 'completo'`, ventas por filas y nombres desde el catálogo.
+  **Se conserva `jornadas`** por los días «No abrió», y los permisos actuales
+  del trabajador. Las columnas antiguas solo se retiran después de publicar
+  consumidores compatibles y observar un ciclo operativo. Ver `docs/plan-accion.md`.
 
 ## 5. Cómo trabajar en este repo
 
@@ -183,7 +229,7 @@ SMOKE_EMAIL=duena@test.local SMOKE_PASSWORD=<.env.staging.local> pnpm vitest run
 - **`v_resumen_dia.efectivo_esperado` no es una caja real** en los días con mañana y tarde: suma los dos turnos, y cada tarde trae su propio fondo ($20.000 en prod). Por eso no se muestra en Hoy; el esperado se muestra por turno (`v_turnos`). Por día, el dato con sentido es `efectivo_neto`, como ya hace la exportación.
 - Para capturar Hoy con datos sin escribir en staging, en Playwright se reescribe `fecha=eq.<hoy>` a otra fecha con `page.route`. Conviene un contexto nuevo por escena, porque la caché de TanStack Query se guarda en IndexedDB.
 - `pnpm e2e` reutiliza un `pnpm dev --mode staging` que ya esté en el puerto 5173. No conviene levantar otro servidor de la v2 en paralelo, porque comparten `.vite`.
-- **Una jornada puede existir sin turnos**: porque está marcada "no abrió" o porque quedó vacía al borrar sus turnos (en prod, el 2026-01-01). Por eso `v_resumen_dia` distingue `sin_registro` de `cerrado`, y todo lo que promedia filtra por `turnos > 0`, no por "hay fila".
+- **Una jornada puede existir sin turnos**: porque está marcada "no abrió" o porque quedó vacía al borrar sus turnos (en prod, el 1 de enero de 2026). Por eso `v_resumen_dia` distingue `sin_registro` de `cerrado`, y todo lo que promedia filtra por `turnos > 0`, no por "hay fila".
 - `docs/superpowers/` no es parte de este trabajo; no tocarlo sin preguntar.
 
 ## 7. Decisiones tomadas por el usuario (no volver a preguntar)

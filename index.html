@@ -13,19 +13,8 @@
     <meta name="apple-mobile-web-app-title" content="FrytControl" />
     <link rel="apple-touch-icon" href="/icon-192.png" />
     <title>FrytControl</title>
-    <script>
-      // Tema antes del primer render, para evitar el destello claro→oscuro
-      // (también en la barra de estado).
-      (function () {
-        try {
-          var t = localStorage.getItem('tema') || 'sistema'
-          if (t === 'oscuro' || (t === 'sistema' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-            document.documentElement.classList.add('dark')
-            document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0B0D10')
-          }
-        } catch (e) {}
-      })()
-    </script>
+    <!-- Tema antes del primer render (síncrono a propósito: evita el destello). -->
+    <script src="/tema.js"></script>
   </head>
   <body>
     <div id="root"></div>

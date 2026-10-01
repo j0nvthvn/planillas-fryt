@@ -16,9 +16,14 @@ export function useUsuarios() {
   })
 }
 
+/**
+ * Lo hace la edge function `desactivar-usuario`: además de `activo`
+ * banea la cuenta en Auth, para que no pueda volver a iniciar sesión.
+ */
 export async function actualizarUsuario(id: string, cambios: { activo: boolean }) {
-  const { error } = await supabase.from('usuarios').update(cambios).eq('id', id)
-  if (error) throw error
+  const r = await supabase.functions.invoke<{ error?: string }>('desactivar-usuario', { body: { id, activo: cambios.activo } })
+  if (r.error) throw r.error instanceof Error ? r.error : new Error(mensajeDeError(r.error))
+  if (r.data?.error) throw new Error(r.data.error)
   await queryClient.invalidateQueries({ queryKey: qk.usuarios })
 }
 

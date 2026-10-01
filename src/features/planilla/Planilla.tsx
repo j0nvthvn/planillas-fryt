@@ -26,7 +26,7 @@ export default function Planilla() {
   const navigate = useNavigate()
   const toast = useToast()
   const { esDueno } = useUsuario()
-  const resumen = useResumenDia(fecha)
+  const resumen = useResumenDia(fecha, { refrescarAlAbrir: true })
   const turnos = useTurnosDia(fecha)
   const metodos = useMetodos()
   const [accion, setAccion] = useState<{ t: 'dividir' | 'unir' | 'eliminar'; turno: TurnoConLineas } | null>(null)
