@@ -33,12 +33,15 @@ export default function Proveedores() {
   const search = useSearch({ from: '/app/proveedores' })
   const [nuevo, setNuevo] = useState<string | null>(null)
   const [creando, setCreando] = useState(false)
+  // En el celular las fechas se abren a pedido; en escritorio están siempre.
+  const [fechasAbiertas, setFechasAbiertas] = useState(false)
 
   // Los filtros viven en la URL: al abrir un proveedor y volver, siguen puestos.
   const { q = '', estado = FILTROS_BASE.estado, uso = FILTROS_BASE.uso, orden = FILTROS_BASE.orden } = search
   const filtros: Filtros = useMemo(() => ({ q, estado, uso, orden }), [q, estado, uso, orden])
   const { desde, hasta } = search.desde && search.hasta ? ajustarRango(search.desde, search.hasta) : periodo(PRESET_BASE, hoy())
   const presetActivo = PRESETS.find((p) => { const x = periodo(p.v, hoy()); return x.desde === desde && x.hasta === hasta })?.v
+  const verFechas = fechasAbiertas || !presetActivo
   const hayFiltros = filtros.q !== '' || filtros.estado !== FILTROS_BASE.estado || filtros.uso !== FILTROS_BASE.uso || filtros.orden !== FILTROS_BASE.orden || presetActivo !== PRESET_BASE
   const compras = useComprasPeriodo(desde, hasta)
 
@@ -89,37 +92,48 @@ export default function Proveedores() {
   return (
     <div className="max-w-3xl mx-auto">
       <PageHeader eyebrow={`Catálogo · ${activos} activo${activos === 1 ? '' : 's'}`} title="Proveedores" action={<button type="button" className="btn-primary btn-bar" onClick={() => setNuevo('')}><Icon name="plus" className="w-4 h-4" stroke={2.2} />Nuevo</button>} />
-      <div className="relative mb-2.5">
-        <Icon name="search" className="w-[17px] h-[17px] absolute left-[13px] top-1/2 -translate-y-1/2 text-muted" />
-        <input type="search" className="input min-h-[44px] py-2.5 pl-10" placeholder="Buscar proveedor" value={filtros.q} onChange={(e) => filtrar({ q: e.target.value }, true)} aria-label="Buscar proveedor" />
+      {/* En el celular «Ordenar» va junto al buscador, para no gastar una fila más. */}
+      <div className="flex gap-2 mb-2.5">
+        <div className="relative flex-1 min-w-0">
+          <Icon name="search" className="w-[17px] h-[17px] absolute left-[13px] top-1/2 -translate-y-1/2 text-muted" />
+          <input type="search" className="input min-h-[44px] py-2.5 pl-10" placeholder="Buscar" value={filtros.q} onChange={(e) => filtrar({ q: e.target.value }, true)} aria-label="Buscar proveedor" />
+        </div>
+        <SelectOrden className="sm:hidden min-h-[44px] max-w-[132px]" valor={filtros.orden} onChange={(orden) => filtrar({ orden })} />
       </div>
 
       {/* Período: las compras y el monto de cada fila, el filtro de uso y el orden se calculan sobre él. */}
       <div className="flex flex-col gap-2.5 mb-2.5 sm:flex-row sm:items-center sm:gap-2">
         <div className="segmented sm:w-auto" role="group" aria-label="Período">
-          {PRESETS.map((p) => (
-            <button key={p.v} type="button" aria-pressed={presetActivo === p.v} onClick={() => filtrar(periodo(p.v, hoy()))}
-              className={`hit ${presetActivo === p.v ? 'segmented-item-on' : 'segmented-item'} min-h-[38px] px-3 whitespace-nowrap`}>
-              {p.label}
-            </button>
-          ))}
+          {PRESETS.map((p) => {
+            const on = !fechasAbiertas && presetActivo === p.v
+            return (
+              <button key={p.v} type="button" aria-pressed={on} onClick={() => { setFechasAbiertas(false); filtrar(periodo(p.v, hoy())) }}
+                className={`hit ${on ? 'segmented-item-on' : 'segmented-item'} min-h-[38px] px-1.5 min-[375px]:px-2 sm:px-3 whitespace-nowrap`}>
+                {p.label}
+              </button>
+            )
+          })}
+          <button type="button" aria-pressed={verFechas} aria-label="Elegir fechas" onClick={() => setFechasAbiertas(true)}
+            className={`hit sm:hidden ${verFechas ? 'segmented-item-on' : 'segmented-item'} min-h-[38px] flex-none px-2.5`}>
+            <Icon name="calendar" className="w-[17px] h-[17px]" />
+          </button>
         </div>
-        <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-1 w-full text-sm sm:flex sm:w-auto sm:ml-auto">
-          <input type="date" aria-label="Desde" className="input py-1.5 px-2.5 min-h-[40px] rounded-[10px] min-w-0 w-full sm:w-[140px]" value={desde} max={hasta} onChange={(e) => e.target.value && filtrar(ajustarRango(e.target.value, hasta, 'desde'))} />
-          <span className="text-muted" aria-hidden="true">→</span>
-          <input type="date" aria-label="Hasta" className="input py-1.5 px-2.5 min-h-[40px] rounded-[10px] min-w-0 w-full sm:w-[140px]" value={hasta} min={desde} max={hoy()} onChange={(e) => e.target.value && filtrar(ajustarRango(desde, e.target.value, 'hasta'))} />
+        <div className={`${verFechas ? 'grid' : 'hidden'} grid-cols-2 items-center gap-2 w-full text-sm sm:flex sm:gap-1 sm:w-auto sm:ml-auto`}>
+          <input type="date" aria-label="Desde" className="input py-1.5 px-2 min-h-[40px] rounded-[10px] min-w-0 w-full sm:w-[140px]" value={desde} max={hasta} onChange={(e) => e.target.value && filtrar(ajustarRango(e.target.value, hasta, 'desde'))} />
+          <span className="hidden sm:inline text-muted" aria-hidden="true">→</span>
+          <input type="date" aria-label="Hasta" className="input py-1.5 px-2 min-h-[40px] rounded-[10px] min-w-0 w-full sm:w-[140px]" value={hasta} min={desde} max={hoy()} onChange={(e) => e.target.value && filtrar(ajustarRango(desde, e.target.value, 'hasta'))} />
         </div>
       </div>
 
-      {/* En el celular el borde derecho se desvanece: avisa que hay más filtros al deslizar. */}
-      <div className="flex items-center gap-1.5 overflow-x-auto -mx-4 px-4 pr-10 pb-2.5 mascara-derecha md:flex-wrap md:mx-0 md:px-0 md:[mask-image:none]">
+      {/* Estado y uso: en el celular, una fila cada uno; nada queda fuera de la pantalla. */}
+      <div className="flex flex-wrap items-center gap-x-1.5 gap-y-2 mb-2.5">
         <div className="flex gap-1.5" role="group" aria-label="Estado">
           {ESTADOS.map((e) => (
             <button key={e.v} type="button" aria-pressed={filtros.estado === e.v} onClick={() => filtrar({ estado: e.v })}
               className={`${PILDORA} ${filtros.estado === e.v ? PILDORA_ON : PILDORA_OFF}`}>{e.label}</button>
           ))}
         </div>
-        <span className="w-px h-5 bg-hairline-strong mx-1 shrink-0" aria-hidden="true" />
+        <span className="hidden sm:block w-px h-5 bg-hairline-strong mx-1 shrink-0" aria-hidden="true" />
         {/* Uso: tocar la píldora encendida la apaga (vuelve a "todos"). */}
         <div className="flex gap-1.5" role="group" aria-label="Compras en el período">
           {USOS.map((u) => (
@@ -131,14 +145,13 @@ export default function Proveedores() {
 
       <div className="flex items-center justify-between gap-2 mb-2.5">
         <p className="text-xs text-muted" aria-live="polite">
-          {catalogo.isPending ? '\u00a0' : `${lista.length} proveedor${lista.length === 1 ? '' : 'es'} · ${rangoLegible(desde, hasta)}`}
-          {hayFiltros && <> · <button type="button" className="hit underline text-ink2" onClick={() => void navigate({ to: '/proveedores', search: {} })}>Quitar filtros</button></>}
+          {/* Cada dato entero en su línea: si no cabe, el corte va en el «·». */}
+          {catalogo.isPending ? '\u00a0' : <><span className="whitespace-nowrap">{lista.length} proveedor{lista.length === 1 ? '' : 'es'}</span> · <span className="whitespace-nowrap">{rangoLegible(desde, hasta)}</span></>}
+          {hayFiltros && <> · <button type="button" className="hit underline text-ink2 whitespace-nowrap" onClick={() => { setFechasAbiertas(false); void navigate({ to: '/proveedores', search: {} }) }}>Quitar filtros</button></>}
         </p>
-        <label className="flex items-center gap-1.5 text-xs text-muted shrink-0">
+        <label className="hidden sm:flex items-center gap-1.5 text-xs text-muted shrink-0">
           Ordenar
-          <select className="input py-1 px-2 min-h-[34px] w-auto text-sm rounded-[9px]" value={filtros.orden} onChange={(e) => filtrar({ orden: e.target.value as Filtros['orden'] })}>
-            {ORDENES.map((o) => <option key={o.v} value={o.v}>{o.label}</option>)}
-          </select>
+          <SelectOrden className="min-h-[34px]" valor={filtros.orden} onChange={(orden) => filtrar({ orden })} />
         </label>
       </div>
 
@@ -173,5 +186,14 @@ export default function Proveedores() {
         </BottomSheet>
       )}
     </div>
+  )
+}
+
+/** El orden de la lista: en el celular va junto al buscador y en escritorio junto al resumen. */
+function SelectOrden({ valor, onChange, className = '' }: { valor: Filtros['orden']; onChange: (orden: Filtros['orden']) => void; className?: string }) {
+  return (
+    <select aria-label="Ordenar" className={`input py-1 px-2 w-auto text-sm rounded-[9px] ${className}`} value={valor} onChange={(e) => onChange(e.target.value as Filtros['orden'])}>
+      {ORDENES.map((o) => <option key={o.v} value={o.v}>{o.label}</option>)}
+    </select>
   )
 }
