@@ -18,7 +18,7 @@ las firmas de guardado, cierre y corrección durante la transición.
 | Lint, tipos y build | Sin errores; lint mantiene 5 advertencias existentes |
 | Playwright contra staging | 12/12 pruebas móviles aprobadas |
 | Acceso del conector | Recuperado tras reinstalar; organización correcta |
-| Reactivar staging | Activo; pausa temporal de `te-toco` autorizada |
+| Reactivar staging | Reactivado para pruebas; pausado al terminar |
 | Esquemas API expuestos | Solo `public` y `graphql_public`, verificado por CLI |
 | Historia de migraciones en producción | Alineada con el repo hasta `20261001173149_retirar_realtime_v1` |
 | Protección contra contraseñas filtradas | Requiere Pro; no disponible en el plan gratuito |
@@ -26,7 +26,8 @@ las firmas de guardado, cierre y corrección durante la transición.
 
 El conector y la CLI tienen acceso a la organización correcta.
 Staging se reactivó con autorización del usuario para pausar temporalmente
-`te-toco`. Al terminar, pausar staging y reactivar `te-toco`.
+`te-toco`. Tras las pruebas se pausó staging y Supabase aceptó la
+reactivación de `te-toco`.
 Registro público desactivado y mínimo 10 aplicados en ambos entornos;
 configuración parcial, revisión previa y comprobación posterior. CLI
 v2.117.0 enlazada a producción. En staging se retiró únicamente el registro
@@ -72,7 +73,8 @@ restablece `replica identity default`. Conserva la publicación.
 - Publicación conservada, sin tablas adicionales en este entorno; identidad
   `d` en las cuatro tablas. Historia aplicada con las versiones del repo.
 
-Reversión de esta migración (solo configuración, no restaura datos):
+Reversión de esta migración (solo configuración, no restaura datos),
+probada en una transacción local con resultado correcto y rollback:
 
 ```sql
 begin;

@@ -66,9 +66,9 @@ VITE_SUPABASE_ANON_KEY=<anon key>
 La CLI viene como devDependency: `pnpm exec supabase …`.
 
 **Verificado el 2026-10-01:** conector y CLI tienen acceso a la organización
-correcta. Staging reactivado con autorización para pausar temporalmente
-`te-toco`; al terminar las comprobaciones, pausar staging y reactivar ese
-proyecto. Base local: 197 pgTAP; Playwright remoto: 12/12. No sustituir los
+correcta. Staging se reactivó con autorización para pausar temporalmente
+`te-toco`. Tras las comprobaciones se pausó staging y Supabase aceptó la
+reactivación de `te-toco`. Base local: 197 pgTAP; Playwright remoto: 12/12. No sustituir los
 proyectos por `fryt-spa`.
 
 Auth en ambos entornos: `enable_signup=false`,

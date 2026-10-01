@@ -13,7 +13,7 @@ reglas que no se deben romper. Última actualización: **2026-10-01**.
 - En la rama de trabajo `mejoras/plan-accion`, `/dia` sin fecha redirige al
   día actual de Chile y las fechas imposibles tienen un mensaje en español.
   Probado con Chromium y la base local; todavía no publicado.
-- Staging reactivado tras autorización para pausar temporalmente `te-toco`.
+- Staging se reactivó tras autorización para pausar temporalmente `te-toco`.
   Playwright: **12/12** pruebas móviles aprobadas. Se corrigió en la rama
   la lectura de «No abrió» tras restaurar una caché persistida reciente.
 - Auth en producción y staging: registro público desactivado y mínimo de
@@ -25,6 +25,8 @@ reglas que no se deben romper. Última actualización: **2026-10-01**.
   `2026-01-01`, sin turnos activos. No se modificaron marcas ni motivos.
 - Migraciones de producción alineadas hasta `20261001173149_retirar_realtime_v1`.
   CLI enlazada al proyecto de producción y acceso remoto comprobado.
+- Completadas las pruebas remotas, staging se pausó y se solicitó la
+  reactivación de `te-toco`, aceptada por Supabase.
 - Realtime v1 retirado en local, staging y producción; publicación
   conservada. Huellas y conteos de las cuatro tablas y los cierres idénticos
   antes y después. Reversión documentada en el plan de acción.
