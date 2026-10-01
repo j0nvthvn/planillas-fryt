@@ -1,11 +1,10 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { corsHeaders as cors } from '../_shared/cors.ts'
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+const LARGO_MINIMO = 10
 
 Deno.serve(async (req) => {
+  const corsHeaders = cors(req)
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
@@ -39,16 +38,16 @@ Deno.serve(async (req) => {
       })
     }
     const { data: perfil } = await supabaseAdmin
-      .from('usuarios').select('rol').eq('id', user.id).single()
-    if (perfil?.rol !== 'dueño') {
+      .from('usuarios').select('rol, activo').eq('id', user.id).single()
+    if (perfil?.rol !== 'dueño' || !perfil.activo) {
       return new Response(JSON.stringify({ error: 'Solo el dueño puede crear usuarios' }), {
         status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     }
 
     const { nombre, email, password } = await req.json()
-    if (!nombre?.trim() || !email?.trim() || !password || password.length < 6) {
-      return new Response(JSON.stringify({ error: 'Datos incompletos o contraseña muy corta' }), {
+    if (!nombre?.trim() || !email?.trim() || !password || password.length < LARGO_MINIMO) {
+      return new Response(JSON.stringify({ error: `Datos incompletos o contraseña de menos de ${LARGO_MINIMO} caracteres` }), {
         status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     }

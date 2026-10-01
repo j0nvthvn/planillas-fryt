@@ -15,3 +15,8 @@ verify_jwt = false
 # La llama la app con la sesión de la dueña; además valida el rol adentro.
 [functions.crear-usuario]
 verify_jwt = true
+
+# Igual que crear-usuario: la llama la app con la sesión de la dueña y
+# valida el rol adentro. Además banea en Auth a la cuenta desactivada.
+[functions.desactivar-usuario]
+verify_jwt = true

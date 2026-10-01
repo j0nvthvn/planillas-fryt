@@ -62,4 +62,9 @@ export default tseslint.config(
     extends: [js.configs.recommended, tseslint.configs.disableTypeChecked],
     languageOptions: { globals: globals.node },
   },
+  {
+    // Scripts que se sirven tal cual al navegador (sin Vite).
+    files: ['public/**/*.js'],
+    languageOptions: { globals: globals.browser },
+  },
 )

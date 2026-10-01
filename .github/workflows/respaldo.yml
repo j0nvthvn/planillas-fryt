@@ -83,7 +83,9 @@ jobs:
             echo "::warning::verificar_integridad() no existe todavía en prod"
             exit 0
           fi
-          hallazgos=$(psql -c "select * from public.verificar_integridad()")
+          # Sin la columna `ejemplo` (fechas y turnos del negocio): el log
+          # y el resumen de un repo público son públicos.
+          hallazgos=$(psql -c "select severidad, chequeo, cantidad from public.verificar_integridad()")
           if [ -n "$hallazgos" ]; then
             { echo '### Hallazgos de integridad'; echo '```'; echo "$hallazgos"; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
             echo "$hallazgos"

@@ -45,14 +45,18 @@ docker exec "$DB" rm -f /tmp/respaldo.dump
 
 echo "▸ comparar con el manifiesto"
 admin < scripts/respaldo/manifiesto.sql > "$dir/manifiesto.restaurado.json"
-if ! diff <(jq -S . "$dir/manifiesto.json") <(jq -S . "$dir/manifiesto.restaurado.json"); then
+# Sin `diff`: mostraría las sumas de dinero en el log (público en Actions).
+if ! cmp -s <(jq -S . "$dir/manifiesto.json") <(jq -S . "$dir/manifiesto.restaurado.json"); then
+  for k in filas sumas ultima_jornada; do
+    [ "$(jq -cS ".$k" "$dir/manifiesto.json")" = "$(jq -cS ".$k" "$dir/manifiesto.restaurado.json")" ] || echo "  difiere: $k"
+  done
   echo "✘ la restauración no coincide con el manifiesto"
   exit 1
 fi
 echo "  $(jq -c .filas "$dir/manifiesto.json")"
 
 echo "▸ verificar_integridad()"
-hallazgos=$(admin -F ' | ' -c "select * from public.verificar_integridad()")
+hallazgos=$(admin -F ' | ' -c "select severidad, chequeo, cantidad from public.verificar_integridad()")
 echo "${hallazgos:-  sin hallazgos}"
 if grep -q '^error' <<< "$hallazgos"; then
   echo "✘ el respaldo tiene errores de integridad"
