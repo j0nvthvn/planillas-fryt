@@ -8,6 +8,7 @@ import Login from './features/auth/Login'
 import Hoy from './features/hoy/Hoy'
 import CerrarTurno from './features/turno/CerrarTurno'
 import { busquedaPlanilla } from './lib/fechaPlanilla'
+import { busquedaAjustes, busquedaAnalisis, busquedaHistorial, busquedaProveedores } from './lib/busquedas'
 
 const Planilla = lazy(() => import('./features/planilla/Planilla'))
 const Historial = lazy(() => import('./features/historial/Historial'))
@@ -19,6 +20,24 @@ const Reporte = lazy(() => import('./features/exportar/Reporte'))
 
 const fechaSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/)
 const modoSchema = z.enum(['completo', 'mañana', 'tarde'])
+
+/**
+ * Pantalla para un enlace con fecha o modo que no se entiende, donde no
+ * conviene cambiarlo en silencio por otro (se abriría otro día). Los demás
+ * errores siguen su camino.
+ */
+function errorDeEnlace(titulo: string, texto: string) {
+  return function ErrorDeEnlace({ error }: { error: unknown }) {
+    if (!(error instanceof SearchParamError)) throw error
+    return (
+      <section className="p-6 space-y-4" role="alert">
+        <h1 className="text-xl font-semibold">{titulo}</h1>
+        <p>{texto}</p>
+        <Link to="/hoy" className="btn">Volver a Hoy</Link>
+      </section>
+    )
+  }
+}
 
 const rootRoute = createRootRoute({
   component: () => <Outlet />,
@@ -78,6 +97,7 @@ const turnoRoute = createRoute({
   getParentRoute: () => appRoute,
   path: '/turno',
   validateSearch: z.object({ fecha: fechaSchema.optional(), modo: modoSchema.optional() }),
+  errorComponent: errorDeEnlace('Enlace inválido', 'No pudimos abrir el cierre de turno. Revisa la fecha del enlace o vuelve a Hoy.'),
   component: CerrarTurno,
 })
 
@@ -90,16 +110,7 @@ const diaRoute = createRoute({
       throw redirect({ to: '/dia', search: { fecha: search.fecha }, replace: true })
     }
   },
-  errorComponent: ({ error }) => {
-    if (!(error instanceof SearchParamError)) throw error
-    return (
-      <section className="p-6 space-y-4" role="alert">
-        <h1 className="text-xl font-semibold">Fecha inválida</h1>
-        <p>No pudimos abrir la planilla. Revisa la fecha del enlace o vuelve a Hoy.</p>
-        <Link to="/hoy" className="btn">Volver a Hoy</Link>
-      </section>
-    )
-  },
+  errorComponent: errorDeEnlace('Fecha inválida', 'No pudimos abrir la planilla. Revisa la fecha del enlace o vuelve a Hoy.'),
   component: Planilla,
 })
 
@@ -107,7 +118,7 @@ const historialRoute = createRoute({
   getParentRoute: () => appRoute,
   path: '/historial',
   beforeLoad: soloDueno,
-  validateSearch: z.object({ filtro: z.enum(['todos', 'borradores', 'corregidos', 'descuadres', 'parciales', 'sin_abrir']).optional() }),
+  validateSearch: busquedaHistorial,
   component: Historial,
 })
 
@@ -115,7 +126,7 @@ const analisisRoute = createRoute({
   getParentRoute: () => appRoute,
   path: '/analisis',
   beforeLoad: soloDueno,
-  validateSearch: z.object({ desde: fechaSchema.optional(), hasta: fechaSchema.optional() }),
+  validateSearch: busquedaAnalisis,
   component: Analisis,
 })
 
@@ -123,14 +134,7 @@ const proveedoresRoute = createRoute({
   getParentRoute: () => appRoute,
   path: '/proveedores',
   beforeLoad: soloDueno,
-  validateSearch: z.object({
-    q: z.string().optional(),
-    estado: z.enum(['activos', 'inactivos', 'todos']).optional(),
-    uso: z.enum(['todos', 'con', 'sin']).optional(),
-    orden: z.enum(['uso', 'monto', 'az', 'nuevos']).optional(),
-    desde: fechaSchema.optional(),
-    hasta: fechaSchema.optional(),
-  }),
+  validateSearch: busquedaProveedores,
   component: Proveedores,
 })
 const proveedorRoute = createRoute({ getParentRoute: () => appRoute, path: '/proveedores/$id', beforeLoad: soloDueno, component: ProveedorDetalle })
@@ -139,7 +143,7 @@ const ajustesRoute = createRoute({
   getParentRoute: () => appRoute,
   path: '/ajustes',
   beforeLoad: soloDueno,
-  validateSearch: z.object({ seccion: z.enum(['general', 'correos', 'trabajadores', 'metodos', 'papelera', 'usuarios', 'errores', 'apariencia']).optional() }),
+  validateSearch: busquedaAjustes,
   component: Ajustes,
 })
 
@@ -152,6 +156,7 @@ const reporteRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/analisis/reporte',
   validateSearch: z.object({ desde: fechaSchema, hasta: fechaSchema }),
+  errorComponent: errorDeEnlace('Enlace inválido', 'No pudimos armar el reporte. Revisa las fechas del enlace o vuelve a Hoy.'),
   beforeLoad: async ({ location }) => {
     const session = await esperarSesion()
     if (!session) throw redirect({ to: '/login', search: { volver: location.pathname } })

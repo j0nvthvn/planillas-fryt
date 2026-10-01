@@ -38,6 +38,26 @@ reglas que no se deben romper. Última actualización: **2026-10-01**.
 - Realtime v1 retirado en local, staging y producción; publicación
   conservada. Huellas y conteos de las cuatro tablas y los cierres idénticos
   antes y después. Reversión documentada en el plan de acción.
+- **PR #14** (`9d44168`, en producción): `Dato.tsx` importa `etiquetaEstado`
+  desde `features/turno/estado` y deja de arrastrar el cliente de Supabase.
+  Rescatado de la rama `sincronizar-sistema-de-diseno`; el resto de esa rama
+  (la sincronización con Claude Design, `.design-sync/`) se descartó.
+- **PR #13** (`3f96eb6`, en producción desde las 19:18 UTC): filtros en
+  Proveedores —período, estado, uso y orden, guardados en la URL—, venía de
+  una sesión remota sin PR. Ajustado para el celular (fechas tras un botón
+  de calendario, «Ordenar» junto al buscador, estado y uso en dos filas).
+  Verificado con Playwright contra la base local con datos sembrados (excluye
+  la papelera) y contra staging: 589 compras y $44.976.732 en el año, igual
+  que SQL. Revisado por el usuario en su celular. El orden por defecto pasa
+  a ser el de compras en los últimos 90 días.
+- **PR #15**: un filtro inválido en la URL (`?estado=raro`, `?desde=ayer`)
+  ya no cae en la pantalla de error genérica en inglés. Historial,
+  Análisis, Proveedores y Ajustes lo descartan (`src/lib/busquedas.ts`);
+  Cerrar turno y el reporte muestran el aviso en español de `/dia`.
+- Ramas: en GitHub quedan solo `main` y `legacy`. Se borraron las ya
+  fusionadas y las dos sin PR después de rescatar lo útil.
+- Al cierre del día: staging **pausado** y `te-toco` **activo** (el plan
+  gratis admite dos proyectos activos: producción y uno más).
 - Seguimiento y condiciones para continuar: `docs/plan-accion.md`.
 
 Documentos complementarios:
