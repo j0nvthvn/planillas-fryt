@@ -10,6 +10,7 @@ las firmas de guardado, cierre y corrección durante la transición.
 | Comprobación | Resultado al 2026-10-01 |
 |---|---|
 | PR #10 (`2e1679c`), CI y Vercel | Correcto |
+| PR #11 (`e14a5f7`), CI y despliegue a producción | Correcto, 18:28 UTC |
 | Producción: respuesta 200 y headers de seguridad | Correcto |
 | Respaldo de hoy e integridad | Correcto, ejecución `36859401601` |
 | Simulacro de la última copia | Correcto, ejecución `36896940247` |
@@ -35,7 +36,7 @@ duplicado `20260916043424`; se conserva la migración canónica.
 
 ## 2. Navegación, celular y fechas históricas
 
-- Implementado en `mejoras/plan-accion`, aún sin publicar: `/dia` sin fecha
+- En producción desde el PR #11 (`e14a5f7`): `/dia` sin fecha
   redirige al día actual de `America/Santiago`; fechas inválidas o imposibles
   muestran un mensaje en español y un enlace a Hoy. Probado con Chromium,
   autenticación y base locales, más pruebas de horario de verano e invierno.
@@ -49,11 +50,11 @@ duplicado `20260916043424`; se conserva la migración canónica.
 - Pendiente en dispositivos reales: altura de hojas y encabezado del
   Historial en Safari, compartir/descargar Excel, VoiceOver/TalkBack y PWA
   instalada desde `app.frytspa.cl`. Conservar los íconos del local.
-- El usuario confirmó todas las fechas el 2026-10-01: `2026-01-01`,
-  `2026-06-07`, `2026-06-21`, `2026-06-28`, `2026-07-12`, `2026-07-16` y
-  `2026-09-06`. La consulta de producción confirmó **seis ya marcadas**, sin
-  turnos activos; se conservaron sus motivos. Solo falta `2026-01-01`, que
-  tampoco tiene turnos activos. Marcarla desde la app con sesión de la dueña
+- El usuario confirmó todas las fechas el 1 de octubre de 2026: 1 de enero;
+  7, 21 y 28 de junio; 12 y 16 de julio, y 6 de septiembre, todas de 2026.
+  La consulta de producción confirmó **seis ya marcadas**, sin turnos
+  activos; se conservaron sus motivos. Solo falta el **1 de enero de 2026**
+  (Año Nuevo), que tampoco tiene turnos activos. Marcarla desde la app con sesión de la dueña
   y motivo vacío (no se indicó uno). Si alguna ya está marcada, conservarla;
   si tiene turnos activos, no borrar ni mover dinero para forzar la marca.
 
