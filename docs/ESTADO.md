@@ -10,12 +10,20 @@ reglas que no se deben romper. Última actualización: **2026-10-01**.
   `app.frytspa.cl` responde 200 con CSP y los headers de seguridad nuevos.
 - Base local: `./scripts/test-db.sh`, **197/197 pgTAP**. Respaldo de hoy e
   integridad en verde; simulacro manual **exitoso** (ejecución `36896940247`).
-- En la rama de trabajo `mejoras/plan-accion`, `/dia` sin fecha redirige al
-  día actual de Chile y las fechas imposibles tienen un mensaje en español.
-  Probado con Chromium y la base local; todavía no publicado.
+- PR #11 fusionado en `main` (`e14a5f7`) y **en producción** desde las
+  18:28 UTC (despliegue `dpl_7uTxrAK5eiSu4i7KnKhzCbFHif8A`, CI en verde):
+  `/dia` sin fecha redirige al día actual de Chile y las fechas imposibles
+  tienen un mensaje en español.
 - Staging se reactivó tras autorización para pausar temporalmente `te-toco`.
-  Playwright: **12/12** pruebas móviles aprobadas. Se corrigió en la rama
-  la lectura de «No abrió» tras restaurar una caché persistida reciente.
+  Playwright: **12/12** pruebas móviles aprobadas. Se corrigió la lectura
+  de «No abrió» tras restaurar una caché persistida reciente (también en
+  producción con el PR #11).
+- Revisión posterior al despliegue: lint (0 errores, 5 advertencias ya
+  existentes), tipos, 163 unitarios y build en verde sobre `e14a5f7`. En
+  producción, `verificar_integridad()` sin hallazgos, 0 errores en
+  `logs_error` en 7 días, sin borradores abiertos y advisors solo con lo
+  ya conocido (funciones `security definer` a propósito, `correos_enviados`
+  sin políticas porque solo la usa el servicio, contraseñas filtradas).
 - Auth en producción y staging: registro público desactivado y mínimo de
   contraseña 10, aplicado con configuración parcial y verificado por CLI.
   Protección contra contraseñas filtradas requiere Pro; no disponible en

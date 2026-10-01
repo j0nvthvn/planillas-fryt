@@ -10,6 +10,7 @@ las firmas de guardado, cierre y corrección durante la transición.
 | Comprobación | Resultado al 2026-10-01 |
 |---|---|
 | PR #10 (`2e1679c`), CI y Vercel | Correcto |
+| PR #11 (`e14a5f7`), CI y despliegue a producción | Correcto, 18:28 UTC |
 | Producción: respuesta 200 y headers de seguridad | Correcto |
 | Respaldo de hoy e integridad | Correcto, ejecución `36859401601` |
 | Simulacro de la última copia | Correcto, ejecución `36896940247` |
@@ -35,7 +36,7 @@ duplicado `20260916043424`; se conserva la migración canónica.
 
 ## 2. Navegación, celular y fechas históricas
 
-- Implementado en `mejoras/plan-accion`, aún sin publicar: `/dia` sin fecha
+- En producción desde el PR #11 (`e14a5f7`): `/dia` sin fecha
   redirige al día actual de `America/Santiago`; fechas inválidas o imposibles
   muestran un mensaje en español y un enlace a Hoy. Probado con Chromium,
   autenticación y base locales, más pruebas de horario de verano e invierno.
