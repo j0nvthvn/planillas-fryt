@@ -38,7 +38,7 @@ export default function CerrarTurno() {
   const diaUnicoConfig = config.diasTurnoUnico.includes(diaSemana(fecha))
   // El día puede estar marcado como "el local no abrió": se avisa antes de
   // llenar la planilla, porque al guardar la base lo rechaza (23514).
-  const resumenDia = useResumenDia(fecha)
+  const resumenDia = useResumenDia(fecha, { refrescarAlAbrir: true })
   const noAbrio = resumenDia.data?.cerrado === true
   const quitarMarca = useQuitarMarcaDia(fecha)
 
@@ -114,7 +114,14 @@ export default function CerrarTurno() {
     }
   }
 
-  if (!search.modo || !state.cargado || metodos.isPending) return <Spinner />
+  if (online && resumenDia.isError) return (
+    <div className="max-w-2xl mx-auto space-y-4">
+      <PageHeader title="Cerrar turno" back="/hoy" />
+      <p role="alert">No pudimos comprobar el estado del día. Vuelve a intentarlo.</p>
+      <button type="button" className="btn-primary" onClick={() => void resumenDia.refetch()}>Reintentar</button>
+    </div>
+  )
+  if (!search.modo || !state.cargado || metodos.isPending || (online && !resumenDia.isFetchedAfterMount)) return <Spinner />
 
   const estadoGuardado = state.sucio ? (online ? 'Guardando borrador…' : 'Guardado en este dispositivo') : state.turnoId ? 'Borrador guardado' : ''
   const listaTrabajadores = trabajadores.data ?? []

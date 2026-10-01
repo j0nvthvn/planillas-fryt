@@ -38,9 +38,12 @@ export const TURNO_ORDEN: Record<string, number> = { 'mañana': 0, 'tarde': 1 }
 export const ordenTurno = (tipo: string) => TURNO_ORDEN[tipo] ?? 9
 
 /* ───────── lecturas ───────── */
-export function useResumenDia(fecha: string) {
+export function useResumenDia(fecha: string, opciones?: { refrescarAlAbrir: boolean }) {
   return useQuery({
     queryKey: qk.resumenDia(fecha),
+    // Antes de editar hay que comprobar la marca «No abrió» en el servidor,
+    // incluso si IndexedDB restauró una copia reciente del día.
+    refetchOnMount: opciones?.refrescarAlAbrir ? 'always' : true,
     queryFn: async (): Promise<VResumenDia | null> => {
       const { data, error } = await supabase.from('v_resumen_dia').select('*').eq('fecha', fecha).maybeSingle()
       if (error) throw error

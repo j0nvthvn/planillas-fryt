@@ -23,11 +23,10 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm lint
       - run: pnpm typecheck
-      # `--mode staging` para que exista VITE_SUPABASE_URL (.env.staging está
-      # versionado): sin eso, cualquier test que importe el cliente falla al
-      # cargarlo. Los tests que tocan la base se saltan solos sin
+      # `pnpm test` carga .env.staging (versionado). Los tests que tocan
+      # la base se saltan solos sin
       # SMOKE_PASSWORD, que no está acá (se corren a mano, ver README.md).
-      - run: pnpm test --mode staging
+      - run: pnpm test
       - run: pnpm build
       # Plantillas de correo (supabase/functions/_shared/correo): TypeScript
       # puro, se prueba con Node y se chequean tipos con el tsc de la app.

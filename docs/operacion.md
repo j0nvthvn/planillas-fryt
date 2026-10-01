@@ -47,12 +47,11 @@ producción → `--mode production`, preview → `--mode staging`. No hay
 variables en el dashboard. Un push a `main` despliega producción, así que se
 avisa antes.
 
-> La cuenta de la CLI (`supabase login`) es distinta de la organización que
-> tiene prod y staging (`ccfgqstvcbxhllxvuivx`), así que `link`/`db push`
-> no aplican por ahora. Las migraciones se aplicaron con el MCP de
-> Supabase, por lotes, y `supabase_migrations.schema_migrations` se dejó
-> con las versiones de los archivos del repo. Cuando la CLI tenga acceso
-> a esa organización, `supabase migration list` debe salir alineado.
+> Acceso de CLI recuperado el 2026-10-01; enlazada a producción nueva.
+> Antes de aplicar, comparar el historial remoto con los archivos locales.
+> En staging se retiró solo el registro duplicado `20260916043424` de
+> `metodos_acumulado_diario`; se conserva el canónico `20260917000000`.
+> La reparación del historial no modificó esquema ni datos.
 
 Variables del frontend (Vercel → Settings → Environment Variables, y
 `.env.local` local — **nunca** se versiona):
@@ -66,15 +65,35 @@ VITE_SUPABASE_ANON_KEY=<anon key>
 
 La CLI viene como devDependency: `pnpm exec supabase …`.
 
+**Verificado el 2026-10-01:** conector y CLI tienen acceso a la organización
+correcta. Staging reactivado con autorización para pausar temporalmente
+`te-toco`; al terminar las comprobaciones, pausar staging y reactivar ese
+proyecto. Base local: 197 pgTAP; Playwright remoto: 12/12. No sustituir los
+proyectos por `fryt-spa`.
+
+Auth en ambos entornos: `enable_signup=false`,
+`minimum_password_length=10`, aplicado mediante un config parcial con
+`config diff` previo. Las propiedades no declaradas se conservaron;
+verificación posterior sin diferencias en las dos propiedades.
+La protección contra contraseñas filtradas requiere Pro y no está
+habilitada en el plan gratuito. Respaldo e integridad del 2026-10-01 y
+simulacro manual de restauración en verde. Seguimiento vigente:
+`docs/plan-accion.md`.
+
 ```sh
 pnpm exec supabase login            # una vez por máquina (abre el navegador)
 pnpm exec supabase link --project-ref aecopggpahxjaglakqwd   # prod (hasta el 2026-09-17 estaba linkeada al prod anterior)
 pnpm exec supabase migration list   # compara repo vs. proyecto
 pnpm exec supabase db push          # aplica migraciones pendientes
-pnpm exec supabase functions deploy # despliega las 3 edge functions
+pnpm exec supabase functions deploy # despliega las edge functions del repo
 ```
 
-### Estado de producción (2026-09-16)
+### Registro histórico de producción (2026-09-16)
+
+Esta sección registra el estado de ese día. No describe las migraciones
+pendientes actuales; las de correos y seguridad se aplicaron después,
+como se documenta en sus secciones. Comparar la historia remota con los
+archivos del repo antes de proponer cualquier `db push`.
 
 Fase 0 (baseline, grants, hardening) y Fase 1 (catálogo de proveedores,
 trabajadores/métodos, totales/vistas, `guardar_turno`) **aplicadas en
@@ -244,7 +263,7 @@ esquema del repo sigue reproduciendo prod.
 
 `public.auditoria` guarda cada cambio real (y cada borrado) en
 `jornadas`, `turnos`, `ventas_turno`, `proveedores_turno`,
-`turno_cierres` (solo borrados), `proveedores_frecuentes`,
+`turno_cierres` (inserciones y borrados desde la migración de seguridad), `proveedores_frecuentes`,
 `trabajadores`, `metodos_pago` y `configuracion`: fila `antes`,
 `despues`, `usuario_id` y `en`. Las reescrituras sin cambios del
 autoguardado de la app actual no se registran. Solo la dueña puede

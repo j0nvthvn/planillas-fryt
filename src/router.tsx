@@ -1,5 +1,5 @@
 import { lazy, Suspense, type ReactNode } from 'react'
-import { createRootRoute, createRoute, createRouter, redirect, Outlet, Navigate } from '@tanstack/react-router'
+import { createRootRoute, createRoute, createRouter, redirect, Outlet, Navigate, Link, SearchParamError } from '@tanstack/react-router'
 import { z } from 'zod'
 import { esperarSesion, cargarUsuario, useSession } from './lib/auth'
 import Layout from './components/Layout'
@@ -7,6 +7,7 @@ import { EsqueletoContenido, EsqueletoPagina } from './components/Esqueleto'
 import Login from './features/auth/Login'
 import Hoy from './features/hoy/Hoy'
 import CerrarTurno from './features/turno/CerrarTurno'
+import { busquedaPlanilla } from './lib/fechaPlanilla'
 
 const Planilla = lazy(() => import('./features/planilla/Planilla'))
 const Historial = lazy(() => import('./features/historial/Historial'))
@@ -83,7 +84,22 @@ const turnoRoute = createRoute({
 const diaRoute = createRoute({
   getParentRoute: () => appRoute,
   path: '/dia',
-  validateSearch: z.object({ fecha: fechaSchema }),
+  validateSearch: busquedaPlanilla,
+  beforeLoad: ({ search, location }) => {
+    if (!new URLSearchParams(location.searchStr).has('fecha')) {
+      throw redirect({ to: '/dia', search: { fecha: search.fecha }, replace: true })
+    }
+  },
+  errorComponent: ({ error }) => {
+    if (!(error instanceof SearchParamError)) throw error
+    return (
+      <section className="p-6 space-y-4" role="alert">
+        <h1 className="text-xl font-semibold">Fecha inválida</h1>
+        <p>No pudimos abrir la planilla. Revisa la fecha del enlace o vuelve a Hoy.</p>
+        <Link to="/hoy" className="btn">Volver a Hoy</Link>
+      </section>
+    )
+  },
   component: Planilla,
 })
 
