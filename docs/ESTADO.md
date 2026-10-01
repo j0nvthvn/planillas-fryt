@@ -29,8 +29,8 @@ reglas que no se deben romper. Última actualización: **2026-10-01**.
   Protección contra contraseñas filtradas requiere Pro; no disponible en
   el plan gratuito actual.
 - El usuario confirmó las siete fechas históricas como «No abrió» el
-  2026-10-01; consulta de producción: seis ya marcadas y solo falta el
-  `2026-01-01`, sin turnos activos. No se modificaron marcas ni motivos.
+  1 de octubre de 2026; consulta de producción: seis ya marcadas y solo
+  falta el **1 de enero de 2026** (Año Nuevo), sin turnos activos. No se modificaron marcas ni motivos.
 - Migraciones de producción alineadas hasta `20261001173149_retirar_realtime_v1`.
   CLI enlazada al proyecto de producción y acceso remoto comprobado.
 - Completadas las pruebas remotas, staging se pausó y se solicitó la
@@ -229,7 +229,7 @@ SMOKE_EMAIL=duena@test.local SMOKE_PASSWORD=<.env.staging.local> pnpm vitest run
 - **`v_resumen_dia.efectivo_esperado` no es una caja real** en los días con mañana y tarde: suma los dos turnos, y cada tarde trae su propio fondo ($20.000 en prod). Por eso no se muestra en Hoy; el esperado se muestra por turno (`v_turnos`). Por día, el dato con sentido es `efectivo_neto`, como ya hace la exportación.
 - Para capturar Hoy con datos sin escribir en staging, en Playwright se reescribe `fecha=eq.<hoy>` a otra fecha con `page.route`. Conviene un contexto nuevo por escena, porque la caché de TanStack Query se guarda en IndexedDB.
 - `pnpm e2e` reutiliza un `pnpm dev --mode staging` que ya esté en el puerto 5173. No conviene levantar otro servidor de la v2 en paralelo, porque comparten `.vite`.
-- **Una jornada puede existir sin turnos**: porque está marcada "no abrió" o porque quedó vacía al borrar sus turnos (en prod, el 2026-01-01). Por eso `v_resumen_dia` distingue `sin_registro` de `cerrado`, y todo lo que promedia filtra por `turnos > 0`, no por "hay fila".
+- **Una jornada puede existir sin turnos**: porque está marcada "no abrió" o porque quedó vacía al borrar sus turnos (en prod, el 1 de enero de 2026). Por eso `v_resumen_dia` distingue `sin_registro` de `cerrado`, y todo lo que promedia filtra por `turnos > 0`, no por "hay fila".
 - `docs/superpowers/` no es parte de este trabajo; no tocarlo sin preguntar.
 
 ## 7. Decisiones tomadas por el usuario (no volver a preguntar)

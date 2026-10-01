@@ -50,11 +50,11 @@ duplicado `20260916043424`; se conserva la migración canónica.
 - Pendiente en dispositivos reales: altura de hojas y encabezado del
   Historial en Safari, compartir/descargar Excel, VoiceOver/TalkBack y PWA
   instalada desde `app.frytspa.cl`. Conservar los íconos del local.
-- El usuario confirmó todas las fechas el 2026-10-01: `2026-01-01`,
-  `2026-06-07`, `2026-06-21`, `2026-06-28`, `2026-07-12`, `2026-07-16` y
-  `2026-09-06`. La consulta de producción confirmó **seis ya marcadas**, sin
-  turnos activos; se conservaron sus motivos. Solo falta `2026-01-01`, que
-  tampoco tiene turnos activos. Marcarla desde la app con sesión de la dueña
+- El usuario confirmó todas las fechas el 1 de octubre de 2026: 1 de enero;
+  7, 21 y 28 de junio; 12 y 16 de julio, y 6 de septiembre, todas de 2026.
+  La consulta de producción confirmó **seis ya marcadas**, sin turnos
+  activos; se conservaron sus motivos. Solo falta el **1 de enero de 2026**
+  (Año Nuevo), que tampoco tiene turnos activos. Marcarla desde la app con sesión de la dueña
   y motivo vacío (no se indicó uno). Si alguna ya está marcada, conservarla;
   si tiene turnos activos, no borrar ni mover dinero para forzar la marca.
 
