@@ -9,7 +9,7 @@
     "preview": "vite preview",
     "typecheck": "tsc -b",
     "lint": "eslint .",
-    "test": "vitest run",
+    "test": "vitest run --mode staging",
     "e2e": "playwright test",
     "test:watch": "vitest",
     "maquetas": "node maquetas/render.mjs"

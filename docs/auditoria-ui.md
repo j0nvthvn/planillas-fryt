@@ -114,9 +114,8 @@ Valores nuevos:
 
 - **Íconos de la PWA y `favicon.svg`.** Son el logo real del local (espigas,
   «Fryt»), no un resto del tema. Cambiarlos es decisión de la dueña.
-- **Plantillas de correo** (`enviar-resumen-*`). Siguen con encabezado café:
-  solo cambiaron los colores de método. Rediseñarlas afecta también los
-  correos de la app actual.
+- **Plantillas de correo:** este pendiente quedó resuelto por el rediseño
+  Fintech del 2026-09-17, documentado en `docs/ESTADO.md`.
 - **`user-select: none` global.** Se mantiene (decisión anterior: para llevarse
   datos está Compartir). Tiene un costo: no se puede copiar un mensaje de error
   ni usar «Traducir» al mantener presionado en iOS.
@@ -124,6 +123,7 @@ Valores nuevos:
   24 px) y se dejaron con el alto del diseño.
 - **Borde punteado del turno «Pendiente».** Usa `hairline-strong`, no el
   `hairline` del handoff, que casi no se ve.
-- **`/dia` sin `?fecha=`** muestra el error crudo del router (en inglés). No es
-  de esta revisión: conviene un valor por defecto o un `errorComponent`.
+- **`/dia` sin `?fecha=`:** corregido en la rama de trabajo del 2026-10-01;
+  redirige a la fecha de Chile y muestra un error en español para fechas
+  inválidas. Probado localmente, pendiente de publicar.
 - **Probar con VoiceOver** (iOS) y TalkBack en un celular real.
