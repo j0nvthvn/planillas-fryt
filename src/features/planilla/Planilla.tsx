@@ -27,7 +27,7 @@ export default function Planilla() {
   const toast = useToast()
   const { esDueno } = useUsuario()
   const resumen = useResumenDia(fecha, { refrescarAlAbrir: true })
-  const turnos = useTurnosDia(fecha)
+  const turnos = useTurnosDia(fecha, { refrescarAlAbrir: true })
   const metodos = useMetodos()
   const [accion, setAccion] = useState<{ t: 'dividir' | 'unir' | 'eliminar'; turno: TurnoConLineas } | null>(null)
   const [diff, setDiff] = useState<TurnoConLineas | null>(null)

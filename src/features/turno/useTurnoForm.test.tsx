@@ -1,0 +1,154 @@
+// @vitest-environment jsdom
+import { describe, it, expect, vi, beforeEach } from 'vitest'
+import type { ReactNode } from 'react'
+import { act, renderHook, waitFor } from '@testing-library/react'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { useTurnoForm } from './useTurnoForm'
+import {
+  cargarTurnosDia, guardarTurno, type GuardarTurnoInput, type ProveedorTurno, type TurnoConLineas, type VTurno,
+} from './api'
+import { qk } from '@/lib/query'
+
+/**
+ * El hook contra un servidor simulado que se comporta como guardar_turno y
+ * v_turnos: cada guardado cambia updated_at, da id a las líneas nuevas e
+ * invalida el día (como invalidarDia), y en un borrador efectivo_contado
+ * sale vacío porque solo existe en turno_cierres. El borrador del
+ * dispositivo vive en memoria.
+ */
+vi.mock('./api', () => ({
+  cargarTurnosDia: vi.fn(),
+  guardarTurno: vi.fn(),
+  ErrorGuardado: class ErrorGuardado extends Error {},
+}))
+vi.mock('./metricas', () => ({ marcarInicio: vi.fn(), registrarCierre: vi.fn() }))
+const locales = vi.hoisted(() => new Map<string, unknown>())
+vi.mock('./borradorLocal', () => ({
+  leerBorradorLocal: vi.fn((fecha: string, modo: string) => Promise.resolve(locales.get(`${fecha}:${modo}`) ?? null)),
+  guardarBorradorLocal: vi.fn((b: { fecha: string; modo: string }) => { locales.set(`${b.fecha}:${b.modo}`, b); return Promise.resolve() }),
+  borrarBorradorLocal: vi.fn((fecha: string, modo: string) => { locales.delete(`${fecha}:${modo}`); return Promise.resolve() }),
+}))
+
+const FECHA = '2026-09-30'
+const ESPERA_AUTOGUARDADO = { timeout: 1500 + 1000 }
+
+let servidor: TurnoConLineas | null
+let cliente: QueryClient
+let siguienteId = 0
+
+function filaServidor(input: GuardarTurnoInput, anterior: VTurno | undefined): VTurno {
+  return {
+    ...anterior,
+    id: 't1', fecha: input.fecha, tipo: 'mañana', modo: input.modo, jornada_id: 'j1',
+    trabajador_id: input.trabajador_id ?? null, fondo_inicial: input.fondo_inicial ?? 0,
+    ...input.ventas,
+    is_draft: !input.cerrar,
+    // v_turnos lo toma del último cierre: un borrador no tiene.
+    efectivo_contado: input.cerrar ? input.efectivo_contado ?? null : null,
+    updated_at: new Date().toISOString(),
+  } as unknown as VTurno
+}
+
+/** Como la RPC: las líneas sin id se insertan (id nuevo) y las de monto 0 no se guardan. */
+function lineasServidor(input: GuardarTurnoInput): ProveedorTurno[] {
+  return (input.proveedores ?? []).filter((l) => l.monto > 0).map((l) => ({
+    id: l.id ?? `p${++siguienteId}`, turno_id: 't1', proveedor_id: l.proveedor_id ?? null,
+    nombre: l.nombre, monto: l.monto, forma_pago: l.forma_pago,
+  }) as unknown as ProveedorTurno)
+}
+
+beforeEach(() => {
+  servidor = null
+  locales.clear()
+  cliente = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+  vi.mocked(cargarTurnosDia).mockReset().mockImplementation(() => Promise.resolve(servidor ? [servidor] : []))
+  vi.mocked(guardarTurno).mockReset().mockImplementation((input) => {
+    servidor = { turno: filaServidor(input, servidor?.turno), proveedores: lineasServidor(input) }
+    void cliente.invalidateQueries({ queryKey: qk.turnosDia(input.fecha) })
+    return Promise.resolve({ conflicto: false, turno: servidor.turno })
+  })
+})
+
+function montar() {
+  const wrapper = ({ children }: { children: ReactNode }) => <QueryClientProvider client={cliente}>{children}</QueryClientProvider>
+  return renderHook(() => useTurnoForm({ fecha: FECHA, modo: 'completo', fondoPorDefecto: 0, online: true }), { wrapper })
+}
+
+type Hook = ReturnType<typeof montar>['result']
+
+/** Pasa el debounce, se guarda el borrador y el día se vuelve a consultar. */
+async function esperarAutoguardado(result: Hook, guardados = 1) {
+  await waitFor(() => expect(guardarTurno).toHaveBeenCalledTimes(guardados), ESPERA_AUTOGUARDADO)
+  await waitFor(() => expect(cargarTurnosDia).toHaveBeenCalledTimes(guardados + 1))
+  await waitFor(() => expect(result.current.state.sucio).toBe(false))
+  await act(() => new Promise((r) => setTimeout(r, 50)))
+}
+
+describe('useTurnoForm: conteo de caja', () => {
+  // El autoguardado no envía el conteo; antes, el refetch que dispara
+  // recargaba el formulario desde el servidor y el conteo desaparecía antes
+  // de cerrar (0 de 16 cierres con conteo en producción).
+  it('conserva el conteo hasta el cierre aunque pase un autoguardado entre medio', async () => {
+    const { result } = montar()
+    await waitFor(() => expect(result.current.state.cargado).toBe(true))
+
+    act(() => result.current.cambiar({ type: 'venta', key: 'efectivo', monto: 120000 }))
+    act(() => result.current.cambiar({ type: 'caja', conto: true, monto: 100000, desglose: { 20000: 5 } }))
+    await esperarAutoguardado(result)
+
+    expect(result.current.state.contoCaja).toBe(true)
+    expect(result.current.state.efectivoContado).toBe(100000)
+    expect(result.current.state.desgloseConteo).toEqual({ 20000: 5 })
+
+    await act(async () => { await result.current.cerrar() })
+    const cierre = vi.mocked(guardarTurno).mock.calls.at(-1)?.[0]
+    expect(cierre).toMatchObject({ cerrar: true, efectivo_contado: 100000 })
+  })
+
+  it('al reabrir la pantalla después de un autoguardado, el conteo sigue ahí', async () => {
+    const primera = montar()
+    await waitFor(() => expect(primera.result.current.state.cargado).toBe(true))
+    act(() => primera.result.current.cambiar({ type: 'venta', key: 'efectivo', monto: 120000 }))
+    act(() => primera.result.current.cambiar({ type: 'caja', conto: true, monto: 100000, desglose: { 20000: 5 } }))
+    await esperarAutoguardado(primera.result)
+    primera.unmount()
+
+    const segunda = montar()
+    await waitFor(() => expect(segunda.result.current.state.cargado).toBe(true))
+    expect(segunda.result.current.state.contoCaja).toBe(true)
+    expect(segunda.result.current.state.efectivoContado).toBe(100000)
+    expect(segunda.result.current.state.ventas.efectivo).toBe(120000)
+  })
+})
+
+describe('useTurnoForm: refetch después de guardar', () => {
+  it('una línea nueva recibe su id sin cambiar de key, y editarla no la duplica', async () => {
+    const { result } = montar()
+    await waitFor(() => expect(result.current.state.cargado).toBe(true))
+    const linea = { key: 'nueva', nombre: 'PF', monto: 5000, forma_pago: 'efectivo' as const }
+    act(() => result.current.cambiar({ type: 'proveedor', linea }))
+    await esperarAutoguardado(result)
+
+    expect(result.current.state.proveedores).toEqual([expect.objectContaining({ key: 'nueva', id: 'p1' })])
+
+    // La hoja se abrió antes de que llegara el id y devuelve la línea sin él.
+    act(() => result.current.cambiar({ type: 'proveedor', linea: { ...linea, monto: 6000 } }))
+    expect(result.current.state.proveedores).toEqual([expect.objectContaining({ key: 'nueva', id: 'p1', monto: 6000 })])
+    await esperarAutoguardado(result, 2)
+    expect(servidor?.proveedores).toEqual([expect.objectContaining({ id: 'p1', monto: 6000 })])
+  })
+
+  it('un cambio guardado desde otro dispositivo sí se carga', async () => {
+    const { result } = montar()
+    await waitFor(() => expect(result.current.state.cargado).toBe(true))
+    act(() => result.current.cambiar({ type: 'venta', key: 'efectivo', monto: 120000 }))
+    await esperarAutoguardado(result)
+
+    servidor = {
+      turno: { ...servidor!.turno, efectivo: 130000, updated_at: new Date(Date.now() + 60_000).toISOString() },
+      proveedores: [],
+    }
+    await act(() => cliente.invalidateQueries({ queryKey: qk.turnosDia(FECHA) }))
+    await waitFor(() => expect(result.current.state.ventas.efectivo).toBe(130000))
+  })
+})

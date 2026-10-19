@@ -46,13 +46,21 @@ test('cerrar un día completo con conteo por billetes', async ({ page }) => {
   await teclear(page, 120000)
   await page.getByRole('button', { name: /Guardar y volver/ }).click()
 
-  // Conteo de caja por denominaciones: 5 de $20.000 + 4 de $5.000 = $120.000.
+  // Conteo de caja por denominaciones: 6 de $20.000 + 3 de $5.000 = $135.000,
+  // distinto de la venta en efectivo para que la planilla no lo confunda.
   await page.getByRole('radio', { name: 'Sí' }).click()
   await expect(page.getByRole('dialog')).toContainText('Conteo de caja')
-  await page.getByLabel('Cuántos de $20.000').fill('5')
-  await page.getByLabel('Cuántos de $5.000').fill('4')
-  await expect(page.getByRole('dialog')).toContainText('$120.000')
+  await page.getByLabel('Cuántos de $20.000').fill('6')
+  await page.getByLabel('Cuántos de $5.000').fill('3')
+  await expect(page.getByRole('dialog')).toContainText('$135.000')
+  // El conteo dispara un autoguardado (1,5 s) y el refetch del día que lo
+  // sigue; antes, ese refetch recargaba desde el servidor y borraba el conteo.
+  // `proveedores_turno` es la última consulta de `cargarTurnosDia`.
+  const guardado = page.waitForResponse((r) => r.url().includes('/rpc/guardar_turno') && r.ok())
   await page.getByRole('button', { name: 'Registrar conteo' }).click()
+  await guardado
+  await page.waitForResponse((r) => r.url().includes('/rest/v1/proveedores_turno') && r.request().method() === 'GET')
+  await expect(page.getByText('Contado $135.000')).toBeVisible()
 
   // Revisión antes de cerrar: avisa que falta el trabajador y muestra el neto.
   await page.getByRole('button', { name: 'Cerrar el día' }).last().click()
@@ -63,9 +71,11 @@ test('cerrar un día completo con conteo por billetes', async ({ page }) => {
 
   await expect(page).toHaveURL(/\/hoy/)
 
-  // La planilla del día muestra lo cerrado.
+  // La planilla del día muestra lo cerrado, con el conteo registrado.
   await page.goto(`/dia?fecha=${FECHA}`)
   await expect(page.getByText('$120.000').first()).toBeVisible()
+  await expect(page.getByText('$135.000').first()).toBeVisible()
+  await expect(page.getByText('sin conteo')).toHaveCount(0)
 })
 
 test('salir lleva al login y ya no deja volver sin sesión', async ({ page }) => {

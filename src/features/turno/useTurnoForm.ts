@@ -4,7 +4,7 @@ import { cargarTurnosDia, guardarTurno, ErrorGuardado, type Modo, type VTurno } 
 import { leerBorradorLocal, guardarBorradorLocal, borrarBorradorLocal } from './borradorLocal'
 import { marcarInicio, registrarCierre } from './metricas'
 import {
-  cargaInicial, debeAutoguardar, debeEnviarAlSalir, inicial, reducer, tieneContenido,
+  cargaInicial, debeAutoguardar, debeEnviarAlSalir, esEscrituraPropia, idsLineasNuevas, inicial, reducer, tieneContenido,
   type Accion, type FormState,
 } from './estadoTurno'
 import { qk } from '@/lib/query'
@@ -40,20 +40,45 @@ export function useTurnoForm({ fecha, modo, fondoPorDefecto, online }: Opciones)
 
   const dia = useQuery({ queryKey: qk.turnosDia(fecha), queryFn: () => cargarTurnosDia(fecha) })
 
+  // ---- persistencia local ----
+  const persistirLocal = useCallback((s: FormState) => {
+    void guardarBorradorLocal({
+      fecha, modo, trabajadorId: s.trabajadorId, fondoInicial: s.fondoInicial, ventas: s.ventas,
+      proveedores: s.proveedores.map(({ key: _k, ...p }) => p), efectivoContado: s.efectivoContado, contoCaja: s.contoCaja,
+      desgloseConteo: s.desgloseConteo,
+      guardadoEn: Date.now(), baseUpdatedAt: s.baseUpdatedAt,
+    })
+  }, [fecha, modo])
+
   // ---- carga inicial (servidor + local) ----
   const cargadoPara = useRef<string>('')
   useEffect(() => {
     if (dia.isPending) return
     const firma = `${fecha}|${modo}|${dia.dataUpdatedAt}`
     if (cargadoPara.current === firma) return
+    const mismoFormulario = cargadoPara.current.startsWith(`${fecha}|${modo}|`)
+    const servidor = (dia.data ?? []).find((t) => t.turno.tipo === tipo)
+    // El refetch que sigue a un guardado propio trae lo mismo que se guardó,
+    // menos el conteo de caja y los ids de las líneas nuevas: se toman solo
+    // los ids, sin recargar.
+    if (mismoFormulario && servidor && esEscrituraPropia(servidor, stateRef.current)) {
+      cargadoPara.current = firma
+      const ids = idsLineasNuevas(stateRef.current.proveedores, servidor.proveedores)
+      if (Object.keys(ids).length) {
+        const a: Accion = { type: 'idsLineas', ids }
+        dispatch(a)
+        stateRef.current = reducer(stateRef.current, a)
+        persistirLocal(stateRef.current)
+      }
+      return
+    }
     // Si ya hay cambios sin sincronizar para este mismo (fecha, modo), un
     // refetch no debe pisarlos.
-    if (cargadoPara.current.startsWith(`${fecha}|${modo}|`) && stateRef.current.sucio) { cargadoPara.current = firma; return }
+    if (mismoFormulario && stateRef.current.sucio) { cargadoPara.current = firma; return }
     cargadoPara.current = firma
     let vivo = true
     let listo = false
     void (async () => {
-      const servidor = (dia.data ?? []).find((t) => t.turno.tipo === tipo)
       const local = await leerBorradorLocal(fecha, modo)
       if (!vivo) return
       listo = true
@@ -68,18 +93,9 @@ export function useTurnoForm({ fecha, modo, fondoPorDefecto, online }: Opciones)
       // o la pantalla se queda en el spinner.
       if (!listo && cargadoPara.current === firma) cargadoPara.current = ''
     }
-  }, [dia.isPending, dia.data, dia.dataUpdatedAt, fecha, modo, tipo, fondoPorDefecto])
+  }, [dia.isPending, dia.data, dia.dataUpdatedAt, fecha, modo, tipo, fondoPorDefecto, persistirLocal])
 
-  // ---- persistencia local + autoguardado ----
-  const persistirLocal = useCallback((s: FormState) => {
-    void guardarBorradorLocal({
-      fecha, modo, trabajadorId: s.trabajadorId, fondoInicial: s.fondoInicial, ventas: s.ventas,
-      proveedores: s.proveedores.map(({ key: _k, ...p }) => p), efectivoContado: s.efectivoContado, contoCaja: s.contoCaja,
-      desgloseConteo: s.desgloseConteo,
-      guardadoEn: Date.now(), baseUpdatedAt: s.baseUpdatedAt,
-    })
-  }, [fecha, modo])
-
+  // ---- autoguardado ----
   const sincronizar = useCallback(async (cerrar: boolean): Promise<'ok' | 'conflicto' | 'error'> => {
     const s = stateRef.current
     const version = cambios.current
@@ -100,13 +116,16 @@ export function useTurnoForm({ fecha, modo, fondoPorDefecto, online }: Opciones)
       stateRef.current = { ...stateRef.current, turnoId: r.turno.id, baseUpdatedAt: r.turno.updated_at, sucio: pendientes }
       if (pendientes && !cerrar) programarAutosaveRef.current()
       setErrorAutosave(null)
+      // El borrador del dispositivo pasa a la versión nueva: al reabrir, gana
+      // sobre el servidor y conserva el conteo, que el servidor no tiene.
       if (cerrar) void borrarBorradorLocal(fecha, modo)
+      else persistirLocal(stateRef.current)
       return 'ok'
     } catch (e) {
       setErrorAutosave(e instanceof ErrorGuardado ? e.message : 'No se pudo guardar')
       return 'error'
     }
-  }, [fecha, modo])
+  }, [fecha, modo, persistirLocal])
 
   const programarAutosave = useCallback(() => {
     if (timer.current) clearTimeout(timer.current)

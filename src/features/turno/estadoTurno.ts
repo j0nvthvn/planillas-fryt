@@ -3,6 +3,7 @@ import type { BorradorLocal } from './borradorLocal'
 import type { Conteo } from './conteo'
 import { METODO_KEYS, VENTAS_VACIAS, type MetodoKey, type ProveedorLinea, type Ventas } from '@/lib/totales'
 import { toNum } from '@/lib/format'
+import { normalizar } from './parecido'
 
 /**
  * Estado del formulario de cierre, sin React: el reducer, los dos orígenes
@@ -43,6 +44,8 @@ export type Accion =
   | { type: 'fondo'; monto: number }
   | { type: 'caja'; conto: boolean; monto: number | null; desglose?: Conteo | null }
   | { type: 'sincronizado'; turno: VTurno; sucio: boolean }
+  /** Ids de base para líneas nuevas, por `key`. No ensucia ni cambia la `key`. */
+  | { type: 'idsLineas'; ids: Record<string, string> }
 
 export const inicial: FormState = {
   cargado: false, turnoId: null, cerrado: false, baseUpdatedAt: null, trabajadorId: null, fondoInicial: 0,
@@ -59,7 +62,9 @@ export function reducer(s: FormState, a: Accion): FormState {
     case 'venta': return { ...s, ventas: { ...s.ventas, [a.key]: a.monto }, sucio: true }
     case 'proveedor': {
       const existe = s.proveedores.some((p) => p.key === a.linea.key)
-      return { ...s, sucio: true, proveedores: existe ? s.proveedores.map((p) => (p.key === a.linea.key ? a.linea : p)) : [...s.proveedores, a.linea] }
+      // Una hoja abierta antes de que la línea recibiera su id la devuelve
+      // sin id: se conserva el que ya tiene, o se reinsertaría al guardar.
+      return { ...s, sucio: true, proveedores: existe ? s.proveedores.map((p) => (p.key === a.linea.key ? { ...a.linea, id: a.linea.id ?? p.id } : p)) : [...s.proveedores, a.linea] }
     }
     case 'quitarProveedor': return { ...s, sucio: true, proveedores: s.proveedores.filter((p) => p.key !== a.key) }
     case 'trabajador': return { ...s, trabajadorId: a.id, sucio: true }
@@ -74,6 +79,10 @@ export function reducer(s: FormState, a: Accion): FormState {
       // los manda; antes se marcaba limpio y esos cambios quedaban solo en el
       // dispositivo hasta el cierre (Hoy mostraba datos viejos).
       sucio: a.sucio,
+    }
+    case 'idsLineas': return {
+      ...s,
+      proveedores: s.proveedores.map((p) => (!p.id && a.ids[p.key] ? { ...p, id: a.ids[p.key] } : p)),
     }
   }
 }
@@ -125,6 +134,49 @@ export function tieneContenido(s: FormState): boolean {
   return Object.values(s.ventas).some((v) => v > 0) || s.proveedores.some((p) => p.monto > 0)
 }
 
+/** Dos `updated_at` del servidor son la misma versión (tolera formatos distintos). */
+export function mismaVersion(a: string | null | undefined, b: string | null | undefined): boolean {
+  if (!a || !b) return false
+  if (a === b) return true
+  const ta = Date.parse(a)
+  return !Number.isNaN(ta) && ta === Date.parse(b)
+}
+
+/**
+ * El turno que trae un refetch es el que este mismo formulario acaba de
+ * guardar: misma versión, mismo turno y mismo estado de cierre. Entonces no
+ * hay nada nuevo que cargar, y recargar haría daño: el servidor no guarda el
+ * conteo de un borrador (solo existe en `turno_cierres`) y las líneas
+ * nuevas cambiarían de `key`.
+ */
+export function esEscrituraPropia(servidor: TurnoConLineas | undefined, s: FormState): boolean {
+  return !!servidor && s.cargado && s.turnoId === servidor.turno.id
+    && s.cerrado === !servidor.turno.is_draft
+    && mismaVersion(s.baseUpdatedAt, servidor.turno.updated_at)
+}
+
+/**
+ * Ids de base para las líneas que el formulario creó sin id, emparejadas con
+ * las del servidor que ninguna línea reclama: mismo monto y forma de pago, y
+ * mismo proveedor del catálogo o, sin él, el mismo nombre normalizado. Sin
+ * pareja, la línea sigue sin id (el próximo guardado la vuelve a insertar).
+ */
+export function idsLineasNuevas(lineas: LineaForm[], delServidor: TurnoConLineas['proveedores']): Record<string, string> {
+  const reclamados = new Set(lineas.map((l) => l.id).filter((id): id is string => !!id))
+  const libres = delServidor.filter((p) => !reclamados.has(p.id))
+  const ids: Record<string, string> = {}
+  for (const l of lineas) {
+    if (l.id || !(l.monto > 0)) continue
+    const i = libres.findIndex((p) => toNum(p.monto) === l.monto
+      && (p.forma_pago === 'transferencia' ? 'transferencia' : 'efectivo') === l.forma_pago
+      && (l.proveedor_id ? p.proveedor_id === l.proveedor_id : normalizar(p.nombre) === normalizar(l.nombre)))
+    if (i < 0) continue
+    ids[l.key] = libres[i]!.id
+    libres.splice(i, 1)
+  }
+  return ids
+}
+
 interface Origenes {
   servidor: TurnoConLineas | undefined
   local: BorradorLocal | null
@@ -133,14 +185,17 @@ interface Origenes {
 
 /**
  * Con qué se abre el formulario. El borrador del dispositivo gana solo si
- * es más nuevo que el turno del servidor y ese turno sigue siendo borrador:
+ * el turno del servidor sigue siendo borrador y, además, se editó sobre esa
+ * misma versión (nadie guardó después; incluye el conteo, que el servidor
+ * no tiene) o es más nuevo que ella:
  * sobre un turno ya cerrado manda siempre el servidor, porque lo local
  * puede ser de antes del cierre. Si gana el servidor y había borrador, hay
  * que borrarlo (`descartarLocal`) para no revivirlo en la próxima carga.
  */
 export function cargaInicial({ servidor, local, fondoPorDefecto }: Origenes): { state: Partial<FormState>; descartarLocal: boolean } {
   const servidorMs = servidor ? new Date(servidor.turno.updated_at ?? 0).getTime() : 0
-  const usarLocal = !!local && (!servidor || servidor.turno.is_draft) && local.guardadoEn > servidorMs
+  const usarLocal = !!local && (!servidor || servidor.turno.is_draft)
+    && (local.guardadoEn > servidorMs || mismaVersion(local.baseUpdatedAt, servidor?.turno.updated_at))
   if (usarLocal && local) return { state: desdeLocal(local, servidor), descartarLocal: false }
   if (servidor) return { state: desdeServidor(servidor), descartarLocal: !!local }
   return { state: { fondoInicial: fondoPorDefecto }, descartarLocal: false }

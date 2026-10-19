@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import {
-  cargaInicial, debeAutoguardar, debeEnviarAlSalir, desdeLocal, desdeServidor, inicial, reducer, tieneContenido,
+  cargaInicial, debeAutoguardar, debeEnviarAlSalir, desdeLocal, desdeServidor, esEscrituraPropia, idsLineasNuevas,
+  inicial, mismaVersion, reducer, tieneContenido,
   type FormState,
 } from './estadoTurno'
 import type { TurnoConLineas, VTurno } from './api'
@@ -47,6 +48,25 @@ describe('reducer', () => {
     s = reducer(s, { type: 'proveedor', linea: { ...linea, monto: 2500 } })
     expect(s.proveedores).toHaveLength(1)
     expect(s.proveedores[0]!.monto).toBe(2500)
+  })
+
+  it('una línea devuelta sin id por una hoja abierta antes conserva el id que ya tenía', () => {
+    const linea = { key: 'a', nombre: 'PF', monto: 1000, forma_pago: 'efectivo' as const }
+    let s = reducer(estado(), { type: 'proveedor', linea })
+    s = reducer(s, { type: 'idsLineas', ids: { a: 'p1' } })
+    s = reducer(s, { type: 'proveedor', linea: { ...linea, monto: 2500 } })
+    expect(s.proveedores).toEqual([expect.objectContaining({ key: 'a', id: 'p1', monto: 2500 })])
+  })
+
+  it('asignar ids no cambia las keys, no pisa ids existentes y no ensucia', () => {
+    const s = reducer(estado({
+      proveedores: [
+        { key: 'a', nombre: 'PF', monto: 1000, forma_pago: 'efectivo' },
+        { key: 'b', id: 'viejo', nombre: 'Río Maipo', monto: 500, forma_pago: 'transferencia' },
+      ],
+    }), { type: 'idsLineas', ids: { a: 'p1', b: 'otro' } })
+    expect(s.proveedores.map((p) => [p.key, p.id])).toEqual([['a', 'p1'], ['b', 'viejo']])
+    expect(s.sucio).toBe(false)
   })
 
   it('quitar un proveedor deja los demás', () => {
@@ -165,6 +185,18 @@ describe('cargaInicial', () => {
     expect(r.descartarLocal).toBe(true)
   })
 
+  it('el borrador local editado sobre la versión vigente gana aunque el reloj del dispositivo vaya atrasado', () => {
+    // Después de un autoguardado el borrador queda con la versión nueva y
+    // con el conteo, que el servidor no tiene.
+    const r = cargaInicial({
+      servidor: turno({ updated_at: '2026-09-18T13:00:00Z' }),
+      local: borrador({ baseUpdatedAt: '2026-09-18T13:00:00Z', contoCaja: true, efectivoContado: 21000 }),
+      fondoPorDefecto: 0,
+    })
+    expect(r.state.efectivoContado).toBe(21000)
+    expect(r.descartarLocal).toBe(false)
+  })
+
   it('sin turno en el servidor, el borrador local se recupera', () => {
     const r = cargaInicial({ servidor: undefined, local: borrador(), fondoPorDefecto: 0 })
     expect(r.state.ventas?.efectivo).toBe(5000)
@@ -211,5 +243,76 @@ describe('debeEnviarAlSalir', () => {
 
   it('no manda si no hay nada que guardar', () => {
     expect(debeEnviarAlSalir(estado(), true)).toBe(false)
+  })
+})
+
+describe('mismaVersion', () => {
+  it('compara updated_at aunque el formato cambie', () => {
+    expect(mismaVersion('2026-09-18T10:00:00Z', '2026-09-18T10:00:00Z')).toBe(true)
+    expect(mismaVersion('2026-09-18T10:00:00.000Z', '2026-09-18T10:00:00+00:00')).toBe(true)
+    expect(mismaVersion('2026-09-18T10:00:00Z', '2026-09-18T10:00:01Z')).toBe(false)
+  })
+
+  it('sin versión no hay coincidencia', () => {
+    expect(mismaVersion(null, null)).toBe(false)
+    expect(mismaVersion('2026-09-18T10:00:00Z', undefined)).toBe(false)
+  })
+})
+
+describe('esEscrituraPropia', () => {
+  const guardado = estado({ turnoId: 't1', baseUpdatedAt: '2026-09-18T10:00:00Z' })
+
+  it('el turno que el formulario acaba de guardar, en la misma versión', () => {
+    expect(esEscrituraPropia(turno(), guardado)).toBe(true)
+  })
+
+  it('no lo es si otro guardó después, si es otro turno o si cambió el cierre', () => {
+    expect(esEscrituraPropia(turno({ updated_at: '2026-09-18T11:00:00Z' }), guardado)).toBe(false)
+    expect(esEscrituraPropia(turno({ id: 't2' }), guardado)).toBe(false)
+    expect(esEscrituraPropia(turno({ is_draft: false }), guardado)).toBe(false)
+    expect(esEscrituraPropia(undefined, guardado)).toBe(false)
+  })
+
+  it('no lo es antes de la primera carga', () => {
+    expect(esEscrituraPropia(turno(), { ...guardado, cargado: false })).toBe(false)
+  })
+})
+
+describe('idsLineasNuevas', () => {
+  const lineaServidor = (p: Partial<TurnoConLineas['proveedores'][number]>) => ({
+    id: 'p1', turno_id: 't1', proveedor_id: null, nombre: 'PF', monto: 1000, forma_pago: 'efectivo', ...p,
+  }) as TurnoConLineas['proveedores'][number]
+
+  it('empareja por proveedor del catálogo, monto y forma de pago', () => {
+    const ids = idsLineasNuevas(
+      [{ key: 'a', proveedor_id: 'cat1', nombre: 'PF', monto: 1000, forma_pago: 'efectivo' }],
+      [lineaServidor({ id: 'p9', proveedor_id: 'cat1', nombre: 'Pf Alimentos' })],
+    )
+    expect(ids).toEqual({ a: 'p9' })
+  })
+
+  it('sin catálogo empareja por nombre normalizado', () => {
+    const ids = idsLineasNuevas(
+      [{ key: 'a', nombre: 'Río Maipo', monto: 500, forma_pago: 'transferencia' }],
+      [lineaServidor({ id: 'p2', nombre: 'rio maipo', monto: '500' as unknown as number, forma_pago: 'transferencia' })],
+    )
+    expect(ids).toEqual({ a: 'p2' })
+  })
+
+  it('no reutiliza una línea ya reclamada ni empareja montos o formas distintas', () => {
+    const ids = idsLineasNuevas(
+      [
+        { key: 'x', id: 'p1', nombre: 'PF', monto: 1000, forma_pago: 'efectivo' },
+        { key: 'a', nombre: 'PF', monto: 1000, forma_pago: 'efectivo' },
+        { key: 'b', nombre: 'PF', monto: 1000, forma_pago: 'efectivo' },
+        { key: 'c', nombre: 'PF', monto: 1000, forma_pago: 'transferencia' },
+      ],
+      [lineaServidor({ id: 'p1' }), lineaServidor({ id: 'p2' })],
+    )
+    expect(ids).toEqual({ a: 'p2' })
+  })
+
+  it('las líneas en cero no se guardan en el servidor y quedan sin id', () => {
+    expect(idsLineasNuevas([{ key: 'a', nombre: 'PF', monto: 0, forma_pago: 'efectivo' }], [lineaServidor({})])).toEqual({})
   })
 })
