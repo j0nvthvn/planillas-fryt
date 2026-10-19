@@ -4,7 +4,28 @@ Documento para quien continúe el trabajo, sea persona o modelo. Resume qué
 es el sistema, qué se hizo, en qué punto está cada fase y qué falta, con las
 reglas que no se deben romper. Última actualización: **2026-10-18**.
 
-### Estado del borrador (18 de octubre de 2026, rama `fix/estado-borrador`)
+### Prioridad 2 (18 de octubre de 2026, rama `fix/prioridad-2`)
+
+Cierra la Prioridad 2 de `docs/revision-general-app.md`:
+- **Carga, error y vacío** (`lib/consulta.ts`, `components/ErrorCarga.tsx`):
+  Hoy, Historial y Análisis muestran el error con «Reintentar» en vez de
+  $0, «Nada que mostrar» o un spinner eterno; con datos previos y un
+  refresco fallido, avisan que pueden no estar al día.
+- **Errores de guardado en español** (`features/turno/errores.ts`): los
+  crudos de Postgres se traducen por código; los propios de la base se
+  conservan con la fecha en palabras. `logs_error` recibe el original.
+- **Detalle de proveedor**: todas las compras (paginado, sin papelera), el
+  total real, orden por jornada, «día completo» y «Ver más». Verificado
+  contra staging: 73 compras y $1.607.450, igual que SQL.
+- **Invalidaciones**: `invalidarDia` incluye el historial por proveedor e
+  `invalidarProveedores()` cubre renombrar, desactivar, logo, eliminar y
+  fusionar.
+- **Login**: vuelve a la ruta completa (`location.href`), con fecha, modo y
+  filtros; `destinoTrasLogin` rechaza también `\` y caracteres de control.
+- **Fechas**: `hoy()` es siempre el día de Chile (`hoyChile` pasa a ser el
+  mismo) y `/turno` y el reporte rechazan el 31 de febrero (`z.iso.date()`).
+
+### Estado del borrador (18 de octubre de 2026, PR #20, en producción)
 
 Cierra la Prioridad 1 de `docs/revision-general-app.md`:
 - **El estado dice la verdad** (`textoGuardado` en `estadoTurno.ts`, con
