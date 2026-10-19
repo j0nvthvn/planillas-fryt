@@ -1,4 +1,4 @@
-import { useEffect, useId, useState, type ReactNode } from 'react'
+import { useId, useState, type ReactNode } from 'react'
 import { BottomSheet } from '@/components/BottomSheet'
 import Icon from '@/components/Icon'
 import { AmountDisplay, DesktopAmountInput, Keypad } from '@/components/Keypad'
@@ -42,10 +42,16 @@ export function MontoSheet({ title, sub, valor, color, label = 'Listo', ayuda, p
   const aTexto = (v: number | null) => numeroADigitos(acumulado && modoTotal && v != null ? totalDesdeTarde(v, acumulado.manana) : v)
   const [digits, setDigits] = useState(() => aTexto(valor))
   // Al encadenar cambia el ítem sin desmontar la hoja: se recarga el monto.
-  // Tiene que ser un efecto: `acumulado` es un objeto nuevo en cada render y
-  // ajustarlo durante el render entraría en bucle.
-  // eslint-disable-next-line react-hooks/set-state-in-effect
-  useEffect(() => { setModoTotal(!!acumulado); setDigits(numeroADigitos(acumulado && valor != null ? totalDesdeTarde(valor, acumulado.manana) : valor)) }, [valor, title, acumulado])
+  // Solo con un ítem o un valor distinto: `acumulado` es un objeto nuevo en
+  // cada render y, cuando era la dependencia, cualquier render de fondo (el
+  // autoguardado de otro método, un cambio de conexión) borraba lo escrito.
+  const cargadoDe = `${title}|${valor}|${acumulado?.manana}`
+  const [cargado, setCargado] = useState(cargadoDe)
+  if (cargado !== cargadoDe) {
+    setCargado(cargadoDe)
+    setModoTotal(!!acumulado)
+    setDigits(numeroADigitos(acumulado && valor != null ? totalDesdeTarde(valor, acumulado.manana) : valor))
+  }
   const escrito = digitosANumero(digits)
   const derivado = acumulado && modoTotal ? derivarTarde(escrito, acumulado.manana) : null
   const montoFinal = derivado ? derivado.tarde : escrito
