@@ -10,7 +10,7 @@ import { MetodoLogo } from '@/components/MetodoLogo'
 import { useMetodos } from '@/features/catalogo/api'
 import { useResumenPeriodo } from './api'
 import { rangoLegible } from './rango'
-import { clp, clpCorto, clpEje, fechaISO, hoy, ajustarRango, sumarDias, fechaDiaMes } from '@/lib/format'
+import { clp, clpCorto, clpEje, hoy, ajustarRango, sumarDias, fechaDiaMes } from '@/lib/format'
 import { porMetodo } from '@/lib/metodos'
 import { ExportarSheet } from '@/features/exportar/ExportarSheet'
 import type { VResumenDia } from '@/features/turno/api'
@@ -22,7 +22,7 @@ import { promedioNeto, resumenGrafico } from './resumen'
 
 function rango(preset: '7' | '30' | 'mes'): { desde: string; hasta: string } {
   const h = hoy()
-  if (preset === 'mes') { const d = new Date(); return { desde: fechaISO(new Date(d.getFullYear(), d.getMonth(), 1)), hasta: h } }
+  if (preset === 'mes') return { desde: `${h.slice(0, 7)}-01`, hasta: h }
   return { desde: sumarDias(h, preset === '7' ? -6 : -29), hasta: h }
 }
 

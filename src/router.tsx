@@ -7,7 +7,7 @@ import { EsqueletoContenido, EsqueletoPagina } from './components/Esqueleto'
 import Login from './features/auth/Login'
 import Hoy from './features/hoy/Hoy'
 import CerrarTurno from './features/turno/CerrarTurno'
-import { busquedaPlanilla } from './lib/fechaPlanilla'
+import { busquedaPlanilla, fechaValida } from './lib/fechaPlanilla'
 import { busquedaAjustes, busquedaAnalisis, busquedaHistorial, busquedaProveedores } from './lib/busquedas'
 
 const Planilla = lazy(() => import('./features/planilla/Planilla'))
@@ -18,7 +18,8 @@ const ProveedorDetalle = lazy(() => import('./features/proveedores/ProveedorDeta
 const Ajustes = lazy(() => import('./features/ajustes/Ajustes'))
 const Reporte = lazy(() => import('./features/exportar/Reporte'))
 
-const fechaSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/)
+// Como en la planilla: una regex aceptaba el 31 de febrero.
+const fechaSchema = fechaValida
 const modoSchema = z.enum(['completo', 'mañana', 'tarde'])
 
 /**

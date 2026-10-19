@@ -109,8 +109,16 @@ export function fechaISO(d: Date): string {
   return `${y}-${m}-${day}`
 }
 
-export function hoy(): string {
-  return fechaISO(new Date())
+/**
+ * El día de hoy en Chile, "YYYY-MM-DD", aunque el dispositivo use otra zona
+ * horaria: el local opera en Chile. Antes salía de la zona del dispositivo.
+ */
+export function hoy(ahora = new Date()): string {
+  const partes = new Intl.DateTimeFormat('en', {
+    timeZone: 'America/Santiago', year: 'numeric', month: '2-digit', day: '2-digit',
+  }).formatToParts(ahora)
+  const valor = (tipo: Intl.DateTimeFormatPartTypes) => partes.find((p) => p.type === tipo)!.value
+  return `${valor('year')}-${valor('month')}-${valor('day')}`
 }
 
 export function sumarDias(fecha: string, dias: number): string {
