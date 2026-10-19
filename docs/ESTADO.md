@@ -2,7 +2,30 @@
 
 Documento para quien continúe el trabajo, sea persona o modelo. Resume qué
 es el sistema, qué se hizo, en qué punto está cada fase y qué falta, con las
-reglas que no se deben romper. Última actualización: **2026-10-18**.
+reglas que no se deben romper. Última actualización: **2026-10-19**.
+
+### Datos fiables en el cierre y la planilla (19 de octubre de 2026, rama `fix/cierre-datos-fiables`)
+
+Cuatro hallazgos de una revisión externa, confirmados en el código, cada uno
+con una regresión que falla con el código anterior:
+- **Monto perdido al escribir** (`MontoSheet`): con un método de «Total del
+  día», cualquier render de fondo (autoguardado, conexión) recargaba el
+  monto, porque `acumulado` es un objeto nuevo en cada render. Ahora se
+  recarga solo si cambia el ítem, su valor o la mañana.
+- **Fondo en $0 con la configuración lenta**: `useTurnoForm` cargaba el
+  turno nuevo con `CONFIG_DEFAULT` y la configuración que llegaba después ya
+  no lo cambiaba. `fondoPorDefecto` es `null` hasta que hay configuración
+  (`useConfig().listo`), y el modo por defecto también la espera.
+- **Cerrar sin métodos de pago**: si fallaban métodos, trabajadores o
+  configuración sin copia en caché, la pantalla quedaba sin ventas y con
+  «Cerrar» habilitado. `estadoCatalogo` (`catalogoCierre.ts`) decide
+  listo/cargando/error y Cerrar turno muestra el error con «Reintentar».
+- **Planilla**: aplica `vistaDe` (turnos, resumen y métodos). Un fallo ya no
+  se ve como «Sin registro este día» y un refresco fallido con datos avisa.
+
+Pendiente de la misma revisión: métodos desactivados que ocultan ventas
+históricas, «En caja» en la Planilla (debe ser «Efectivo neto») y la fecha
+de Hoy al volver a la app (ojo con los cierres pasada la medianoche).
 
 ### Prioridad 3 (18 de octubre de 2026, rama `refactor/prioridad-3`)
 
