@@ -71,7 +71,8 @@ const appRoute = createRoute({
   id: 'app',
   beforeLoad: async ({ location }) => {
     const session = await esperarSesion()
-    if (!session) throw redirect({ to: '/login', search: { volver: location.pathname } })
+    // `href` y no `pathname`: se vuelve con la fecha, el modo y los filtros.
+    if (!session) throw redirect({ to: '/login', search: { volver: location.href } })
     const usuario = await cargarUsuario(session.user.id).catch(() => null)
     return { usuario, esDueno: usuario?.rol === 'dueño' }
   },
@@ -160,7 +161,7 @@ const reporteRoute = createRoute({
   errorComponent: errorDeEnlace('Enlace inválido', 'No pudimos armar el reporte. Revisa las fechas del enlace o vuelve a Hoy.'),
   beforeLoad: async ({ location }) => {
     const session = await esperarSesion()
-    if (!session) throw redirect({ to: '/login', search: { volver: location.pathname } })
+    if (!session) throw redirect({ to: '/login', search: { volver: location.href } })
     const usuario = await cargarUsuario(session.user.id).catch(() => null)
     if (usuario?.rol !== 'dueño') throw redirect({ to: '/hoy' })
   },
