@@ -6,12 +6,15 @@ import { createClient } from '@supabase/supabase-js'
  * cuenta la caja por billetes, revisa y cierra; después la planilla muestra
  * lo mismo. Contra staging, con una fecha de 2028 que se borra al final.
  */
-// URL y anon key salen de .env.staging.local (las carga playwright.config).
+// URL y anon key salen de .env.staging (las carga playwright.config).
 const URL = process.env.VITE_SUPABASE_URL ?? ''
 const ANON = process.env.VITE_SUPABASE_ANON_KEY ?? ''
 const EMAIL = process.env.SMOKE_EMAIL ?? 'duena@test.local'
 const PASSWORD = process.env.STAGING_PASSWORD ?? process.env.SMOKE_PASSWORD ?? ''
-const FECHA = `2028-0${1 + Math.floor(Math.random() * 9)}-${String(1 + Math.floor(Math.random() * 28)).padStart(2, '0')}`
+const fechaAlAzar = () => `2028-0${1 + Math.floor(Math.random() * 9)}-${String(1 + Math.floor(Math.random() * 28)).padStart(2, '0')}`
+const FECHA = fechaAlAzar()
+let FECHA_LENTA = fechaAlAzar()
+while (FECHA_LENTA === FECHA) FECHA_LENTA = fechaAlAzar()
 
 test.skip(!PASSWORD, 'necesita STAGING_PASSWORD (v2/.env.staging.local)')
 
@@ -19,7 +22,7 @@ test.afterAll(async () => {
   if (!ANON || !URL || /kfmwhtbvgqurnpotypii|aecopggpahxjaglakqwd/.test(URL)) return
   const sb = createClient(URL, ANON)
   await sb.auth.signInWithPassword({ email: EMAIL, password: PASSWORD })
-  await sb.from('jornadas').delete().eq('fecha', FECHA)
+  await sb.from('jornadas').delete().in('fecha', [FECHA, FECHA_LENTA])
   await sb.auth.signOut()
 })
 
@@ -76,6 +79,41 @@ test('cerrar un día completo con conteo por billetes', async ({ page }) => {
   await expect(page.getByText('$120.000').first()).toBeVisible()
   await expect(page.getByText('$135.000').first()).toBeVisible()
   await expect(page.getByText('sin conteo')).toHaveCount(0)
+})
+
+// Antes, Cerrar salía con la misma versión base que el autoguardado en curso
+// y la RPC, que cambia updated_at en cada guardado, respondía conflicto.
+test('cerrar con la red lenta espera al autoguardado en curso, sin conflicto', async ({ page }) => {
+  await entrar(page)
+  await page.goto(`/turno?fecha=${FECHA_LENTA}&modo=completo`)
+  await expect(page.getByRole('heading', { name: 'Cerrar el día' })).toBeVisible()
+
+  // Primer guardado con la red normal: el borrador ya existe en el servidor.
+  const primero = page.waitForResponse((r) => r.url().includes('/rpc/guardar_turno') && r.ok())
+  await page.getByRole('button', { name: /^Efectivo/ }).click()
+  await teclear(page, 50000)
+  await page.getByRole('button', { name: /Guardar y volver/ }).click()
+  await primero
+
+  // Desde acá, cada guardado tarda 2,5 s.
+  await page.route('**/rpc/guardar_turno', async (route) => {
+    await new Promise((r) => setTimeout(r, 2500))
+    await route.continue()
+  })
+  const enCurso = page.waitForRequest((r) => r.url().includes('/rpc/guardar_turno'))
+  await page.getByRole('button', { name: /^Getnet/ }).click()
+  await teclear(page, 30000)
+  await page.getByRole('button', { name: /Guardar y volver/ }).click()
+  await enCurso
+
+  await page.getByRole('button', { name: 'Cerrar el día' }).last().click()
+  await page.getByRole('dialog').getByRole('button', { name: 'Cerrar el día' }).click()
+
+  await expect(page).toHaveURL(/\/hoy/, { timeout: 15_000 })
+  await expect(page.getByText('Este turno cambió en otro dispositivo')).toHaveCount(0)
+  await page.goto(`/dia?fecha=${FECHA_LENTA}`)
+  await expect(page.getByText('$80.000').first()).toBeVisible()
+  await expect(page.getByText('Cerrado', { exact: true })).toBeVisible()
 })
 
 test('salir lleva al login y ya no deja volver sin sesión', async ({ page }) => {

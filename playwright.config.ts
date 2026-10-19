@@ -1,8 +1,11 @@
 import { defineConfig, devices } from '@playwright/test'
 import { config as cargarEnv } from 'dotenv'
 
-// La contraseña de staging vive en .env.staging.local (nunca se versiona).
+// La contraseña de staging vive en .env.staging.local (nunca se versiona);
+// la URL y la anon key, en .env.staging. La limpieza de las pruebas las
+// necesita: sin ellas se saltaba en silencio y quedaban días de 2028.
 cargarEnv({ path: '.env.staging.local', quiet: true })
+cargarEnv({ path: '.env.staging', quiet: true })
 
 /**
  * E2E contra STAGING, nunca contra producción: `pnpm dev --mode staging`
