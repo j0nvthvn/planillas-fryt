@@ -8,12 +8,14 @@ import {
   cargarTurnosDia, guardarTurno, type GuardarTurnoInput, type ProveedorTurno, type TurnoConLineas, type VTurno,
 } from './api'
 import { qk } from '@/lib/query'
+import { logError } from '@/lib/errorLog'
 
 /**
  * El hook contra un servidor simulado que se comporta como guardar_turno y
  * v_turnos: cada guardado cambia updated_at, da id a las líneas nuevas e
  * invalida el día (como invalidarDia), y en un borrador efectivo_contado
- * sale vacío porque solo existe en turno_cierres. El borrador del
+ * sale vacío porque solo existe en turno_cierres. Con una versión base
+ * distinta de la actual devuelve conflicto, como la RPC. El borrador del
  * dispositivo vive en memoria.
  */
 vi.mock('./api', () => ({
@@ -22,6 +24,7 @@ vi.mock('./api', () => ({
   ErrorGuardado: class ErrorGuardado extends Error {},
 }))
 vi.mock('./metricas', () => ({ marcarInicio: vi.fn(), registrarCierre: vi.fn() }))
+vi.mock('@/lib/errorLog', () => ({ logError: vi.fn() }))
 const locales = vi.hoisted(() => new Map<string, unknown>())
 vi.mock('./borradorLocal', () => ({
   leerBorradorLocal: vi.fn((fecha: string, modo: string) => Promise.resolve(locales.get(`${fecha}:${modo}`) ?? null)),
@@ -35,6 +38,11 @@ const ESPERA_AUTOGUARDADO = { timeout: 1500 + 1000 }
 let servidor: TurnoConLineas | null
 let cliente: QueryClient
 let siguienteId = 0
+let versiones = 0
+/** Mientras exista, cada guardado espera a que se resuelva (red lenta). */
+let pausa: Promise<void> | null
+let enVuelo = 0
+let maxEnVuelo = 0
 
 function filaServidor(input: GuardarTurnoInput, anterior: VTurno | undefined): VTurno {
   return {
@@ -45,7 +53,8 @@ function filaServidor(input: GuardarTurnoInput, anterior: VTurno | undefined): V
     is_draft: !input.cerrar,
     // v_turnos lo toma del último cierre: un borrador no tiene.
     efectivo_contado: input.cerrar ? input.efectivo_contado ?? null : null,
-    updated_at: new Date().toISOString(),
+    // Cada guardado, una versión distinta aunque caigan en el mismo milisegundo.
+    updated_at: new Date(Date.parse('2026-09-30T12:00:00Z') + ++versiones).toISOString(),
   } as unknown as VTurno
 }
 
@@ -59,13 +68,25 @@ function lineasServidor(input: GuardarTurnoInput): ProveedorTurno[] {
 
 beforeEach(() => {
   servidor = null
+  pausa = null
+  enVuelo = 0
+  maxEnVuelo = 0
   locales.clear()
+  vi.mocked(logError).mockClear()
   cliente = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   vi.mocked(cargarTurnosDia).mockReset().mockImplementation(() => Promise.resolve(servidor ? [servidor] : []))
-  vi.mocked(guardarTurno).mockReset().mockImplementation((input) => {
-    servidor = { turno: filaServidor(input, servidor?.turno), proveedores: lineasServidor(input) }
-    void cliente.invalidateQueries({ queryKey: qk.turnosDia(input.fecha) })
-    return Promise.resolve({ conflicto: false, turno: servidor.turno })
+  vi.mocked(guardarTurno).mockReset().mockImplementation(async (input) => {
+    enVuelo += 1
+    maxEnVuelo = Math.max(maxEnVuelo, enVuelo)
+    try {
+      if (pausa) await pausa
+      if (servidor && input.base_updated_at && input.base_updated_at !== servidor.turno.updated_at) {
+        return { conflicto: true, actual: servidor.turno }
+      }
+      servidor = { turno: filaServidor(input, servidor?.turno), proveedores: lineasServidor(input) }
+      void cliente.invalidateQueries({ queryKey: qk.turnosDia(input.fecha) })
+      return { conflicto: false, turno: servidor.turno }
+    } finally { enVuelo -= 1 }
   })
 })
 
@@ -151,4 +172,79 @@ describe('useTurnoForm: refetch después de guardar', () => {
     await act(() => cliente.invalidateQueries({ queryKey: qk.turnosDia(FECHA) }))
     await waitFor(() => expect(result.current.state.ventas.efectivo).toBe(130000))
   })
+})
+
+describe('useTurnoForm: una solicitud a la vez', () => {
+  // Antes, Cerrar salía con la misma versión base que el autoguardado en
+  // curso; la RPC cambia updated_at en cada guardado, así que el cierre
+  // recibía «Este turno cambió en otro dispositivo».
+  it('cerrar con un autoguardado en curso espera y no se genera un conflicto propio', async () => {
+    const { result } = montar()
+    await waitFor(() => expect(result.current.state.cargado).toBe(true))
+    act(() => result.current.cambiar({ type: 'venta', key: 'efectivo', monto: 120000 }))
+    await esperarAutoguardado(result)
+
+    let soltar!: () => void
+    pausa = new Promise((r) => { soltar = r })
+    act(() => result.current.cambiar({ type: 'venta', key: 'getnet', monto: 30000 }))
+    await waitFor(() => expect(guardarTurno).toHaveBeenCalledTimes(2), ESPERA_AUTOGUARDADO)
+
+    let cierre!: ReturnType<typeof result.current.cerrar>
+    act(() => { cierre = result.current.cerrar() })
+    await act(() => new Promise((r) => setTimeout(r, 50)))
+    expect(guardarTurno).toHaveBeenCalledTimes(2)
+    pausa = null
+    soltar()
+
+    await act(async () => { expect(await cierre).toEqual({ estado: 'ok' }) })
+    expect(maxEnVuelo).toBe(1)
+    expect(result.current.conflicto).toBeNull()
+    const [, auto, cerrar] = vi.mocked(guardarTurno).mock.calls.map((c) => c[0])
+    expect(cerrar).toMatchObject({ cerrar: true, ventas: expect.objectContaining({ efectivo: 120000, getnet: 30000 }) })
+    expect(cerrar!.base_updated_at).not.toBe(auto!.base_updated_at)
+  }, 10_000)
+})
+
+describe('useTurnoForm: errores y conflictos', () => {
+  // Con la consulta caída, el formulario se abría vacío y el primer dato
+  // salía sin versión base: la RPC sobrescribía el borrador del servidor.
+  it('si falla la consulta del día no se abre el formulario ni se guarda nada', async () => {
+    vi.mocked(cargarTurnosDia).mockRejectedValueOnce(new Error('sin red'))
+    const { result } = montar()
+    await waitFor(() => expect(result.current.errorDia).toBe(true))
+    expect(result.current.state.cargado).toBe(false)
+    expect(guardarTurno).not.toHaveBeenCalled()
+
+    act(() => result.current.reintentarDia())
+    await waitFor(() => expect(result.current.state.cargado).toBe(true))
+    expect(result.current.errorDia).toBe(false)
+  })
+
+  it('con un conflicto pendiente no se manda nada más, lo local se conserva y queda registrado', async () => {
+    const { result } = montar()
+    await waitFor(() => expect(result.current.state.cargado).toBe(true))
+    act(() => result.current.cambiar({ type: 'venta', key: 'efectivo', monto: 120000 }))
+    await esperarAutoguardado(result)
+
+    // Otro dispositivo guarda; este no se entera hasta su próximo guardado.
+    servidor = { ...servidor!, turno: { ...servidor!.turno, efectivo: 1, updated_at: new Date(Date.now() + 60_000).toISOString() } }
+    act(() => result.current.cambiar({ type: 'venta', key: 'efectivo', monto: 125000 }))
+    await waitFor(() => expect(result.current.conflicto).not.toBeNull(), ESPERA_AUTOGUARDADO)
+    expect(result.current.conflicto?.alCerrar).toBe(false)
+    expect(logError).toHaveBeenCalledWith(expect.any(String), expect.objectContaining({ contexto: 'guardar' }))
+
+    act(() => result.current.cambiar({ type: 'venta', key: 'efectivo', monto: 126000 }))
+    await act(() => new Promise((r) => setTimeout(r, 2000)))
+    expect(guardarTurno).toHaveBeenCalledTimes(2)
+    expect(result.current.state.ventas.efectivo).toBe(126000)
+
+    // Cerrar no manda nada, pero «reemplazar» pasa a cerrar también.
+    await act(async () => { expect(await result.current.cerrar()).toEqual({ estado: 'conflicto' }) })
+    expect(guardarTurno).toHaveBeenCalledTimes(2)
+    expect(result.current.conflicto?.alCerrar).toBe(true)
+
+    await act(async () => { expect(await result.current.sobrescribir(true)).toEqual({ estado: 'ok' }) })
+    expect(vi.mocked(guardarTurno).mock.calls.at(-1)?.[0]).toMatchObject({ cerrar: true, base_updated_at: null, ventas: expect.objectContaining({ efectivo: 126000 }) })
+    expect(result.current.conflicto).toBeNull()
+  }, 10_000)
 })

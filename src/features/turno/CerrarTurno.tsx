@@ -103,27 +103,42 @@ export default function CerrarTurno() {
     setRevisar(true)
   }
 
+  function alCerrarBien() {
+    toast.ok(state.cerrado ? 'Corrección guardada' : modo === 'completo' ? 'Día cerrado' : `Turno ${modo} cerrado`)
+    void navigate({ to: '/hoy' })
+  }
+
   async function onCerrar() {
     const r = await form.cerrar()
     setRevisar(false)
-    if (r === 'ok') {
-      toast.ok(state.cerrado ? 'Corrección guardada' : modo === 'completo' ? 'Día cerrado' : `Turno ${modo} cerrado`)
-      void navigate({ to: '/hoy' })
-    } else if (r === 'error') {
-      toast.error(form.errorAutosave ?? 'No se pudo cerrar. Tus datos quedaron guardados en este dispositivo.')
-    }
+    if (r.estado === 'ok') alCerrarBien()
+    else if (r.estado === 'error') toast.error(r.mensaje)
   }
 
-  if (online && resumenDia.isError) return (
+  // La hoja de conflicto se puede cerrar sin elegir: lo local se conserva y
+  // un aviso permite volver a abrirla. Antes, cerrarla descartaba lo local.
+  // Un conflicto nuevo (u otro objeto, como al pasar a «al cerrar») se muestra.
+  const [conflictoOculto, setConflictoOculto] = useState<typeof form.conflicto>(null)
+  const verConflicto = !!form.conflicto && form.conflicto !== conflictoOculto
+
+  async function onReemplazar() {
+    const alCerrar = form.conflicto?.alCerrar ?? false
+    const r = await form.sobrescribir(alCerrar)
+    if (r.estado === 'ok' && alCerrar) alCerrarBien()
+    else if (r.estado === 'error') toast.error(r.mensaje)
+  }
+
+  const errorAlCargar = online && resumenDia.isError ? () => void resumenDia.refetch() : form.errorDia ? form.reintentarDia : null
+  if (errorAlCargar) return (
     <div className="max-w-2xl mx-auto space-y-4">
       <PageHeader title="Cerrar turno" back="/hoy" />
-      <p role="alert">No pudimos comprobar el estado del día. Vuelve a intentarlo.</p>
-      <button type="button" className="btn-primary" onClick={() => void resumenDia.refetch()}>Reintentar</button>
+      <p role="alert">No pudimos cargar lo registrado de este día. Vuelve a intentarlo.</p>
+      <button type="button" className="btn-primary" onClick={errorAlCargar}>Reintentar</button>
     </div>
   )
   if (!search.modo || !state.cargado || metodos.isPending || (online && !resumenDia.isFetchedAfterMount)) return <Spinner />
 
-  const estadoGuardado = state.sucio ? (online ? 'Guardando borrador…' : 'Guardado en este dispositivo') : state.turnoId ? 'Borrador guardado' : ''
+  const estadoGuardado = form.conflicto ? 'Sin guardar' : state.sucio ? (online ? 'Guardando borrador…' : 'Guardado en este dispositivo') : state.turnoId ? 'Borrador guardado' : ''
   const listaTrabajadores = trabajadores.data ?? []
   // Hasta cuatro caben como segmented; con más, píldoras con scroll.
   const trabajadoresSegmented = listaTrabajadores.length <= 4
@@ -162,6 +177,14 @@ export default function CerrarTurno() {
       {state.cerrado && esDueno && (
         <div className="mb-4 aviso bg-info-tint text-info">
           Turno cerrado: al guardar se registra una <b>corrección</b> con la fotografía anterior y la nueva.
+        </div>
+      )}
+      {form.conflicto && !verConflicto && (
+        <div role="alert" className="mb-4 aviso bg-warn-tint text-warn">
+          <span>
+            Este turno cambió en otro dispositivo. Lo tuyo sigue en este dispositivo, pero no se guarda hasta que elijas.{' '}
+            <button type="button" className="underline font-semibold" onClick={() => setConflictoOculto(null)}>Elegir</button>
+          </span>
         </div>
       )}
       {form.errorAutosave && online && (
@@ -410,14 +433,16 @@ export default function CerrarTurno() {
         />
       )}
 
-      {form.conflicto && (
-        <BottomSheet title="Este turno cambió en otro dispositivo" onClose={() => void form.adoptarServidor()}>
+      {form.conflicto && verConflicto && (
+        <BottomSheet title="Este turno cambió en otro dispositivo" onClose={() => setConflictoOculto(form.conflicto)}>
           <p className="text-sm text-ink2">
             Mientras escribías, alguien guardó este mismo turno ({etiquetaModo(form.conflicto.actual.modo)} · ventas {clp(form.conflicto.actual.total_ventas)}).
             ¿Qué quieres hacer?
           </p>
           <button type="button" className="btn-primary btn-lg w-full" onClick={() => void form.adoptarServidor()}>Ver lo que se guardó (descarta lo mío)</button>
-          <button type="button" className="btn-secondary btn-lg w-full" onClick={() => void form.sobrescribir(false)}>Conservar lo mío y reemplazar</button>
+          <button type="button" disabled={form.guardando} className="btn-secondary btn-lg w-full" onClick={() => void onReemplazar()}>
+            {form.conflicto.alCerrar ? 'Reemplazar con lo mío y cerrar' : 'Conservar lo mío y reemplazar'}
+          </button>
         </BottomSheet>
       )}
     </div>
