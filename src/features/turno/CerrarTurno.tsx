@@ -2,7 +2,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useSearch } from '@tanstack/react-router'
 import PageHeader from '@/components/PageHeader'
 import Icon from '@/components/Icon'
-import Spinner from '@/components/Spinner'
+import { EsqueletoContenido } from '@/components/Esqueleto'
 import { BottomSheet } from '@/components/BottomSheet'
 import { MetodoLogo } from '@/components/MetodoLogo'
 import { useToast } from '@/hooks/useToast'
@@ -142,7 +142,7 @@ export default function CerrarTurno() {
       <button type="button" className="btn-primary" onClick={errorAlCargar}>Reintentar</button>
     </div>
   )
-  if (!mostrando) return <Spinner />
+  if (!mostrando) return <EsqueletoContenido />
 
   const guardado = textoGuardado({ sync: form.sync, cerrado: state.cerrado, localOk: form.localOk })
   const TONO = { pos: 'bg-pos', warn: 'bg-warn', neg: 'bg-neg' } as const

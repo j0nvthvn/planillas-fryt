@@ -1,6 +1,6 @@
 import { Link, useNavigate, useSearch } from '@tanstack/react-router'
 import PageHeader from '@/components/PageHeader'
-import Spinner from '@/components/Spinner'
+import { EsqueletoContenido } from '@/components/Esqueleto'
 import { AvisoDesactualizado, ErrorCarga } from '@/components/ErrorCarga'
 import { vistaDe } from '@/lib/consulta'
 import Icon from '@/components/Icon'
@@ -44,7 +44,7 @@ export default function Historial() {
       {desactualizado && <AvisoDesactualizado onReintentar={() => void q.refetch()} />}
       {/* Un error no es «nada que mostrar»: antes se veía igual que un filtro sin resultados. */}
       {vista === 'error' ? <ErrorCarga que="el historial" onReintentar={() => void q.refetch()} />
-        : vista === 'cargando' ? <Spinner /> : filas.length === 0 ? (
+        : vista === 'cargando' ? <EsqueletoContenido sinTitulo /> : filas.length === 0 ? (
         <p className="text-center text-muted py-10">Nada que mostrar con este filtro.</p>
       ) : (
         <div className="space-y-1">
