@@ -3,6 +3,8 @@ import { AvisoAmbar } from '@/components/Aviso'
 import { Link, useNavigate } from '@tanstack/react-router'
 import Icon from '@/components/Icon'
 import { EsqueletoContenido } from '@/components/Esqueleto'
+import { AvisoDesactualizado, ErrorCarga } from '@/components/ErrorCarga'
+import { vistaDe } from '@/lib/consulta'
 import { Dato, EstadoChip } from '@/components/Dato'
 import { useUsuario } from '@/hooks/useUsuario'
 import { useResumenDia, useTurnosDia, useBorradores, etiquetaModo } from '@/features/turno/api'
@@ -47,6 +49,8 @@ export default function Hoy() {
   const ra = resumenAyer.data
   const hayAyer = !!ra && (ra.turnos ?? 0) > 0
   const metodosVisibles = verMetodos ? ventas : ventas.slice(0, 3)
+  const { vista, desactualizado } = vistaDe(resumen, turnos)
+  const reintentar = () => { void resumen.refetch(); void turnos.refetch() }
 
   return (
     <div className="relative isolate max-w-2xl mx-auto">
@@ -66,10 +70,13 @@ export default function Hoy() {
         </AvisoAmbar>
       )}
 
-      {/* `||`: mientras falte cualquiera de las dos, el esqueleto. Con `&&` la
-          pantalla se pintaba a medias, con el día sin sus turnos. */}
-      {resumen.isPending || turnos.isPending ? <EsqueletoContenido sinTitulo /> : (
+      {/* Mientras falte cualquiera de las dos, el esqueleto (con `&&` la
+          pantalla se pintaba a medias). Si una falla, el error: antes el día
+          se mostraba en $0, como si no se hubiera vendido nada. */}
+      {vista === 'error' ? <ErrorCarga que="el día de hoy" onReintentar={reintentar} />
+        : vista === 'cargando' ? <EsqueletoContenido sinTitulo /> : (
         <>
+          {desactualizado && <AvisoDesactualizado onReintentar={reintentar} />}
           {/* La cifra al frente */}
           <section aria-labelledby="hoy-neto" className="card pb-4 mb-3">
             <div className="flex items-center justify-between gap-2.5">

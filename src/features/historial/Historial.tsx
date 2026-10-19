@@ -2,6 +2,8 @@ import { useInfiniteQuery } from '@tanstack/react-query'
 import { Link, useNavigate, useSearch } from '@tanstack/react-router'
 import PageHeader from '@/components/PageHeader'
 import Spinner from '@/components/Spinner'
+import { AvisoDesactualizado, ErrorCarga } from '@/components/ErrorCarga'
+import { vistaDe } from '@/lib/consulta'
 import Icon from '@/components/Icon'
 import { EstadoChip } from '@/components/Dato'
 import { PILDORA, PILDORA_ON, PILDORA_OFF } from '@/components/pildora'
@@ -42,6 +44,7 @@ export default function Historial() {
   // huecos no significan nada. Hoy queda fuera porque está en curso.
   const items = filtro === 'todos' ? conHuecos(filas, sumarDias(hoy(), -1)) : filas.map((d): ItemHistorial => ({ tipo: 'dia', fecha: d.fecha, d }))
   const meses = porMes(items)
+  const { vista, desactualizado } = vistaDe(q)
 
   return (
     <div className="max-w-3xl mx-auto">
@@ -57,7 +60,10 @@ export default function Historial() {
         ))}
       </div>
 
-      {q.isPending ? <Spinner /> : filas.length === 0 ? (
+      {desactualizado && <AvisoDesactualizado onReintentar={() => void q.refetch()} />}
+      {/* Un error no es «nada que mostrar»: antes se veía igual que un filtro sin resultados. */}
+      {vista === 'error' ? <ErrorCarga que="el historial" onReintentar={() => void q.refetch()} />
+        : vista === 'cargando' ? <Spinner /> : filas.length === 0 ? (
         <p className="text-center text-muted py-10">Nada que mostrar con este filtro.</p>
       ) : (
         <div className="space-y-1">
