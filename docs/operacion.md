@@ -184,7 +184,7 @@ El plan gratis de Supabase no hace copias. Las hace
 | Qué | Cuándo | Resultado |
 |---|---|---|
 | Respaldo | diario, 03:00 Chile | `frytcontrol-AAAA-MM-DD.tar.age` en Drive, carpeta `frytcontrol-respaldos` |
-| Control de integridad | tras cada respaldo | falla el job si `verificar_integridad()` devuelve filas |
+| Control de integridad | tras cada respaldo | falla el job si `verificar_integridad()` devuelve un `error`; los `aviso` quedan como advertencia en el resumen |
 | Simulacro | domingos | restaura la última copia en una base local del runner y compara |
 
 Cada `.tar.age` (cifrado con [age](https://age-encryption.org)) contiene
@@ -306,8 +306,10 @@ regla que falla, con `severidad` `error` (datos inconsistentes: totales
 distintos del último cierre, turno cerrado sin ventas, correcciones sin
 cierre anterior, proveedores sin catálogo, día completo con una tarde
 con ventas) o `aviso` (borradores de días pasados, fechas futuras, día
-completo con una tarde vacía). El respaldo diario falla si hay
-cualquiera de las dos. Prod quedó sin hallazgos el 2026-09-16 (se
+completo con una tarde vacía, día sin registro ni marca). El respaldo
+diario y el simulacro fallan solo con un `error`; los avisos salen como
+advertencia en el resumen de la ejecución (desde el 2026-10-18: antes
+cualquier aviso lo ponía en rojo). Prod quedó sin hallazgos el 2026-09-16 (se
 corrigió el 2026-06-17: día completo con 2 proveedores en una tarde sin
 ventas; los pagos pasaron a la mañana y la tarde a la papelera).
 
