@@ -28,7 +28,7 @@ vi.mock('@/lib/errorLog', () => ({ logError: vi.fn() }))
 const locales = vi.hoisted(() => new Map<string, unknown>())
 vi.mock('./borradorLocal', () => ({
   leerBorradorLocal: vi.fn((fecha: string, modo: string) => Promise.resolve(locales.get(`${fecha}:${modo}`) ?? null)),
-  guardarBorradorLocal: vi.fn((b: { fecha: string; modo: string }) => { locales.set(`${b.fecha}:${b.modo}`, b); return Promise.resolve() }),
+  guardarBorradorLocal: vi.fn((b: { fecha: string; modo: string }) => { locales.set(`${b.fecha}:${b.modo}`, b); return Promise.resolve(true) }),
   borrarBorradorLocal: vi.fn((fecha: string, modo: string) => { locales.delete(`${fecha}:${modo}`); return Promise.resolve() }),
 }))
 
@@ -74,7 +74,7 @@ beforeEach(() => {
   locales.clear()
   vi.mocked(logError).mockClear()
   cliente = new QueryClient({ defaultOptions: { queries: { retry: false } } })
-  vi.mocked(cargarTurnosDia).mockReset().mockImplementation(() => Promise.resolve(servidor ? [servidor] : []))
+  vi.mocked(cargarTurnosDia).mockReset().mockImplementation((fecha) => Promise.resolve(servidor?.turno.fecha === fecha ? [servidor] : []))
   vi.mocked(guardarTurno).mockReset().mockImplementation(async (input) => {
     enVuelo += 1
     maxEnVuelo = Math.max(maxEnVuelo, enVuelo)
@@ -92,7 +92,9 @@ beforeEach(() => {
 
 function montar() {
   const wrapper = ({ children }: { children: ReactNode }) => <QueryClientProvider client={cliente}>{children}</QueryClientProvider>
-  return renderHook(() => useTurnoForm({ fecha: FECHA, modo: 'completo', fondoPorDefecto: 0, online: true }), { wrapper })
+  return renderHook(({ fecha }: { fecha: string }) => useTurnoForm({ fecha, modo: 'completo', fondoPorDefecto: 0, online: true }), {
+    wrapper, initialProps: { fecha: FECHA },
+  })
 }
 
 type Hook = ReturnType<typeof montar>['result']
@@ -246,5 +248,40 @@ describe('useTurnoForm: errores y conflictos', () => {
     await act(async () => { expect(await result.current.sobrescribir(true)).toEqual({ estado: 'ok' }) })
     expect(vi.mocked(guardarTurno).mock.calls.at(-1)?.[0]).toMatchObject({ cerrar: true, base_updated_at: null, ventas: expect.objectContaining({ efectivo: 126000 }) })
     expect(result.current.conflicto).toBeNull()
+  }, 10_000)
+})
+
+describe('useTurnoForm: lo pendiente', () => {
+  it('al abrir, recupera lo que no alcanzó a subir y lo sube sin esperar otra edición', async () => {
+    locales.set(`${FECHA}:completo`, {
+      fecha: FECHA, modo: 'completo', trabajadorId: null, fondoInicial: 0, ventas: { efectivo: 7000 }, proveedores: [],
+      efectivoContado: null, contoCaja: false, guardadoEn: 0, baseUpdatedAt: null, pendiente: true,
+    })
+    const { result } = montar()
+    await waitFor(() => expect(result.current.listo).toBe(true))
+    expect(result.current.state.ventas.efectivo).toBe(7000)
+    expect(result.current.sync).toBe('pendiente')
+    await esperarAutoguardado(result)
+    expect(servidor?.turno).toMatchObject({ efectivo: 7000 })
+    expect(result.current.sync).toBe('sincronizado')
+  })
+
+  it('al cambiar de fecha, lo pendiente sale antes con su fecha y no se mezcla con la nueva', async () => {
+    const OTRA = '2026-09-29'
+    const { result, rerender } = montar()
+    await waitFor(() => expect(result.current.listo).toBe(true))
+    act(() => result.current.cambiar({ type: 'venta', key: 'efectivo', monto: 9000 }))
+    rerender({ fecha: OTRA })
+    expect(result.current.listo).toBe(false)
+
+    await waitFor(() => expect(result.current.listo).toBe(true))
+    expect(guardarTurno).toHaveBeenCalledTimes(1)
+    expect(vi.mocked(guardarTurno).mock.calls[0]?.[0]).toMatchObject({ fecha: FECHA, ventas: expect.objectContaining({ efectivo: 9000 }) })
+    expect(result.current.state.ventas.efectivo).toBe(0)
+    expect(result.current.state.sucio).toBe(false)
+
+    // Pasado el debounce no sale nada más: ni lo viejo con la fecha nueva.
+    await act(() => new Promise((r) => setTimeout(r, 2000)))
+    expect(guardarTurno).toHaveBeenCalledTimes(1)
   }, 10_000)
 })

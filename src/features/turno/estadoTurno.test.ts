@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import {
   cargaInicial, debeAutoguardar, debeEnviarAlSalir, desdeLocal, desdeServidor, esEscrituraPropia, idsLineasNuevas,
-  inicial, mismaVersion, reducer, tieneContenido,
+  inicial, mismaVersion, reducer, textoGuardado, tieneContenido,
   type FormState,
 } from './estadoTurno'
 import type { TurnoConLineas, VTurno } from './api'
@@ -84,10 +84,9 @@ describe('reducer', () => {
     expect(s.desgloseConteo).toBeNull()
   })
 
-  it('una carga siempre parte limpia, aunque el origen venga marcado sucio', () => {
-    const s = reducer(estado({ sucio: true }), { type: 'cargar', state: { fondoInicial: 20000, sucio: true } })
-    expect(s.sucio).toBe(false)
-    expect(s.cargado).toBe(true)
+  it('una carga parte limpia salvo que el origen traiga cambios sin subir', () => {
+    expect(reducer(estado({ sucio: true }), { type: 'cargar', state: { fondoInicial: 20000 } })).toMatchObject({ sucio: false, cargado: true })
+    expect(reducer(estado(), { type: 'cargar', state: { fondoInicial: 20000, sucio: true } }).sucio).toBe(true)
   })
 
   it('sincronizado guarda la versión del servidor y respeta lo que se escribió mientras viajaba', () => {
@@ -314,5 +313,119 @@ describe('idsLineasNuevas', () => {
 
   it('las líneas en cero no se guardan en el servidor y quedan sin id', () => {
     expect(idsLineasNuevas([{ key: 'a', nombre: 'PF', monto: 0, forma_pago: 'efectivo' }], [lineaServidor({})])).toEqual({})
+  })
+})
+
+describe('cargaInicial con cambios sin subir (pendiente)', () => {
+  const V1 = '2026-09-18T10:00:00Z'
+  const V2 = '2026-09-18T13:00:00Z'
+
+  it('editado sobre la versión vigente y sin subir: gana lo local y abre sucio, aunque el reloj vaya atrasado', () => {
+    const r = cargaInicial({
+      servidor: turno({ updated_at: V1 }),
+      local: borrador({ baseUpdatedAt: V1, pendiente: true, guardadoEn: Date.parse('2020-01-01T00:00:00Z') }),
+      fondoPorDefecto: 0,
+    })
+    expect(r.state.ventas?.efectivo).toBe(5000)
+    expect(r.state.sucio).toBe(true)
+    expect(r.conflicto).toBeNull()
+    expect(r.descartarLocal).toBe(false)
+  })
+
+  it('editado sobre la versión vigente y ya subido: gana lo local, limpio (trae el conteo)', () => {
+    const r = cargaInicial({
+      servidor: turno({ updated_at: V1 }),
+      local: borrador({ baseUpdatedAt: V1, pendiente: false, contoCaja: true, efectivoContado: 21000 }),
+      fondoPorDefecto: 0,
+    })
+    expect(r.state.efectivoContado).toBe(21000)
+    expect(r.state.sucio).toBe(false)
+  })
+
+  it('editado sobre otra versión y sin subir: abre lo local con el conflicto, sin descartarlo', () => {
+    const r = cargaInicial({
+      servidor: turno({ updated_at: V2 }),
+      local: borrador({ baseUpdatedAt: V1, pendiente: true }),
+      fondoPorDefecto: 0,
+    })
+    expect(r.state.ventas?.efectivo).toBe(5000)
+    expect(r.state.baseUpdatedAt).toBe(V1)
+    expect(r.state.sucio).toBe(true)
+    expect(r.conflicto?.updated_at).toBe(V2)
+    expect(r.descartarLocal).toBe(false)
+  })
+
+  it('editado sobre otra versión y ya subido: gana el servidor aunque lo local parezca más nuevo', () => {
+    const r = cargaInicial({
+      servidor: turno({ updated_at: V2 }),
+      local: borrador({ baseUpdatedAt: V1, pendiente: false, guardadoEn: Date.parse('2030-01-01T00:00:00Z') }),
+      fondoPorDefecto: 0,
+    })
+    expect(r.state.ventas?.efectivo).toBe(1000)
+    expect(r.descartarLocal).toBe(true)
+  })
+
+  it('una corrección sin guardar sobre el turno cerrado se recupera', () => {
+    const r = cargaInicial({
+      servidor: turno({ updated_at: V1, is_draft: false }),
+      local: borrador({ baseUpdatedAt: V1, pendiente: true }),
+      fondoPorDefecto: 0,
+    })
+    expect(r.state.cerrado).toBe(true)
+    expect(r.state.ventas?.efectivo).toBe(5000)
+    expect(r.state.sucio).toBe(true)
+  })
+
+  it('una corrección sobre un cierre que cambió: conflicto que, al reemplazar, cierra', () => {
+    const r = cargaInicial({
+      servidor: turno({ updated_at: V2, is_draft: false }),
+      local: borrador({ baseUpdatedAt: V1, pendiente: true }),
+      fondoPorDefecto: 0,
+    })
+    expect(r.conflicto?.is_draft).toBe(false)
+  })
+
+  it('sin turno en el servidor: lo que nunca se subió se recupera para subirlo', () => {
+    const r = cargaInicial({ servidor: undefined, local: borrador({ baseUpdatedAt: null, pendiente: true }), fondoPorDefecto: 0 })
+    expect(r.state.ventas?.efectivo).toBe(5000)
+    expect(r.state.sucio).toBe(true)
+  })
+
+  it('sin turno en el servidor y ya subido: se borró a propósito, no se revive', () => {
+    const r = cargaInicial({ servidor: undefined, local: borrador({ baseUpdatedAt: V1, pendiente: false }), fondoPorDefecto: 20000 })
+    expect(r.state).toEqual({ fondoInicial: 20000 })
+    expect(r.descartarLocal).toBe(true)
+  })
+
+  it('sin turno en el servidor pero con cambios sin subir: se recupera sin versión base', () => {
+    const r = cargaInicial({ servidor: undefined, local: borrador({ baseUpdatedAt: V1, pendiente: true }), fondoPorDefecto: 0 })
+    expect(r.state.ventas?.efectivo).toBe(5000)
+    expect(r.state.baseUpdatedAt).toBeNull()
+    expect(r.state.sucio).toBe(true)
+  })
+})
+
+describe('textoGuardado', () => {
+  const t = (sync: Parameters<typeof textoGuardado>[0]['sync'], cerrado = false, localOk = true) => textoGuardado({ sync, cerrado, localOk })?.texto ?? null
+
+  it('separa lo guardado en el dispositivo de lo sincronizado', () => {
+    expect(t('pendiente')).toBe('Guardado en este dispositivo')
+    expect(t('enviando')).toBe('Guardando…')
+    expect(t('sincronizado')).toBe('Borrador sincronizado')
+    expect(t('nuevo')).toBeNull()
+  })
+
+  it('sin almacenamiento local, lo pendiente no está guardado en ninguna parte', () => {
+    expect(t('pendiente', false, false)).toBe('Sin guardar')
+  })
+
+  it('en un turno cerrado no habla de borradores', () => {
+    expect(t('pendiente', true)).toBe('Corrección sin guardar')
+    expect(t('sincronizado', true)).toBeNull()
+  })
+
+  it('error y conflicto', () => {
+    expect(t('error')).toBe('No se pudo guardar')
+    expect(textoGuardado({ sync: 'conflicto', cerrado: false, localOk: true })).toEqual({ texto: 'Sin guardar', tono: 'neg' })
   })
 })
