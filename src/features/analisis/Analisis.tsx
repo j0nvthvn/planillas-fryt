@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { Link, useNavigate, useSearch } from '@tanstack/react-router'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, ReferenceLine } from 'recharts'
 import PageHeader from '@/components/PageHeader'
-import Spinner from '@/components/Spinner'
+import { EsqueletoContenido } from '@/components/Esqueleto'
 import { AvisoDesactualizado, ErrorCarga } from '@/components/ErrorCarga'
 import { vistaDe } from '@/lib/consulta'
 import Icon from '@/components/Icon'
@@ -20,6 +20,7 @@ import { colorMetodo } from '@/lib/theme'
 import { BarraMetodos } from '@/components/BarraMetodos'
 import { useIsDesktop } from '@/hooks/useIsDesktop'
 import { promedioNeto, resumenGrafico } from './resumen'
+import { etiquetaEstado } from '@/features/turno/estado'
 
 
 function rango(preset: '7' | '30' | 'mes'): { desde: string; hasta: string } {
@@ -82,7 +83,7 @@ export default function Analisis() {
 
       {/* Con un error y sin datos, antes quedaba el spinner para siempre. */}
       {vista === 'error' ? <ErrorCarga que="el análisis del período" onReintentar={() => void q.refetch()} />
-        : vista === 'cargando' || !r ? <Spinner /> : (
+        : vista === 'cargando' || !r ? <EsqueletoContenido sinTitulo /> : (
         <>
           {desactualizado && <AvisoDesactualizado onReintentar={() => void q.refetch()} />}
           {/* Celular: una tarjeta partida en 2×2. Escritorio: cuatro tarjetas. */}
@@ -138,6 +139,9 @@ export default function Analisis() {
                   </BarChart>
                 </ResponsiveContainer>
               </div>
+              {/* El gráfico está oculto a las tecnologías asistivas y no se
+                  recorre con el teclado: los mismos datos, en una tabla. */}
+              {dias.length > 0 && <DatosPorDia dias={dias} />}
             </div>
 
             <div className="flex flex-col gap-3 md:gap-3.5">
@@ -190,6 +194,40 @@ export default function Analisis() {
       )}
       {exportando && r && <ExportarSheet resumen={r} onClose={() => setExportando(false)} />}
     </div>
+  )
+}
+
+/** Los días del gráfico como tabla, plegada bajo «Ver datos por día». */
+function DatosPorDia({ dias }: { dias: (VResumenDia & { neto: number; total_ventas: number })[] }) {
+  return (
+    <details className="mt-3 border-t border-hairline pt-2.5">
+      <summary className="hit cursor-pointer text-sm font-medium text-brand py-1.5">Ver datos por día</summary>
+      <div className="overflow-x-auto mt-2">
+        <table className="w-full text-sm">
+          <caption className="sr-only">Ventas, neto y estado de cada día del período</caption>
+          <thead>
+            <tr className="text-xs text-muted text-left">
+              <th scope="col" className="font-medium py-1.5 pr-2">Día</th>
+              <th scope="col" className="font-medium py-1.5 px-2 text-right">Ventas</th>
+              <th scope="col" className="font-medium py-1.5 px-2 text-right">Neto</th>
+              <th scope="col" className="font-medium py-1.5 pl-2">Estado</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-hairline">
+            {dias.map((d) => (
+              <tr key={d.fecha}>
+                <th scope="row" className="font-normal py-1.5 pr-2 text-left">
+                  <Link to="/dia" search={{ fecha: d.fecha }} className="text-ink underline-offset-2 hover:underline capitalize">{fechaDiaMes(d.fecha)}</Link>
+                </th>
+                <td className="cifra py-1.5 px-2 text-right text-ink2">{d.cerrado ? '—' : clp(d.total_ventas)}</td>
+                <td className={`cifra py-1.5 px-2 text-right ${d.neto < 0 ? 'text-neg' : 'text-ink'}`}>{d.cerrado ? '—' : clp(d.neto)}</td>
+                <td className="py-1.5 pl-2 text-muted">{etiquetaEstado(d.estado).largo}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </details>
   )
 }
 
