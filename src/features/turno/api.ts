@@ -67,8 +67,14 @@ export async function cargarTurnosDia(fecha: string): Promise<TurnoConLineas[]> 
     .map((turno) => ({ turno, proveedores: lineas.filter((l) => l.turno_id === turno.id) }))
 }
 
-export function useTurnosDia(fecha: string) {
-  return useQuery({ queryKey: qk.turnosDia(fecha), queryFn: () => cargarTurnosDia(fecha) })
+export function useTurnosDia(fecha: string, opciones?: { refrescarAlAbrir: boolean }) {
+  return useQuery({
+    queryKey: qk.turnosDia(fecha),
+    // Igual que el resumen: una copia reciente de IndexedDB puede ser de
+    // antes del último guardado, y la planilla mostraría el día sin turnos.
+    refetchOnMount: opciones?.refrescarAlAbrir ? 'always' : true,
+    queryFn: () => cargarTurnosDia(fecha),
+  })
 }
 
 /** Borradores de cualquier fecha (los "turnos olvidados"). */
