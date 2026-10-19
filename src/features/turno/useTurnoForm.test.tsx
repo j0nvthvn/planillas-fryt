@@ -285,3 +285,34 @@ describe('useTurnoForm: lo pendiente', () => {
     expect(guardarTurno).toHaveBeenCalledTimes(1)
   }, 10_000)
 })
+
+describe('useTurnoForm: fondo por defecto', () => {
+  function montarConFondo(fondo: number | null) {
+    const wrapper = ({ children }: { children: ReactNode }) => <QueryClientProvider client={cliente}>{children}</QueryClientProvider>
+    return renderHook(({ fondo }: { fondo: number | null }) => useTurnoForm({ fecha: FECHA, modo: 'completo', fondoPorDefecto: fondo, online: true }), {
+      wrapper, initialProps: { fondo },
+    })
+  }
+
+  // Con la configuración lenta el día llegaba antes y el turno nuevo partía
+  // con el fondo de CONFIG_DEFAULT ($0); la configuración ya no lo cambiaba.
+  it('un turno nuevo espera la configuración para tomar el fondo', async () => {
+    const { result, rerender } = montarConFondo(null)
+    await waitFor(() => expect(cargarTurnosDia).toHaveBeenCalled())
+    await act(() => new Promise((r) => setTimeout(r, 50)))
+    expect(result.current.listo).toBe(false)
+
+    rerender({ fondo: 50000 })
+    await waitFor(() => expect(result.current.listo).toBe(true))
+    expect(result.current.state.fondoInicial).toBe(50000)
+  })
+
+  it('un fondo ya editado no cambia si la configuración se actualiza', async () => {
+    const { result, rerender } = montarConFondo(50000)
+    await waitFor(() => expect(result.current.listo).toBe(true))
+    act(() => result.current.cambiar({ type: 'fondo', monto: 30000 }))
+    rerender({ fondo: 60000 })
+    await act(() => new Promise((r) => setTimeout(r, 50)))
+    expect(result.current.state.fondoInicial).toBe(30000)
+  })
+})
