@@ -1,13 +1,5 @@
 import { useState } from 'react'
-
-/** Fondos de avatar: todos dan ≥ 5:1 con la inicial en blanco, en claro y en oscuro. */
-const COLORS = ['#475569', '#047857', '#4F46E5', '#B45309', '#0F766E', '#BE185D']
-
-export function avatarColor(nombre: string): string {
-  let h = 0
-  for (const c of nombre) h = (h * 31 + c.charCodeAt(0)) & 0xffff
-  return COLORS[h % COLORS.length] ?? COLORS[0]!
-}
+import { avatarColor } from './avatar'
 
 const SIZES = { sm: 'w-9 h-9 rounded-[9px] text-sm', md: 'w-10 h-10 rounded-[10px] text-base', lg: 'w-16 h-16 rounded-[14px] text-2xl' }
 

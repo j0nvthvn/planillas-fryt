@@ -1,5 +1,5 @@
 import { useCallback } from 'react'
-import { useToast } from '@/components/Toast'
+import { useToast } from '@/hooks/useToast'
 import { mensajeDeError } from '@/lib/errorLog'
 
 /**

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { applyKey, numeroADigitos, digitosANumero } from './Keypad'
+import { applyKey, numeroADigitos, digitosANumero } from './teclado'
 
 describe('applyKey', () => {
   it('agrega dígitos y borra', () => {

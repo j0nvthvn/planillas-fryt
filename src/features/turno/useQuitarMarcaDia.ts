@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react'
-import { useToast } from '@/components/Toast'
+import { useToast } from '@/hooks/useToast'
 import { mensajeDeError } from '@/lib/errorLog'
 import { marcarDiaCerrado } from './api'
 
