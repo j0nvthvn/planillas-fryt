@@ -4,7 +4,31 @@ Documento para quien continúe el trabajo, sea persona o modelo. Resume qué
 es el sistema, qué se hizo, en qué punto está cada fase y qué falta, con las
 reglas que no se deben romper. Última actualización: **2026-10-18**.
 
-### Guardado del cierre (18 de octubre de 2026, rama `fix/guardado-serializado`)
+### Estado del borrador (18 de octubre de 2026, rama `fix/estado-borrador`)
+
+Cierra la Prioridad 1 de `docs/revision-general-app.md`:
+- **El estado dice la verdad** (`textoGuardado` en `estadoTurno.ts`, con
+  pruebas): «Guardado en este dispositivo» mientras falta subir (también
+  sin conexión), «Guardando…» solo con una solicitud en curso, «Borrador
+  sincronizado» cuando el servidor ya lo tiene, «Corrección sin guardar» en
+  un turno cerrado (antes, «Guardando borrador…», y un turno cerrado decía
+  «Borrador guardado»), y error o conflicto. Si IndexedDB falla (modo
+  privado, sin espacio), un aviso pide no cerrar la app.
+- **Recuperar sin depender del reloj**: el borrador local guarda
+  `pendiente` (cambios que el servidor no tiene) y `cargaInicial` decide por
+  eso y por la versión base. Lo recuperado con cambios sin subir abre
+  `sucio` y se sube solo; sobre otra versión, se muestra el conflicto en vez
+  de descartarlo; una corrección sin guardar de un turno cerrado se
+  recupera. Los borradores de antes usan la regla anterior.
+- **Cambiar de fecha o de modo** manda lo pendiente con su fecha antes de
+  cargar el formulario nuevo (antes, un envío al ocultar o un autoguardado
+  atrasado podían mezclar uno con otro).
+- De paso: la barra fija de Cerrar turno no se medía si el resumen del día
+  llegaba después del formulario (los toasts quedaban detrás), y la píldora
+  «Staging» baja a la esquina inferior izquierda: arriba tapaba las bandas
+  de «Sin conexión» y «Hay una versión nueva».
+
+### Guardado del cierre (18 de octubre de 2026, PR #19, en producción)
 
 Cierra la Prioridad 0 de `docs/revision-general-app.md`:
 - **Una solicitud a la vez** (`features/turno/colaGuardado.ts`, con
