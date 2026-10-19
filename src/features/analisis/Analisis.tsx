@@ -3,6 +3,8 @@ import { Link, useNavigate, useSearch } from '@tanstack/react-router'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, ReferenceLine } from 'recharts'
 import PageHeader from '@/components/PageHeader'
 import Spinner from '@/components/Spinner'
+import { AvisoDesactualizado, ErrorCarga } from '@/components/ErrorCarga'
+import { vistaDe } from '@/lib/consulta'
 import Icon from '@/components/Icon'
 import { DeltaBadge } from '@/components/DeltaBadge'
 import { ProveedorAvatar } from '@/components/ProveedorAvatar'
@@ -10,7 +12,7 @@ import { MetodoLogo } from '@/components/MetodoLogo'
 import { useMetodos } from '@/features/catalogo/api'
 import { useResumenPeriodo } from './api'
 import { rangoLegible } from './rango'
-import { clp, clpCorto, clpEje, fechaISO, hoy, ajustarRango, sumarDias, fechaDiaMes } from '@/lib/format'
+import { clp, clpCorto, clpEje, hoy, ajustarRango, sumarDias, fechaDiaMes } from '@/lib/format'
 import { porMetodo } from '@/lib/metodos'
 import { ExportarSheet } from '@/features/exportar/ExportarSheet'
 import type { VResumenDia } from '@/features/turno/api'
@@ -22,7 +24,7 @@ import { promedioNeto, resumenGrafico } from './resumen'
 
 function rango(preset: '7' | '30' | 'mes'): { desde: string; hasta: string } {
   const h = hoy()
-  if (preset === 'mes') { const d = new Date(); return { desde: fechaISO(new Date(d.getFullYear(), d.getMonth(), 1)), hasta: h } }
+  if (preset === 'mes') return { desde: `${h.slice(0, 7)}-01`, hasta: h }
   return { desde: sumarDias(h, preset === '7' ? -6 : -29), hasta: h }
 }
 
@@ -49,6 +51,7 @@ export default function Analisis() {
   const irADia = (fecha: string) => void navigate({ to: '/dia', search: { fecha } })
   const ventas = porMetodo(r?.totales, metodos.data)
   const totalProveedores = Number(r?.totales.total_proveedores ?? 0)
+  const { vista, desactualizado } = vistaDe(q)
 
   return (
     <div className="max-w-3xl mx-auto">
@@ -77,8 +80,11 @@ export default function Analisis() {
         </div>
       </div>
 
-      {q.isPending || !r ? <Spinner /> : (
+      {/* Con un error y sin datos, antes quedaba el spinner para siempre. */}
+      {vista === 'error' ? <ErrorCarga que="el análisis del período" onReintentar={() => void q.refetch()} />
+        : vista === 'cargando' || !r ? <Spinner /> : (
         <>
+          {desactualizado && <AvisoDesactualizado onReintentar={() => void q.refetch()} />}
           {/* Celular: una tarjeta partida en 2×2. Escritorio: cuatro tarjetas. */}
           <div className="card p-0 overflow-hidden grid grid-cols-2 mb-3 md:grid-cols-4 md:gap-3.5 md:p-0 md:overflow-visible md:bg-transparent md:border-0 md:shadow-none md:rounded-none">
             <Kpi label="Neto" value={r.totales.neto} anterior={r.anterior.neto} destacado className="border-r border-b" />

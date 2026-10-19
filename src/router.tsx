@@ -7,7 +7,7 @@ import { EsqueletoContenido, EsqueletoPagina } from './components/Esqueleto'
 import Login from './features/auth/Login'
 import Hoy from './features/hoy/Hoy'
 import CerrarTurno from './features/turno/CerrarTurno'
-import { busquedaPlanilla } from './lib/fechaPlanilla'
+import { busquedaPlanilla, fechaValida } from './lib/fechaPlanilla'
 import { busquedaAjustes, busquedaAnalisis, busquedaHistorial, busquedaProveedores } from './lib/busquedas'
 
 const Planilla = lazy(() => import('./features/planilla/Planilla'))
@@ -18,7 +18,8 @@ const ProveedorDetalle = lazy(() => import('./features/proveedores/ProveedorDeta
 const Ajustes = lazy(() => import('./features/ajustes/Ajustes'))
 const Reporte = lazy(() => import('./features/exportar/Reporte'))
 
-const fechaSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/)
+// Como en la planilla: una regex aceptaba el 31 de febrero.
+const fechaSchema = fechaValida
 const modoSchema = z.enum(['completo', 'mañana', 'tarde'])
 
 /**
@@ -70,7 +71,8 @@ const appRoute = createRoute({
   id: 'app',
   beforeLoad: async ({ location }) => {
     const session = await esperarSesion()
-    if (!session) throw redirect({ to: '/login', search: { volver: location.pathname } })
+    // `href` y no `pathname`: se vuelve con la fecha, el modo y los filtros.
+    if (!session) throw redirect({ to: '/login', search: { volver: location.href } })
     const usuario = await cargarUsuario(session.user.id).catch(() => null)
     return { usuario, esDueno: usuario?.rol === 'dueño' }
   },
@@ -159,7 +161,7 @@ const reporteRoute = createRoute({
   errorComponent: errorDeEnlace('Enlace inválido', 'No pudimos armar el reporte. Revisa las fechas del enlace o vuelve a Hoy.'),
   beforeLoad: async ({ location }) => {
     const session = await esperarSesion()
-    if (!session) throw redirect({ to: '/login', search: { volver: location.pathname } })
+    if (!session) throw redirect({ to: '/login', search: { volver: location.href } })
     const usuario = await cargarUsuario(session.user.id).catch(() => null)
     if (usuario?.rol !== 'dueño') throw redirect({ to: '/hoy' })
   },

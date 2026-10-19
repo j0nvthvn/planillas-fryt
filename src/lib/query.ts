@@ -51,6 +51,7 @@ export const qk = {
   /** Prefijos, para invalidar todas las fechas o todos los rangos de una vez. */
   todosResumenDia: ['resumen-dia'] as const,
   turnosDia: (fecha: string) => ['turnos-dia', fecha] as const,
+  todosTurnosDia: ['turnos-dia'] as const,
   cierresTurno: (turnoId: string) => ['cierres', turnoId] as const,
   borradores: ['borradores'] as const,
   historial: (filtro: string) => ['historial', filtro] as const,
@@ -81,4 +82,17 @@ export function invalidarDia(fecha: string) {
   void queryClient.invalidateQueries({ queryKey: qk.borradores })
   void queryClient.invalidateQueries({ queryKey: qk.catalogo })
   void queryClient.invalidateQueries({ queryKey: qk.todasComprasProveedores })
+  void queryClient.invalidateQueries({ queryKey: qk.todoProveedorHistorial })
+}
+
+/**
+ * Después de renombrar, desactivar, cambiar el logo, eliminar o fusionar
+ * proveedores del catálogo: el nombre y el logo se ven en las planillas, el
+ * historial, la exportación y las compras, no solo en el catálogo.
+ */
+export async function invalidarProveedores() {
+  await Promise.all([
+    qk.catalogo, qk.todoProveedorHistorial, qk.todasComprasProveedores, qk.todosTurnosDia,
+    qk.todosResumenDia, qk.todoHistorial, qk.todosResumenPeriodo, qk.todaExportacion,
+  ].map((queryKey) => queryClient.invalidateQueries({ queryKey })))
 }

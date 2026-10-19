@@ -1,6 +1,6 @@
 import { useQuery, useMutation } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
-import { qk, queryClient } from '@/lib/query'
+import { qk, queryClient, invalidarProveedores } from '@/lib/query'
 import type { Tables, Json } from '@/lib/database.types'
 
 export type MetodoPago = Tables<'metodos_pago'>
@@ -103,21 +103,19 @@ export async function crearProveedor(nombre: string): Promise<Tables<'proveedore
 export async function actualizarProveedor(id: string, cambios: Partial<Pick<Tables<'proveedores_frecuentes'>, 'nombre' | 'activo' | 'imagen_url'>>) {
   const { error } = await supabase.from('proveedores_frecuentes').update(cambios).eq('id', id)
   if (error) throw error
-  await queryClient.invalidateQueries({ queryKey: qk.catalogo })
+  await invalidarProveedores()
 }
 
 export async function eliminarProveedor(id: string) {
   const { error } = await supabase.from('proveedores_frecuentes').delete().eq('id', id)
   if (error) throw error
-  await queryClient.invalidateQueries({ queryKey: qk.catalogo })
+  await invalidarProveedores()
 }
 
 export async function fusionarProveedores(origen: string, destino: string) {
   const { error } = await supabase.rpc('fusionar_proveedores', { p_origen: origen, p_destino: destino })
   if (error) throw error
-  await queryClient.invalidateQueries({ queryKey: qk.catalogo })
-  await queryClient.invalidateQueries({ queryKey: qk.todoProveedorHistorial })
-  await queryClient.invalidateQueries({ queryKey: qk.todasComprasProveedores })
+  await invalidarProveedores()
 }
 
 export async function subirLogo(proveedorId: string, nombre: string, archivo: File): Promise<string> {

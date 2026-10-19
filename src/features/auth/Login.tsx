@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react'
 import Icon from '@/components/Icon'
 import { useNavigate, useSearch } from '@tanstack/react-router'
 import { iniciarSesion } from '@/lib/auth'
+import { destinoTrasLogin } from '@/lib/sesion'
 import { fechaLegible, hoy } from '@/lib/format'
 
 function saludo() {
@@ -34,9 +35,7 @@ export default function Login() {
     }
     // El botón sigue en "Ingresando…" mientras la ruta carga el usuario:
     // antes volvía a quedar activo y la pantalla parecía no responder.
-    // Solo rutas internas ("/x", nunca "//dominio").
-    const destino = volver && /^\/(?!\/)/.test(volver) && volver !== '/login' ? volver : '/hoy'
-    await navigate({ to: destino as '/hoy', replace: true }).finally(() => setLoading(false))
+    await navigate({ href: destinoTrasLogin(volver), replace: true }).finally(() => setLoading(false))
   }
 
   return (

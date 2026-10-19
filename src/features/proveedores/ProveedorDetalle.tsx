@@ -1,5 +1,4 @@
 import { useMemo, useRef, useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
 import { Link, useNavigate, useParams } from '@tanstack/react-router'
 import PageHeader from '@/components/PageHeader'
 import Spinner from '@/components/Spinner'
@@ -10,11 +9,12 @@ import { ConfirmDialog } from '@/components/ConfirmDialog'
 import { useAccion } from '@/hooks/useAccion'
 import { useCatalogo, actualizarProveedor, eliminarProveedor, fusionarProveedores, subirLogo } from '@/features/catalogo/api'
 import { normalizar } from '@/features/turno/parecido'
-import { supabase } from '@/lib/supabase'
-import { qk } from '@/lib/query'
+import { etiquetaModo } from '@/features/turno/modo'
 import { clp, fechaDiaMes } from '@/lib/format'
+import { useComprasProveedor } from './api'
 
-interface Compra { id: string; monto: number; forma_pago: string; creado_en: string; turno: { tipo: string; deleted_at: string | null; jornada: { fecha: string } | null } | null }
+/** Compras que se muestran de una vez; «Ver más» agrega otras tantas. */
+const POR_PAGINA = 30
 
 export default function ProveedorDetalle() {
   const { id } = useParams({ from: '/app/proveedores/$id' })
@@ -27,21 +27,10 @@ export default function ProveedorDetalle() {
   const [confirmar, setConfirmar] = useState<'eliminar' | 'fusionar' | null>(null)
   const [ocupado, setOcupado] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
+  const [mostradas, setMostradas] = useState(POR_PAGINA)
 
-  const compras = useQuery({
-    queryKey: qk.proveedorHistorial(id),
-    queryFn: async (): Promise<Compra[]> => {
-      const { data, error } = await supabase
-        .from('proveedores_turno')
-        .select('id, monto, forma_pago, creado_en, turno:turnos!proveedores_turno_turno_id_fkey(tipo, deleted_at, jornada:jornadas(fecha))')
-        .eq('proveedor_id', id)
-        .order('creado_en', { ascending: false })
-        .limit(100)
-      if (error) throw error
-      return (data as unknown as Compra[]).filter((c) => !c.turno?.deleted_at)
-    },
-  })
-  const totalCompras = useMemo(() => (compras.data ?? []).reduce((s, c) => s + Number(c.monto), 0), [compras.data])
+  const compras = useComprasProveedor(id)
+  const lista = compras.data?.compras ?? []
   const candidatos = useMemo(() => {
     const n = normalizar(fusion?.q ?? '')
     return (catalogo.data ?? []).filter((p) => p.id !== id && (!n || normalizar(p.nombre).includes(n))).slice(0, 8)
@@ -71,7 +60,9 @@ export default function ProveedorDetalle() {
           e.target.value = ''
         }} />
         <div className="flex-1 min-w-0">
-          <p className="text-xs text-muted tabular-nums">{compras.data?.length ?? 0} compras · {clp(totalCompras)} en total</p>
+          <p className="text-xs text-muted tabular-nums">
+            {compras.data ? `${lista.length} ${lista.length === 1 ? 'compra' : 'compras'} · ${clp(compras.data.total)} en total` : compras.isError ? 'No se pudieron cargar las compras' : 'Cargando compras…'}
+          </p>
           <div className="flex flex-wrap gap-1.5 mt-2">
             <button type="button" className="hit btn-secondary text-sm min-h-[38px] px-3" onClick={() => setRenombrar(prov.nombre)}><Icon name="pencil" className="w-4 h-4" />Renombrar</button>
             <button type="button" className="hit btn-secondary text-sm min-h-[38px] px-3" onClick={() => setFusion({ q: '', destino: null })}><Icon name="merge" className="w-4 h-4" />Fusionar con…</button>
@@ -84,16 +75,28 @@ export default function ProveedorDetalle() {
       </div>
 
       <h2 className="eyebrow mb-[9px]">Compras</h2>
-      {compras.isPending ? <Spinner className="py-6" /> : (compras.data ?? []).length === 0 ? <p className="text-sm text-muted">Sin compras registradas.</p> : (
-        <div className="card p-0 divide-y divide-hairline overflow-hidden">
-          {(compras.data ?? []).map((c) => (
-            <Link key={c.id} to="/dia" search={{ fecha: c.turno?.jornada?.fecha ?? '' }} className="flex items-center gap-3 px-4 py-2.5 min-h-[56px] hover:bg-soft/60">
-              <span className={`w-[7px] h-[7px] rounded-full shrink-0 ${c.forma_pago === 'efectivo' ? 'bg-pos' : 'bg-brand'}`} aria-hidden="true" />
-              <span className="flex-1 text-sm text-ink"><span className="capitalize">{fechaDiaMes(c.turno?.jornada?.fecha)}</span> <span className="text-muted text-xs">· {c.turno?.tipo} · {c.forma_pago === 'efectivo' ? 'efectivo' : 'transferencia'}</span></span>
-              <span className="cifra text-sm text-neg">{Number(c.monto) ? '−' : ''}{clp(c.monto)}</span>
-            </Link>
-          ))}
+      {compras.isPending ? <Spinner className="py-6" /> : compras.isError ? (
+        <div role="alert" className="card text-center py-6">
+          <p className="text-sm text-ink2">No pudimos cargar las compras.</p>
+          <button type="button" className="btn-secondary mt-3" onClick={() => void compras.refetch()}>Reintentar</button>
         </div>
+      ) : lista.length === 0 ? <p className="text-sm text-muted">Sin compras registradas.</p> : (
+        <>
+          <div className="card p-0 divide-y divide-hairline overflow-hidden">
+            {lista.slice(0, mostradas).map((c) => (
+              <Link key={c.id} to="/dia" search={{ fecha: c.fecha }} className="flex items-center gap-3 px-4 py-2.5 min-h-[56px] hover:bg-soft/60">
+                <span className={`w-[7px] h-[7px] rounded-full shrink-0 ${c.formaPago === 'efectivo' ? 'bg-pos' : 'bg-brand'}`} aria-hidden="true" />
+                <span className="flex-1 text-sm text-ink"><span className="capitalize">{fechaDiaMes(c.fecha)}</span> <span className="text-muted text-xs">· {etiquetaModo(c.modo).toLowerCase()} · {c.formaPago}</span></span>
+                <span className="cifra text-sm text-neg">{c.monto ? '−' : ''}{clp(c.monto)}</span>
+              </Link>
+            ))}
+          </div>
+          {lista.length > mostradas && (
+            <button type="button" className="btn-secondary w-full mt-3" onClick={() => setMostradas((n) => n + POR_PAGINA)}>
+              Ver más compras ({lista.length - mostradas} más)
+            </button>
+          )}
+        </>
       )}
 
       {renombrar !== null && (

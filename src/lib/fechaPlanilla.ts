@@ -1,13 +1,10 @@
 import { z } from 'zod'
+import { hoy } from './format'
 
 /** El local opera en Chile, aunque el dispositivo use otra zona horaria. */
-export function hoyChile(ahora = new Date()): string {
-  const partes = new Intl.DateTimeFormat('en', {
-    timeZone: 'America/Santiago', year: 'numeric', month: '2-digit', day: '2-digit',
-  }).formatToParts(ahora)
-  const valor = (tipo: Intl.DateTimeFormatPartTypes) => partes.find((p) => p.type === tipo)!.value
-  return `${valor('year')}-${valor('month')}-${valor('day')}`
-}
+export const hoyChile = hoy
 
-/** Rechaza también fechas imposibles (por ejemplo, 31 de febrero). */
-export const busquedaPlanilla = z.object({ fecha: z.iso.date().default(() => hoyChile()) })
+/** Una fecha "YYYY-MM-DD" que existe: rechaza el 31 de febrero o el mes 13. */
+export const fechaValida = z.iso.date()
+
+export const busquedaPlanilla = z.object({ fecha: fechaValida.default(() => hoyChile()) })
