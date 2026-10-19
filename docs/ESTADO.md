@@ -4,7 +4,33 @@ Documento para quien continúe el trabajo, sea persona o modelo. Resume qué
 es el sistema, qué se hizo, en qué punto está cada fase y qué falta, con las
 reglas que no se deben romper. Última actualización: **2026-10-18**.
 
-### Conteo de caja (18 de octubre de 2026, rama `fix/conteo-caja-autoguardado`)
+### Guardado del cierre (18 de octubre de 2026, rama `fix/guardado-serializado`)
+
+Cierra la Prioridad 0 de `docs/revision-general-app.md`:
+- **Una solicitud a la vez** (`features/turno/colaGuardado.ts`, con
+  pruebas): autoguardado, envío al ocultar y Cerrar pasan por una cola y
+  cada uno lee el estado al empezar, ya con la versión del anterior. Antes,
+  Cerrar con un autoguardado en curso recibía «Este turno cambió en otro
+  dispositivo» con los datos propios (e2e «red lenta» lo reproduce con el
+  código anterior).
+- **Conflicto sin descartes**: cerrar la hoja (X, Escape, fondo, arrastre)
+  ya no adopta el servidor; queda un aviso con «Elegir». Mientras siga
+  pendiente no se manda nada y el estado dice «Sin guardar». Si apareció al
+  cerrar, el botón es «Reemplazar con lo mío y cerrar».
+- **Si falla la consulta del día**, Cerrar turno muestra el error con
+  «Reintentar» en vez de un formulario vacío que sobrescribía el borrador.
+  El formulario también espera la respuesta del servidor al abrir
+  (`refetchOnMount: 'always'`), en vez de una copia vieja de IndexedDB.
+- **Errores y conflictos de guardado en `logs_error`** con contexto
+  `v2:guardar` (fecha, modo, si era cierre y el código de Postgres).
+  Revisarlo en producción tras unos días.
+- Pendiente de la Prioridad 1: separar «Guardado en este dispositivo» de
+  «Borrador sincronizado», recuperar pendientes al abrir sin depender del
+  reloj, y enviar lo pendiente al cambiar de fecha o de modo.
+- La limpieza al final de `e2e/cierre.spec.ts` no borra las jornadas de
+  2028 en staging (quedan en el Historial); por revisar.
+
+### Conteo de caja (18 de octubre de 2026, PR #16, en producción)
 
 - En producción, **ninguno de los 39 cierres desde el 17 de septiembre de
   2026 tiene conteo**: el refetch que sigue a un autoguardado recargaba el
@@ -12,8 +38,6 @@ reglas que no se deben romper. Última actualización: **2026-10-18**.
   además cambiaba la `key` de los proveedores nuevos (riesgo de pago
   duplicado). Es la Prioridad 0 de `docs/revision-general-app.md`; esta
   rama arregla esos dos puntos (`esEscrituraPropia`, `idsLineasNuevas`).
-  Siguen pendientes los conflictos propios, el formulario vacío si falla la
-  consulta del día y el registro de errores de guardado.
 - `e2e/cierre.spec.ts` cuenta $135.000 (distinto de la venta), espera el
   autoguardado y su refetch, y comprueba el conteo en la planilla. Con el
   código anterior falla en ese punto.
@@ -21,11 +45,12 @@ reglas que no se deben romper. Última actualización: **2026-10-18**.
   planilla tomaba de IndexedDB una lista de turnos anterior al guardado y
   mostraba «Sin registro este día» bajo un resumen «Completo».
   `useTurnosDia` gana `refrescarAlAbrir`, como el resumen en el PR #11.
-  `useTurnoForm` usa su propia consulta y todavía no lo tiene.
-- Respaldos: desde el 9 de octubre la ejecución sale en rojo casi a diario
-  porque `verificar_integridad()` reporta un aviso (hoy, el 13 de octubre
-  sin registro ni marca). La copia sí se sube. Pendiente: resolver ese día
-  y que un `aviso` no haga fallar el workflow.
+- Respaldos: desde el 9 de octubre la ejecución salía en rojo casi a diario
+  por un aviso de `verificar_integridad()` (hoy, el 13 de octubre sin
+  registro ni marca), aunque la copia se subía. Desde el PR #18 solo un
+  `error` falla el job. Falta resolver el 13 de octubre con la dueña.
+- PR #17: con `--mode staging` (dev y previews) se ve una píldora «Staging»
+  y el título empieza con `[Staging]`; producción no la incluye.
 - El 1 de enero de 2026 sigue sin marcar como «No abrió».
 
 ### Verificación del 2026-10-01
