@@ -86,13 +86,17 @@ jobs:
           # Sin la columna `ejemplo` (fechas y turnos del negocio): el log
           # y el resumen de un repo público son públicos.
           hallazgos=$(psql -c "select severidad, chequeo, cantidad from public.verificar_integridad()")
-          if [ -n "$hallazgos" ]; then
-            { echo '### Hallazgos de integridad'; echo '```'; echo "$hallazgos"; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
-            echo "$hallazgos"
-            echo "::error::verificar_integridad() reportó hallazgos (el respaldo sí se subió)"
+          if [ -z "$hallazgos" ]; then echo "sin hallazgos"; exit 0; fi
+          { echo '### Hallazgos de integridad'; echo '```'; echo "$hallazgos"; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+          echo "$hallazgos"
+          # Solo un `error` (datos inconsistentes) pone el job en rojo, igual
+          # que en el simulacro. Un `aviso` (un día sin registrar, un borrador
+          # viejo) es trabajo pendiente de la dueña: queda como advertencia.
+          if grep -q '^error' <<< "$hallazgos"; then
+            echo "::error::verificar_integridad() reportó errores (el respaldo sí se subió)"
             exit 1
           fi
-          echo "sin hallazgos"
+          echo "::warning::verificar_integridad() reportó avisos (el respaldo sí se subió)"
 
   simulacro:
     if: github.event.schedule == '30 7 * * 0' || inputs.tarea == 'simulacro'
