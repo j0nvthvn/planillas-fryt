@@ -6,7 +6,7 @@ import { createClient } from '@supabase/supabase-js'
  * cuenta la caja por billetes, revisa y cierra; después la planilla muestra
  * lo mismo. Contra staging, con una fecha de 2028 que se borra al final.
  */
-// URL y anon key salen de .env.staging.local (las carga playwright.config).
+// URL y anon key salen de .env.staging (las carga playwright.config).
 const URL = process.env.VITE_SUPABASE_URL ?? ''
 const ANON = process.env.VITE_SUPABASE_ANON_KEY ?? ''
 const EMAIL = process.env.SMOKE_EMAIL ?? 'duena@test.local'

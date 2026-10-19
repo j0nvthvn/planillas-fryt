@@ -27,8 +27,11 @@ Cierra la Prioridad 0 de `docs/revision-general-app.md`:
 - Pendiente de la Prioridad 1: separar «Guardado en este dispositivo» de
   «Borrador sincronizado», recuperar pendientes al abrir sin depender del
   reloj, y enviar lo pendiente al cambiar de fecha o de modo.
-- La limpieza al final de `e2e/cierre.spec.ts` no borra las jornadas de
-  2028 en staging (quedan en el Historial); por revisar.
+- La limpieza de los e2e se saltaba en silencio: `playwright.config.ts`
+  cargaba solo `.env.staging.local` (la contraseña), sin la URL ni la anon
+  key de `.env.staging`. Quedaban jornadas de 2019 y 2028 en staging, y una
+  fecha al azar podía caer en un día ya cerrado. Ahora carga los dos; se
+  borraron las 24 jornadas de prueba que había.
 
 ### Conteo de caja (18 de octubre de 2026, PR #16, en producción)
 
