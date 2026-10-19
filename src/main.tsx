@@ -8,6 +8,7 @@ import { router } from './router'
 import { queryClient, persister, PERSIST_BUSTER } from './lib/query'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { ToastProvider } from './components/Toast'
+import { EtiquetaEntorno } from './components/EtiquetaEntorno'
 import { aplicarTemaGuardado } from './lib/theme'
 
 aplicarTemaGuardado()
@@ -22,6 +23,7 @@ createRoot(document.getElementById('root')!).render(
         <ToastProvider>
           <RouterProvider router={router} />
         </ToastProvider>
+        <EtiquetaEntorno />
       </PersistQueryClientProvider>
     </ErrorBoundary>
   </StrictMode>,

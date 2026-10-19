@@ -6,6 +6,7 @@ import { useOnline } from '@/hooks/useOnline'
 import { useUsuario } from '@/hooks/useUsuario'
 import { useColorBarra } from '@/hooks/useColorBarra'
 import { iniciales } from '@/lib/format'
+import { ES_STAGING } from '@/lib/entorno'
 
 interface Item { to: string; label: string; icon: IconName; dueno?: boolean }
 
@@ -82,7 +83,7 @@ export default function Layout({ children }: { children: ReactNode }) {
   const mainRef = useRef<HTMLElement>(null)
   const rutaAnterior = useRef(pathname)
   useEffect(() => {
-    document.title = `${tituloDe(pathname)} · FrytControl`
+    document.title = `${ES_STAGING ? '[Staging] ' : ''}${tituloDe(pathname)} · FrytControl`
     if (rutaAnterior.current === pathname) return
     rutaAnterior.current = pathname
     mainRef.current?.focus({ preventScroll: true })
