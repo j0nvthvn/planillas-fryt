@@ -58,7 +58,8 @@ export function reducer(s: FormState, a: Accion): FormState {
     // del dispositivo: eso se sube al primer cambio o al cerrar. Quien
     // necesita marcar cambios pendientes sin pasar por acá (el camino de
     // "sobrescribir" tras un conflicto) lo hace sobre la copia en el ref.
-    case 'cargar': return { ...inicial, ...a.state, cargado: true, sucio: false }
+    // Lo recuperado del dispositivo puede llegar con cambios sin subir.
+    case 'cargar': return { ...inicial, ...a.state, cargado: true, sucio: a.state.sucio ?? false }
     case 'venta': return { ...s, ventas: { ...s.ventas, [a.key]: a.monto }, sucio: true }
     case 'proveedor': {
       const existe = s.proveedores.some((p) => p.key === a.linea.key)
@@ -183,22 +184,57 @@ interface Origenes {
   fondoPorDefecto: number
 }
 
+export interface Carga {
+  state: Partial<FormState>
+  /** Gana el servidor y había borrador: borrarlo para no revivirlo después. */
+  descartarLocal: boolean
+  /** Lo local tiene cambios sin subir hechos sobre otra versión del servidor. */
+  conflicto: VTurno | null
+}
+
 /**
- * Con qué se abre el formulario. El borrador del dispositivo gana solo si
- * el turno del servidor sigue siendo borrador y, además, se editó sobre esa
- * misma versión (nadie guardó después; incluye el conteo, que el servidor
- * no tiene) o es más nuevo que ella:
- * sobre un turno ya cerrado manda siempre el servidor, porque lo local
- * puede ser de antes del cierre. Si gana el servidor y había borrador, hay
- * que borrarlo (`descartarLocal`) para no revivirlo en la próxima carga.
+ * Con qué se abre el formulario, sin depender del reloj del dispositivo:
+ * cuentan los cambios sin subir del borrador local (`pendiente`) y la
+ * versión del servidor sobre la que se editó (`baseUpdatedAt`).
+ *  - Sobre la versión vigente: gana lo local (trae el conteo, que el servidor
+ *    no tiene). Con cambios sin subir abre `sucio`, para que se suban o, en
+ *    un turno cerrado, para guardar la corrección.
+ *  - Sobre otra versión y con cambios sin subir: no se descarta en silencio;
+ *    se abre lo local con el conflicto, y se elige.
+ *  - Sobre otra versión y sin cambios sin subir: gana el servidor.
+ *  - Sin turno en el servidor: se recupera si nunca llegó al servidor o
+ *    tiene cambios sin subir; si llegó y ya no está, se borró a propósito.
  */
-export function cargaInicial({ servidor, local, fondoPorDefecto }: Origenes): { state: Partial<FormState>; descartarLocal: boolean } {
+export function cargaInicial({ servidor, local, fondoPorDefecto }: Origenes): Carga {
+  const sinConflicto = { descartarLocal: false, conflicto: null }
+  if (!local) return { state: servidor ? desdeServidor(servidor) : { fondoInicial: fondoPorDefecto }, ...sinConflicto }
+  if (local.pendiente === undefined) return cargaAnterior({ servidor, local, fondoPorDefecto })
+  if (!servidor) {
+    if (local.pendiente || !local.baseUpdatedAt) return { state: { ...desdeLocal(local, undefined), baseUpdatedAt: null, sucio: local.pendiente }, ...sinConflicto }
+    return { state: { fondoInicial: fondoPorDefecto }, descartarLocal: true, conflicto: null }
+  }
+  if (mismaVersion(local.baseUpdatedAt, servidor.turno.updated_at)) {
+    return { state: { ...desdeLocal(local, servidor), sucio: local.pendiente }, ...sinConflicto }
+  }
+  if (local.pendiente) {
+    // Con la versión del borrador: si se guardara sin elegir, la RPC
+    // respondería conflicto en vez de pisar lo del otro dispositivo.
+    return { state: { ...desdeLocal(local, servidor), baseUpdatedAt: local.baseUpdatedAt, sucio: true }, descartarLocal: false, conflicto: servidor.turno }
+  }
+  return { state: desdeServidor(servidor), descartarLocal: true, conflicto: null }
+}
+
+/**
+ * Borradores de antes de `pendiente`: gana lo local, limpio, si el turno
+ * sigue siendo borrador y se editó sobre esa versión o es más nuevo que ella.
+ */
+function cargaAnterior({ servidor, local, fondoPorDefecto }: Origenes & { local: BorradorLocal }): Carga {
   const servidorMs = servidor ? new Date(servidor.turno.updated_at ?? 0).getTime() : 0
-  const usarLocal = !!local && (!servidor || servidor.turno.is_draft)
+  const usarLocal = (!servidor || servidor.turno.is_draft)
     && (local.guardadoEn > servidorMs || mismaVersion(local.baseUpdatedAt, servidor?.turno.updated_at))
-  if (usarLocal && local) return { state: desdeLocal(local, servidor), descartarLocal: false }
-  if (servidor) return { state: desdeServidor(servidor), descartarLocal: !!local }
-  return { state: { fondoInicial: fondoPorDefecto }, descartarLocal: false }
+  if (usarLocal) return { state: desdeLocal(local, servidor), descartarLocal: false, conflicto: null }
+  if (servidor) return { state: desdeServidor(servidor), descartarLocal: true, conflicto: null }
+  return { state: { fondoInicial: fondoPorDefecto }, descartarLocal: false, conflicto: null }
 }
 
 /**
@@ -217,4 +253,25 @@ export function debeAutoguardar(s: FormState, { online, guardando }: { online: b
  */
 export function debeEnviarAlSalir(s: FormState, online: boolean): boolean {
   return s.sucio && !s.cerrado && online && (tieneContenido(s) || s.turnoId != null)
+}
+
+/** En qué está el guardado del formulario. */
+export type EstadoSync = 'conflicto' | 'enviando' | 'error' | 'pendiente' | 'sincronizado' | 'nuevo'
+
+/**
+ * Lo que dice la pantalla del cierre sobre el guardado. Antes, cualquier
+ * cambio decía «Guardando borrador…» (también una corrección, que no se
+ * autoguarda) y un turno cerrado decía «Borrador guardado».
+ */
+export function textoGuardado({ sync, cerrado, localOk }: { sync: EstadoSync; cerrado: boolean; localOk: boolean }): { texto: string; tono: 'pos' | 'warn' | 'neg' } | null {
+  switch (sync) {
+    case 'conflicto': return { texto: 'Sin guardar', tono: 'neg' }
+    case 'enviando': return { texto: 'Guardando…', tono: 'warn' }
+    case 'error': return { texto: 'No se pudo guardar', tono: 'neg' }
+    case 'pendiente':
+      if (cerrado) return { texto: 'Corrección sin guardar', tono: 'warn' }
+      return localOk ? { texto: 'Guardado en este dispositivo', tono: 'warn' } : { texto: 'Sin guardar', tono: 'neg' }
+    case 'sincronizado': return cerrado ? null : { texto: 'Borrador sincronizado', tono: 'pos' }
+    case 'nuevo': return null
+  }
 }

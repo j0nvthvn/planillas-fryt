@@ -15,7 +15,7 @@ import { modoPorDefecto, modosDisponibles, etiquetaCerrar, tituloCierre } from '
 import { useTurnoForm } from './useTurnoForm'
 import { useQuitarMarcaDia } from './useQuitarMarcaDia'
 import { FechaSheet } from './FechaSheet'
-import type { LineaForm } from './estadoTurno'
+import { textoGuardado, type LineaForm } from './estadoTurno'
 import { ProveedorSheet } from './ProveedorSheet'
 import { MontoSheet } from './MontoSheet'
 import { ConteoSheet } from './ConteoSheet'
@@ -70,7 +70,14 @@ export default function CerrarTurno() {
   >(null)
   const [revisar, setRevisar] = useState(false)
 
-  // Altura de la barra fija → los toasts se muestran encima.
+  // La pantalla se muestra (y con ella la barra fija) cuando están el
+  // formulario, los métodos y, con conexión, la marca «No abrió» del día.
+  const mostrando = !!search.modo && form.listo && !metodos.isPending && (!online || resumenDia.isFetchedAfterMount)
+  const soloLectura = state.cerrado && !esDueno
+
+  // Altura de la barra fija → los toasts se muestran encima. Se mide cuando
+  // la barra existe: antes dependía solo de la carga del formulario, y si el
+  // resumen del día llegaba después, la barra nunca se medía.
   const barRef = useRef<HTMLDivElement>(null)
   useLayoutEffect(() => {
     const el = barRef.current
@@ -80,9 +87,8 @@ export default function CerrarTurno() {
     const ro = new ResizeObserver(set)
     ro.observe(el)
     return () => { ro.disconnect(); document.documentElement.style.removeProperty('--sticky-bar-h') }
-  }, [state.cargado])
+  }, [mostrando, soloLectura])
 
-  const soloLectura = state.cerrado && !esDueno
   const turnoManana = form.dia.find((t) => t.turno.tipo === 'mañana')?.turno
   // «¿Contaste la caja?»: Sí abre el conteo; No lo borra.
   const cajaRadio = useRovingRadio([false, true], state.contoCaja, (conto) => {
@@ -136,9 +142,10 @@ export default function CerrarTurno() {
       <button type="button" className="btn-primary" onClick={errorAlCargar}>Reintentar</button>
     </div>
   )
-  if (!search.modo || !state.cargado || metodos.isPending || (online && !resumenDia.isFetchedAfterMount)) return <Spinner />
+  if (!mostrando) return <Spinner />
 
-  const estadoGuardado = form.conflicto ? 'Sin guardar' : state.sucio ? (online ? 'Guardando borrador…' : 'Guardado en este dispositivo') : state.turnoId ? 'Borrador guardado' : ''
+  const guardado = textoGuardado({ sync: form.sync, cerrado: state.cerrado, localOk: form.localOk })
+  const TONO = { pos: 'bg-pos', warn: 'bg-warn', neg: 'bg-neg' } as const
   const listaTrabajadores = trabajadores.data ?? []
   // Hasta cuatro caben como segmented; con más, píldoras con scroll.
   const trabajadoresSegmented = listaTrabajadores.length <= 4
@@ -148,7 +155,7 @@ export default function CerrarTurno() {
       <PageHeader
         title={tituloCierre(modo, state.cerrado)}
         back="/hoy"
-        subtitle={esDueno ? (state.cerrado ? fechaLegible(fecha) : estadoGuardado || fechaLegible(fecha)) : fechaLegible(fecha)}
+        subtitle={esDueno ? (state.cerrado ? fechaLegible(fecha) : guardado?.texto ?? fechaLegible(fecha)) : fechaLegible(fecha)}
         action={esDueno && (
           <button type="button" onClick={() => setSheet({ t: 'fecha' })} aria-label={`Cambiar fecha, ${fechaDiaMes(fecha)}`}
             className="btn-secondary btn-bar gap-[7px]">
@@ -185,6 +192,11 @@ export default function CerrarTurno() {
             Este turno cambió en otro dispositivo. Lo tuyo sigue en este dispositivo, pero no se guarda hasta que elijas.{' '}
             <button type="button" className="underline font-semibold" onClick={() => setConflictoOculto(null)}>Elegir</button>
           </span>
+        </div>
+      )}
+      {!form.localOk && !soloLectura && (
+        <div role="alert" className="mb-4 aviso bg-neg-tint text-neg">
+          Este dispositivo no está guardando el borrador (¿navegación privada o sin espacio?). No cierres la app hasta cerrar el turno.
         </div>
       )}
       {form.errorAutosave && online && (
@@ -338,11 +350,11 @@ export default function CerrarTurno() {
             <div className="flex-1 min-w-0">
               <p className="eyebrow leading-none mb-[5px]">Neto {modo === 'completo' ? 'del día' : 'del turno'}</p>
               <p className={`amount text-amount-sm leading-none truncate ${totales.neto >= 0 ? 'text-ink' : 'text-neg'}`}>{clp(totales.neto)}</p>
-              {/* Región viva estable: el lector se entera de «Borrador guardado» sin mirar. */}
+              {/* Región viva estable: el lector se entera de «Borrador sincronizado» sin mirar. */}
               <div role="status">
-                {estadoGuardado && (
+                {guardado && (
                   <p className="flex items-center gap-[5px] text-xs text-muted mt-[5px]">
-                    <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${state.sucio ? 'bg-warn' : 'bg-pos'}`} aria-hidden="true" />{estadoGuardado}
+                    <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${TONO[guardado.tono]}`} aria-hidden="true" />{guardado.texto}
                   </p>
                 )}
               </div>

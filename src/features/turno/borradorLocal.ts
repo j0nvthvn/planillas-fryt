@@ -25,6 +25,9 @@ export interface BorradorLocal {
   guardadoEn: number
   /** updated_at del turno en el servidor sobre el que se editó (para el conflicto). */
   baseUpdatedAt: string | null
+  /** Tiene cambios que el servidor todavía no tiene. Se reescribe tras cada
+   *  guardado. Los borradores anteriores a esta versión no lo traen. */
+  pendiente?: boolean
 }
 
 const PREFIX = 'borrador:'
@@ -34,8 +37,9 @@ export async function leerBorradorLocal(fecha: string, modo: Modo): Promise<Borr
   try { return (await get<BorradorLocal>(clave(fecha, modo))) ?? null } catch { return null }
 }
 
-export async function guardarBorradorLocal(b: BorradorLocal): Promise<void> {
-  try { await set(clave(b.fecha, b.modo), b) } catch { /* sin storage */ }
+/** `false` si IndexedDB falló (modo privado, sin espacio): la pantalla lo avisa. */
+export async function guardarBorradorLocal(b: BorradorLocal): Promise<boolean> {
+  try { await set(clave(b.fecha, b.modo), b); return true } catch { return false }
 }
 
 export async function borrarBorradorLocal(fecha: string, modo: Modo): Promise<void> {
