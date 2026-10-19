@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
 import { qk, queryClient, invalidarDia } from '@/lib/query'
+import { mensajeGuardado } from './errores'
 import type { Tables, Json } from '@/lib/database.types'
 import type { FormaPago, MetodoKey, ProveedorLinea } from '@/lib/totales'
 import type { Estado } from './estado'
@@ -122,9 +123,11 @@ export type GuardarTurnoResultado =
   | { conflicto: false; turno: VTurno }
   | { conflicto: true; actual: VTurno }
 
+/** `message` ya está en español para mostrarlo; `original` es el de la base, para `logs_error`. */
 export class ErrorGuardado extends Error {
   code: string
-  constructor(message: string, code: string) { super(message); this.code = code }
+  original: string
+  constructor(message: string, code: string, original = message) { super(message); this.code = code; this.original = original }
 }
 
 /**
@@ -150,7 +153,7 @@ export async function guardarTurno(input: GuardarTurnoInput): Promise<GuardarTur
   if (input.base_updated_at) p.base_updated_at = input.base_updated_at
 
   const { data, error } = await supabase.rpc('guardar_turno', { p })
-  if (error) throw new ErrorGuardado(error.message, error.code ?? '')
+  if (error) throw new ErrorGuardado(mensajeGuardado(error), error.code ?? '', error.message)
   const r = data as { conflicto?: boolean; actual?: VTurno } | VTurno
   if (r && typeof r === 'object' && 'conflicto' in r && r.conflicto) {
     return { conflicto: true, actual: (r as { actual: VTurno }).actual }

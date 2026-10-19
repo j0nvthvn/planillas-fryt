@@ -192,7 +192,7 @@ export function useTurnoForm({ fecha, modo, fondoPorDefecto, online }: Opciones)
     } catch (e) {
       const mensaje = e instanceof ErrorGuardado ? e.message : 'No se pudo guardar. Tus datos quedaron guardados en este dispositivo.'
       setErrorAutosave(mensaje)
-      void logError(e instanceof Error ? e.message : String(e), {
+      void logError(e instanceof ErrorGuardado ? e.original : e instanceof Error ? e.message : String(e), {
         contexto: 'guardar',
         detalle: { fecha, modo, cerrar, code: e instanceof ErrorGuardado ? e.code : null },
       })
