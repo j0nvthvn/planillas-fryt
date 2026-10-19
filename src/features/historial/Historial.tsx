@@ -1,20 +1,16 @@
-import { useInfiniteQuery } from '@tanstack/react-query'
 import { Link, useNavigate, useSearch } from '@tanstack/react-router'
 import PageHeader from '@/components/PageHeader'
-import Spinner from '@/components/Spinner'
+import { EsqueletoContenido } from '@/components/Esqueleto'
 import { AvisoDesactualizado, ErrorCarga } from '@/components/ErrorCarga'
 import { vistaDe } from '@/lib/consulta'
 import Icon from '@/components/Icon'
 import { EstadoChip } from '@/components/Dato'
 import { PILDORA, PILDORA_ON, PILDORA_OFF } from '@/components/pildora'
-import { supabase } from '@/lib/supabase'
-import { qk } from '@/lib/query'
-import type { VResumenDia } from '@/features/turno/api'
 import { clp, fechaDiaMes, fechaSinAnio, mesAnio, hoy, sumarDias } from '@/lib/format'
 import { conHuecos, porMes, resumenMes, type ItemHistorial } from './huecos'
+import { useHistorial, type Filtro } from './api'
+import type { VResumenDia } from '@/features/turno/api'
 
-const PAGINA = 30
-type Filtro = 'todos' | 'borradores' | 'corregidos' | 'descuadres' | 'parciales' | 'sin_abrir'
 const FILTROS: { v: Filtro; label: string }[] = [
   { v: 'todos', label: 'Todos' }, { v: 'borradores', label: 'Borradores' }, { v: 'parciales', label: 'Falta tarde' },
   { v: 'corregidos', label: 'Corregidos' }, { v: 'descuadres', label: 'Descuadres' }, { v: 'sin_abrir', label: 'No abrió' },
@@ -23,22 +19,7 @@ const FILTROS: { v: Filtro; label: string }[] = [
 export default function Historial() {
   const { filtro = 'todos' } = useSearch({ from: '/app/historial' })
   const navigate = useNavigate()
-  const q = useInfiniteQuery({
-    queryKey: qk.historial(filtro),
-    initialPageParam: 0,
-    getNextPageParam: (last: VResumenDia[], all) => (last.length < PAGINA ? undefined : all.length * PAGINA),
-    queryFn: async ({ pageParam }): Promise<VResumenDia[]> => {
-      let s = supabase.from('v_resumen_dia').select('*').order('fecha', { ascending: false }).range(pageParam, pageParam + PAGINA - 1)
-      if (filtro === 'borradores') s = s.eq('tiene_borrador', true)
-      if (filtro === 'corregidos') s = s.eq('corregido', true)
-      if (filtro === 'descuadres') s = s.eq('con_descuadre', true)
-      if (filtro === 'parciales') s = s.eq('estado', 'parcial')
-      if (filtro === 'sin_abrir') s = s.eq('cerrado', true)
-      const { data, error } = await s
-      if (error) throw error
-      return data as VResumenDia[]
-    },
-  })
+  const q = useHistorial(filtro)
   const filas = q.data?.pages.flat() ?? []
   // Con un filtro puesto se listan excepciones, no un calendario: ahí los
   // huecos no significan nada. Hoy queda fuera porque está en curso.
@@ -63,7 +44,7 @@ export default function Historial() {
       {desactualizado && <AvisoDesactualizado onReintentar={() => void q.refetch()} />}
       {/* Un error no es «nada que mostrar»: antes se veía igual que un filtro sin resultados. */}
       {vista === 'error' ? <ErrorCarga que="el historial" onReintentar={() => void q.refetch()} />
-        : vista === 'cargando' ? <Spinner /> : filas.length === 0 ? (
+        : vista === 'cargando' ? <EsqueletoContenido sinTitulo /> : filas.length === 0 ? (
         <p className="text-center text-muted py-10">Nada que mostrar con este filtro.</p>
       ) : (
         <div className="space-y-1">

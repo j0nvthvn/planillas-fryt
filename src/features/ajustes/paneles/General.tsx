@@ -1,7 +1,7 @@
 import { useId, useState } from 'react'
 import Spinner from '@/components/Spinner'
 import { MontoInput, HoraInput } from '@/components/MontoInput'
-import { useToast } from '@/components/Toast'
+import { useToast } from '@/hooks/useToast'
 import { mensajeDeError } from '@/lib/errorLog'
 import { useConfig, useGuardarConfig, type Config } from '@/features/catalogo/api'
 import { CAMPO, Fila } from '../Fila'

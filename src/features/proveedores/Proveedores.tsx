@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { AvisoAmbar } from '@/components/Aviso'
 import { Link, useNavigate, useSearch } from '@tanstack/react-router'
 import PageHeader from '@/components/PageHeader'
-import Spinner from '@/components/Spinner'
+import { EsqueletoContenido } from '@/components/Esqueleto'
 import Icon from '@/components/Icon'
 import { ProveedorAvatar } from '@/components/ProveedorAvatar'
 import { BottomSheet } from '@/components/BottomSheet'
@@ -162,7 +162,7 @@ export default function Proveedores() {
         </AvisoAmbar>
       )}
 
-      {catalogo.isPending || compras.isPending ? <Spinner /> : compras.isError ? (
+      {catalogo.isPending || compras.isPending ? <EsqueletoContenido sinTitulo /> : compras.isError ? (
         <p className="text-center text-muted py-8 text-sm">No se pudieron cargar las compras del período. <button type="button" className="hit underline" onClick={() => void compras.refetch()}>Reintentar</button></p>
       ) : (
         <div className={`card p-0 divide-y divide-hairline overflow-hidden transition-opacity ${compras.isPlaceholderData ? 'opacity-60' : ''}`}>

@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { cargarTurnosDia, guardarTurno, ErrorGuardado, type Modo, type VTurno } from './api'
-import { leerBorradorLocal, guardarBorradorLocal, borrarBorradorLocal } from './borradorLocal'
+import { leerBorradorLocal, borrarBorradorLocal } from './borradorLocal'
+import { usePersistenciaLocal } from './usePersistenciaLocal'
 import { marcarInicio, registrarCierre } from './metricas'
 import {
   cargaInicial, debeAutoguardar, debeEnviarAlSalir, esEscrituraPropia, idsLineasNuevas, inicial, reducer, tieneContenido,
-  type Accion, type EstadoSync, type FormState,
+  type Accion, type EstadoSync,
 } from './estadoTurno'
 import { crearColaGuardado } from './colaGuardado'
 import { qk } from '@/lib/query'
@@ -41,8 +42,7 @@ export function useTurnoForm({ fecha, modo, fondoPorDefecto, online }: Opciones)
   const [guardando, setGuardando] = useState(false)
   const [errorAutosave, setErrorAutosave] = useState<string | null>(null)
   const [enviando, setEnviando] = useState(false)
-  /** IndexedDB guardó el último cambio (falla en modo privado o sin espacio). */
-  const [localOk, setLocalOk] = useState(true)
+  const { persistir: persistirLocal, localOk } = usePersistenciaLocal(fecha, modo)
   const [cola] = useState(crearColaGuardado)
   /**
    * El formulario cargado: su (fecha, modo) y el `sincronizar` atado a ellos.
@@ -68,16 +68,6 @@ export function useTurnoForm({ fecha, modo, fondoPorDefecto, online }: Opciones)
     // con conexión, el formulario espera la respuesta del servidor.
     refetchOnMount: 'always',
   })
-
-  // ---- persistencia local ----
-  const persistirLocal = useCallback((s: FormState) => {
-    void guardarBorradorLocal({
-      fecha, modo, trabajadorId: s.trabajadorId, fondoInicial: s.fondoInicial, ventas: s.ventas,
-      proveedores: s.proveedores.map(({ key: _k, ...p }) => p), efectivoContado: s.efectivoContado, contoCaja: s.contoCaja,
-      desgloseConteo: s.desgloseConteo,
-      guardadoEn: Date.now(), baseUpdatedAt: s.baseUpdatedAt, pendiente: s.sucio,
-    }).then(setLocalOk)
-  }, [fecha, modo])
 
   // ---- carga inicial (servidor + local) ----
   const cargadoPara = useRef<string>('')

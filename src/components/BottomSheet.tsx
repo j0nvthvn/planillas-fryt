@@ -1,5 +1,6 @@
 import { useEffect, useId, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import Icon from './Icon'
+import { useIsDesktop } from '@/hooks/useIsDesktop'
 
 interface Props {
   title?: string
@@ -27,7 +28,7 @@ export function BottomSheet({ title, children, onClose, extra, footer, role, des
   const ref = useRef<HTMLDialogElement>(null)
   const startY = useRef<number | null>(null)
   const [dragY, setDragY] = useState(0)
-  const [isDesktop, setIsDesktop] = useState(() => window.matchMedia('(min-width: 768px)').matches)
+  const isDesktop = useIsDesktop()
 
   // Antes del primer pintado: si no, la hoja se vería un frame fuera del
   // top layer. Al desmontar, `close()` devuelve el foco a quien abrió.
@@ -35,13 +36,6 @@ export function BottomSheet({ title, children, onClose, extra, footer, role, des
     const d = ref.current
     if (d && !d.open) d.showModal()
     return () => { if (d?.open) d.close() }
-  }, [])
-
-  useEffect(() => {
-    const mq = window.matchMedia('(min-width: 768px)')
-    const h = (e: MediaQueryListEvent) => setIsDesktop(e.matches)
-    mq.addEventListener('change', h)
-    return () => mq.removeEventListener('change', h)
   }, [])
 
   useEffect(() => {

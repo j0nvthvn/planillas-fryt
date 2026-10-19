@@ -2,6 +2,7 @@ import { useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from '@tanstack/react-router'
 import PageHeader from '@/components/PageHeader'
 import Spinner from '@/components/Spinner'
+import { EsqueletoContenido } from '@/components/Esqueleto'
 import Icon from '@/components/Icon'
 import { ProveedorAvatar } from '@/components/ProveedorAvatar'
 import { BottomSheet } from '@/components/BottomSheet'
@@ -43,7 +44,7 @@ export default function ProveedorDetalle() {
     setConfirmar(null)
   }
 
-  if (catalogo.isPending) return <Spinner />
+  if (catalogo.isPending) return <EsqueletoContenido />
   if (!prov) return <div className="text-center py-10 text-muted">Proveedor no encontrado. <Link to="/proveedores" className="underline">Volver</Link></div>
 
   return (

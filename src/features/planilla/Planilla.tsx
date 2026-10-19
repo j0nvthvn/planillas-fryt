@@ -2,10 +2,10 @@ import { useState } from 'react'
 import { Link, useNavigate, useSearch } from '@tanstack/react-router'
 import PageHeader from '@/components/PageHeader'
 import Icon from '@/components/Icon'
-import Spinner from '@/components/Spinner'
+import { EsqueletoContenido } from '@/components/Esqueleto'
 import { ConfirmDialog } from '@/components/ConfirmDialog'
 import { CorreccionModal } from '@/components/CorreccionModal'
-import { useToast } from '@/components/Toast'
+import { useToast } from '@/hooks/useToast'
 import { useUsuario } from '@/hooks/useUsuario'
 import { useMetodos } from '@/features/catalogo/api'
 import { useResumenDia, useTurnosDia, useCierres, guardarTurno, eliminarTurno, etiquetaModo, type TurnoConLineas } from '@/features/turno/api'
@@ -80,7 +80,7 @@ export default function Planilla() {
         }
       />
 
-      {turnos.isPending ? <Spinner /> : (
+      {turnos.isPending ? <EsqueletoContenido sinTitulo /> : (
         <>
           <section aria-label="Neto del día" className="card mb-3">
             <div className="flex items-center justify-between gap-2.5"><p className="eyebrow">Neto del día</p><EstadoChip estado={r?.estado ?? 'sin_registro'} /></div>

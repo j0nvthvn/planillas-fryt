@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { BottomSheet } from './BottomSheet'
-import { useToast } from './Toast'
+import { useToast } from '@/hooks/useToast'
 import { marcarDiaCerrado } from '@/features/turno/api'
 import { fechaLegible } from '@/lib/format'
 import { mensajeDeError } from '@/lib/errorLog'

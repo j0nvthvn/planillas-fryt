@@ -4,7 +4,25 @@ Documento para quien continúe el trabajo, sea persona o modelo. Resume qué
 es el sistema, qué se hizo, en qué punto está cada fase y qué falta, con las
 reglas que no se deben romper. Última actualización: **2026-10-18**.
 
-### Prioridad 2 (18 de octubre de 2026, rama `fix/prioridad-2`)
+### Prioridad 3 (18 de octubre de 2026, rama `refactor/prioridad-3`)
+
+Cierra la Prioridad 3 de `docs/revision-general-app.md` (con esto, toda la
+revisión del 1 de octubre queda hecha):
+- **Cerrar turno dividido**: `SeccionesCierre`, `AvisosCierre`,
+  `BarraCierre` (mide su propia altura) y `HojasCierre`; la pantalla queda
+  con la coordinación (462 → 200 líneas). `useTurnoForm` saca la
+  persistencia local a `usePersistenciaLocal`.
+- Consultas fuera de las pantallas: `historial/api.ts` (el detalle de
+  proveedor ya estaba en la Prioridad 2). `BottomSheet` usa `useIsDesktop`.
+- **Lint sin advertencias**: utilidades y hooks fuera de los archivos de
+  componentes (`components/teclado.ts`, `components/avatar.ts`,
+  `hooks/useToast.ts`).
+- Esqueletos en vez de spinners en las cargas iniciales; la revisión del
+  cierre dice «Volver a editar».
+- Análisis: «Ver datos por día», tabla plegable y accesible con los datos
+  del gráfico, que está oculto a los lectores de pantalla.
+
+### Prioridad 2 (18 de octubre de 2026, PR #21, en producción)
 
 Cierra la Prioridad 2 de `docs/revision-general-app.md`:
 - **Carga, error y vacío** (`lib/consulta.ts`, `components/ErrorCarga.tsx`):

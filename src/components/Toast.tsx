@@ -1,31 +1,7 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import Icon from './Icon'
+import { ToastContext, type ToastApi, type ToastItem, type ShowOptions } from '@/hooks/useToast'
 
-interface ToastItem {
-  id: number
-  message: string
-  tipo: 'info' | 'error' | 'ok'
-  actionLabel?: string
-  onAction?: () => void
-}
-
-interface ShowOptions {
-  message: string
-  tipo?: ToastItem['tipo']
-  actionLabel?: string
-  onAction?: () => void
-  /** ms; null = persistente hasta que se cierre */
-  duration?: number | null
-}
-
-interface ToastApi {
-  show: (o: ShowOptions) => number
-  hide: (id: number) => void
-  error: (message: string) => number
-  ok: (message: string) => number
-}
-
-const ToastContext = createContext<ToastApi | null>(null)
 let seq = 0
 
 const SOPORTA_POPOVER = typeof HTMLElement !== 'undefined' && 'showPopover' in HTMLElement.prototype
@@ -114,10 +90,4 @@ function ToastView({ toast, onHide, onPausa, onSigue }: { toast: ToastItem; onHi
       </button>
     </div>
   )
-}
-
-export function useToast(): ToastApi {
-  const ctx = useContext(ToastContext)
-  if (!ctx) throw new Error('useToast debe usarse dentro de <ToastProvider>')
-  return ctx
 }
