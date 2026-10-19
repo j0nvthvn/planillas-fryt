@@ -3,6 +3,8 @@ import { Link, useNavigate, useSearch } from '@tanstack/react-router'
 import PageHeader from '@/components/PageHeader'
 import Icon from '@/components/Icon'
 import { EsqueletoContenido } from '@/components/Esqueleto'
+import { AvisoDesactualizado, ErrorCarga } from '@/components/ErrorCarga'
+import { vistaDe } from '@/lib/consulta'
 import { ConfirmDialog } from '@/components/ConfirmDialog'
 import { CorreccionModal } from '@/components/CorreccionModal'
 import { useToast } from '@/hooks/useToast'
@@ -41,6 +43,10 @@ export default function Planilla() {
   const noAbrio = r?.cerrado === true
   const puedeUnir = lista.length === 1 && lista[0]?.turno.modo === 'mañana'
   const esCompleto = lista.some((t) => t.turno.modo === 'completo')
+  // Sin turnos (o sin métodos) por un error, la planilla decía «Sin registro
+  // este día» o un desglose vacío bajo un resumen «Completo».
+  const { vista, desactualizado } = vistaDe(resumen, turnos, metodos)
+  const reintentar = () => { void resumen.refetch(); void turnos.refetch(); void metodos.refetch() }
 
   async function ejecutar() {
     if (!accion) return
@@ -80,8 +86,10 @@ export default function Planilla() {
         }
       />
 
-      {turnos.isPending ? <EsqueletoContenido sinTitulo /> : (
+      {vista === 'error' ? <ErrorCarga que="la planilla de este día" onReintentar={reintentar} />
+        : vista === 'cargando' ? <EsqueletoContenido sinTitulo /> : (
         <>
+          {desactualizado && <AvisoDesactualizado onReintentar={reintentar} />}
           <section aria-label="Neto del día" className="card mb-3">
             <div className="flex items-center justify-between gap-2.5"><p className="eyebrow">Neto del día</p><EstadoChip estado={r?.estado ?? 'sin_registro'} /></div>
             <p className={`amount text-amount leading-[1.05] mt-2.5 ${Number(r?.neto ?? 0) < 0 ? 'text-neg' : 'text-ink'}`}>{noAbrio ? '—' : clp(r?.neto ?? 0)}</p>

@@ -164,7 +164,10 @@ export function useConfig() {
       return leerConfig(data)
     },
   })
-  return { config: q.data ?? CONFIG_DEFAULT, cargando: q.isPending, error: q.error }
+  // `listo`: hay una configuración real (del servidor o de la caché). Mientras
+  // no, `config` es CONFIG_DEFAULT, que no sirve para iniciar un turno: el
+  // fondo saldría en $0 y el modo por defecto podría ser otro.
+  return { config: q.data ?? CONFIG_DEFAULT, listo: q.data !== undefined, cargando: q.isPending, error: q.error, reintentar: () => void q.refetch() }
 }
 
 export function useGuardarConfig() {

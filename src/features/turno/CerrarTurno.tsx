@@ -13,6 +13,7 @@ import { modoPorDefecto, modosDisponibles, etiquetaCerrar, tituloCierre } from '
 import { useTurnoForm } from './useTurnoForm'
 import { useQuitarMarcaDia } from './useQuitarMarcaDia'
 import { textoGuardado } from './estadoTurno'
+import { estadoCatalogo } from './catalogoCierre'
 import { RevisionSheet } from './RevisionSheet'
 import { AvisosCierre } from './AvisosCierre'
 import { BarraCierre } from './BarraCierre'
@@ -27,9 +28,13 @@ export default function CerrarTurno() {
   const toast = useToast()
   const online = useOnline()
   const { esDueno } = useUsuario()
-  const { config } = useConfig()
+  const { config, listo: configLista, error: errorConfig, reintentar: reintentarConfig } = useConfig()
   const metodos = useMetodos()
   const trabajadores = useTrabajadores()
+  const catalogo = estadoCatalogo({
+    config: { data: configLista ? config : undefined, isError: !!errorConfig },
+    metodos, trabajadores,
+  })
 
   const fecha = search.fecha ?? hoy()
   const diaUnicoConfig = config.diasTurnoUnico.includes(diaSemana(fecha))
@@ -39,18 +44,18 @@ export default function CerrarTurno() {
   const noAbrio = resumenDia.data?.cerrado === true
   const quitarMarca = useQuitarMarcaDia(fecha)
 
-  // Primero se necesita el día para decidir el modo por defecto.
-  const form = useTurnoForm({ fecha, modo: search.modo ?? 'completo', fondoPorDefecto: config.fondoCajaInicial, online })
+  // Primero se necesitan el día y la configuración para decidir el modo por defecto.
+  const form = useTurnoForm({ fecha, modo: search.modo ?? 'completo', fondoPorDefecto: configLista ? config.fondoCajaInicial : null, online })
   const estadoDia = useMemo(() => ({
     turnos: form.dia.map((t) => ({ tipo: t.turno.tipo, modo: t.turno.modo, is_draft: t.turno.is_draft })),
     diaUnicoConfig,
   }), [form.dia, diaUnicoConfig])
 
   useEffect(() => {
-    if (!search.modo && !form.cargandoDia) {
+    if (!search.modo && !form.cargandoDia && configLista) {
       void navigate({ to: '/turno', search: { fecha, modo: modoPorDefecto(estadoDia) }, replace: true })
     }
-  }, [search.modo, form.cargandoDia, estadoDia, fecha, navigate])
+  }, [search.modo, form.cargandoDia, configLista, estadoDia, fecha, navigate])
 
   const modo: Modo = search.modo ?? 'completo'
   const disponibles = modosDisponibles(estadoDia)
@@ -60,8 +65,8 @@ export default function CerrarTurno() {
   const [revisar, setRevisar] = useState(false)
 
   // La pantalla se muestra (y con ella la barra fija) cuando están el
-  // formulario, los métodos y, con conexión, la marca «No abrió» del día.
-  const mostrando = !!search.modo && form.listo && !metodos.isPending && (!online || resumenDia.isFetchedAfterMount)
+  // formulario, el catálogo y, con conexión, la marca «No abrió» del día.
+  const mostrando = !!search.modo && form.listo && catalogo === 'listo' && (!online || resumenDia.isFetchedAfterMount)
   const soloLectura = state.cerrado && !esDueno
 
   const turnoManana = form.dia.find((t) => t.turno.tipo === 'mañana')?.turno
@@ -104,11 +109,16 @@ export default function CerrarTurno() {
   }
 
   const errorAlCargar = online && resumenDia.isError ? () => void resumenDia.refetch() : form.errorDia ? form.reintentarDia : null
-  if (errorAlCargar) return (
+  const reintentarCatalogo = () => {
+    if (!configLista) reintentarConfig()
+    if (!metodos.data) void metodos.refetch()
+    if (!trabajadores.data) void trabajadores.refetch()
+  }
+  if (errorAlCargar || catalogo === 'error') return (
     <div className="max-w-2xl mx-auto space-y-4">
       <PageHeader title="Cerrar turno" back="/hoy" />
-      <p role="alert">No pudimos cargar lo registrado de este día. Vuelve a intentarlo.</p>
-      <button type="button" className="btn-primary" onClick={errorAlCargar}>Reintentar</button>
+      <p role="alert">{errorAlCargar ? 'No pudimos cargar lo registrado de este día.' : 'No pudimos cargar los métodos de pago, los trabajadores o la configuración.'} Vuelve a intentarlo.</p>
+      <button type="button" className="btn-primary" onClick={errorAlCargar ?? reintentarCatalogo}>Reintentar</button>
     </div>
   )
   if (!mostrando) return <EsqueletoContenido />

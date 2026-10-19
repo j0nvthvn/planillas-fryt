@@ -21,7 +21,8 @@ export type ResultadoGuardado = { estado: 'ok' } | { estado: 'conflicto' } | { e
 interface Opciones {
   fecha: string
   modo: Modo
-  fondoPorDefecto: number
+  /** `null` mientras no llega la configuración: el formulario espera para cargar. */
+  fondoPorDefecto: number | null
   online: boolean
 }
 
@@ -73,6 +74,10 @@ export function useTurnoForm({ fecha, modo, fondoPorDefecto, online }: Opciones)
   const cargadoPara = useRef<string>('')
   useEffect(() => {
     if (dia.isPending || (online && !dia.isFetchedAfterMount)) return
+    // Un turno nuevo parte con el fondo de la configuración: cargarlo antes
+    // dejaba el valor por defecto ($0), y la configuración que llegaba
+    // después ya no lo cambiaba.
+    if (fondoPorDefecto == null) return
     // Sin el turno del servidor, el primer dato saldría sin versión base y la
     // RPC sobrescribiría el borrador existente: la pantalla muestra el error.
     if (dia.isError && !stateRef.current.cargado) return
